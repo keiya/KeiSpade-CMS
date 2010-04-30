@@ -1,0 +1,35 @@
+@charset "utf-8";
+/* sub_container 
+------------------------------*/
+/* ページ内メニュー */
+dl#page_menu {
+  margin:0 5px;
+  background-color: #ccc;
+  padding: 0 0 7px 0;
+  line-height: 1;
+}
+#page_menu dt {
+    padding:8px 7px 4px 9px;
+    font-size:1.6em;
+    color:#555;
+    border-bottom: solid 3px #AACD06;
+    text-transform: uppercase;
+}
+#page_menu dd {
+    margin:0 1px;
+    background-color: #fffff0;
+    border-bottom: solid 1px #AACD06;
+}
+#page_menu dd a {
+    line-height: 1.4;
+    display:block;
+    padding:8px 14px;
+    color:#333;
+}
+#page_menu dd a:link {
+    text-decoration: none;
+}
+#page_menu dd a:hover {
+    text-decoration: underline;
+    color: #690;
+}

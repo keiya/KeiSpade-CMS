@@ -1,0 +1,48 @@
+@charset "utf-8";
+/* header
+------------------------------*/
+header {
+    border-bottom:solid 4px #aaa;
+    width:50em;
+    margin:6px auto;
+}
+
+h1 {
+    background-color:white;
+    padding:4px 3px 0px 13px;
+    border-left:solid 4px #555;
+    margin-bottom:8px;
+    font-size:1.4em;
+    color:#999;
+}
+
+h1 span {
+    font-family: Arial, Helvetica, sans-serif;
+    font-size:1.6em;
+    color:#555;
+    text-transform: uppercase;
+}
+/* メインメニュー */
+header ul {
+    list-style-type: none;
+    line-height:1;
+}
+header ul li {
+    display:inline;
+    line-height:1.61;
+}
+header ul li a {
+}
+header ul li a span {
+    padding:0 12px;
+    border:solid 4px white;
+    background-color:white;
+}
+header ul li a:hover {
+    color:#fff;
+    text-decoration: none;
+}
+header ul li a:hover span {
+    background-color:#69C;
+    border-color:#69C;
+}

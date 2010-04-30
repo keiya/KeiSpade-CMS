@@ -1,0 +1,11 @@
+@charset "utf-8";
+/* set
+------------------------------*/
+@import url("init.css");
+@import url("init_h5_add.css");
+@import url("layout_h5.css");
+@import url("header_h5.css");
+@import url("footer_h5.css");
+@import url("sub_container.css");
+@import url("common.css");
+@import url("for_wtm.css");

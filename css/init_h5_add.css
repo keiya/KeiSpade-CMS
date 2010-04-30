@@ -1,0 +1,15 @@
+@charset "utf-8";
+/* init add
+------------------------------*/
+/* 基本margin初期化 html5 add  */
+
+article,
+aside,
+nav,
+section,
+footer,
+headear{
+    margin: 0px;
+    padding: 0px;
+    display:block;
+}

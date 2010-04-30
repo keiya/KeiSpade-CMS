@@ -1,0 +1,25 @@
+@charset "utf-8";
+
+/* common
+------------------------------*/
+  /* html5 common */
+  section{padding:0 15px;min-height:7em;}
+
+  /* 共通ページジャンプ */
+div#main_container .page_top{
+    text-align: right;
+    line-height:1;
+    margin-top:6px;
+    padding:18px 0px 14px 0px;
+    background-repeat: no-repeat;
+    background-position: right 17px;
+}
+div#main_container .page_top a{
+    text-align: right;
+    padding-right: 18px;
+    color: #555;
+    line-height: 1;
+}
+ div#main_container .page_top a:hover{
+    color: #690;
+}

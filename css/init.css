@@ -1,0 +1,46 @@
+@charset "utf-8";
+/* init
+2009.10.-
+------------------------------*/
+/* 基本margin初期化 */
+body,
+div,p,
+img,a,
+table,
+ul,ol,li,dl,dt,dd,
+h1,h2,h3,h4,h5,
+form {
+    margin: 0px;
+    padding: 0px;
+}
+
+/* 画像 */
+img {
+    border-width: 0px;
+}
+
+/* body初期値 */
+body {
+    overflow:scroll;
+    font-family: "ＭＳ Ｐゴシック", Osaka, "ヒラギノ角ゴ Pro W3";
+    background-color:#ccc;
+    color: #333;
+    text-align: center;
+    line-height: 1.61;
+    font-size:0.78em;
+}
+
+/* 基本アンカー */
+a:link {
+    color:#f39;
+}
+
+a:hover {
+    color:#09f;
+}
+
+/* テ-ブル内初期値同期 */
+table {
+    font-size:1em;
+    line-height: 1.61;
+}

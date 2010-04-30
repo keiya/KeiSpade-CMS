@@ -1,0 +1,36 @@
+@charset "utf-8";
+/* footer_nav / footer
+------------------------------*/
+/* フッター */
+footer {
+    color:#fff;
+    font-family: Arial, Helvetica, sans-serif;
+}
+address{
+    text-align:right;
+    padding:20px 8px 4px 0;
+    margin:2px 0 0 0;
+    border:soli 1px #000;
+    background-color:#555;
+    }
+/* フッターナビ */
+footer ul {
+    line-height:1.5;
+    color:#f1f1f1;
+    border-left:solid 1px #f1f1f1;
+    display:inline;
+    list-style-type: none;
+    font-size:0.8em;
+}
+footer ul li {
+    border-right:solid 1px #f1f1f1;
+    display:inline;
+    padding:0 0.6em;
+}
+footer a {
+    color:#f1f1f1;
+}
+footer a:hover {
+    color:#fff;
+    text-decoration: none;
+}

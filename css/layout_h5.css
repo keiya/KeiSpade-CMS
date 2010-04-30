@@ -1,0 +1,45 @@
+@charset "utf-8";
+
+/* レイアウト
+------------------------------*/
+
+/* header */
+header{
+    width:50em;
+    margin:6px auto;
+    text-align:left;
+    display:block;
+}
+
+/* container */
+div#container{
+    width:49.6em;
+    margin:12px auto;
+    text-align:left;
+}
+
+/* main_container */
+div#main_container{
+    width:33em;
+    float: right;
+    padding-bottom: 12px;
+    background-color: white;
+    text-align:left;
+}
+
+/* aside sub_container */
+aside{
+    width:15em;
+    padding: 4px 0;
+    text-align:left;
+    background-color: #555;
+}
+
+/* footer */
+footer{
+    clear:both;
+    color:white;
+    background-color: #000;
+    width:50em;
+    margin:6px auto;
+}

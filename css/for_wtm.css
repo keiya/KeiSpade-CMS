@@ -1,0 +1,108 @@
+@charset "utf-8";
+
+/* デフォルトタグフォーマット */
+  /* 基本マージン */
+#main_container div,
+#main_container p,
+#main_container table,
+#main_container ul,
+#main_container ol,
+#main_container dl,
+#main_container h3,
+#main_container h4,
+#main_container h5,
+#main_container form {
+    margin:0.4em 0;
+}
+#main_container ul,
+#main_container ol {
+    padding:0 0 0 1.2em;
+    line-height:1.8;
+    margin:0.3em 0 0.6em 0.2em;
+}
+/* h2 */
+  #main_container h2 {
+    line-height:1.3;
+    padding:5px 8px;
+    margin-bottom: 0.4em;
+    color:#000;
+    background-color:#AACD06;
+    border-bottom:solid 1px #555;
+}
+
+/* h3 */
+  #main_container h3 {
+    line-height:1.3;
+    padding:0 5px;
+    margin:8px 0;
+    font-size:1.2em;
+    color:#f06;
+    background-color:#f1f1f1;
+}
+
+/* subset */
+  /* strong */
+#main_container strong {
+    color:#900;
+    font-size:1.2em;
+}
+
+/* table */
+#main_container table {
+    border:solid 1px #888;
+    border-right-width:0px;
+    border-top-width:0px;
+    border-collapse:collapse;
+}
+#main_container table th,
+#main_container table td {
+    border:solid 1px #888;
+    padding:2px 4px 1px 4px;
+    line-height:1.5;
+    vertical-align:top;
+}
+#main_container table th {
+    background-color:#FFECEC;
+    text-align:center;
+    color:#555;
+}
+#main_container table td {
+    text-align:justify;
+    background-color:white;
+}
+
+/* ul */
+#main_container ul {
+    list-style-type: none;
+    line-height:1;
+}
+
+#main_container ul li {
+    margin:4px 0;
+    line-height:1.61;
+}
+/* 入れ子のul */
+#main_container ol li ul,
+#main_container ul li ul {
+    list-style-type: none;
+    line-height:1;
+}
+/* ol */
+#main_container ul ol,
+#main_container ol {
+    line-height:1;
+    list-style-type: decimal;
+    list-style-image: none;
+}
+#main_container ol li {
+    margin:4px 0;
+    line-height:1.61;
+}
+/* hr */
+#main_container hr {
+    color:#FF0066;
+    background-color:#FF0066;
+    height:1px;
+    border:0px solid #fff;
+    margin:0.3em auto;
+}
