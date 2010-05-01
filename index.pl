@@ -37,6 +37,7 @@ $htmlbdhd .=<<__EOM__;
 <li><a href="./index.pl?cmd=new"><span>New</span></a></li>
 <li><a href="./index.pl?page=$pagenamens&amp;cmd=del"><span>Delete</span></a></li>
 <li><a href="./index.pl?cmd=upload&amp;page=$pagenamens"><span>Upload</span></a></li>
+<li><a href="./index.pl?cmd=search"><span>List of Pages</span></a></li>
 </ul>
 </nav>
 __EOM__
@@ -58,14 +59,18 @@ require 'convert.pl';
 	my @res = (&sql::fetch("select * from pages where title='$pagename';",$data_source));
 	$htmlhead .= '<title>'.$res[0].'@'.$conf_site.'</title>';
 	&convert::tohtml(\$res[7]);
-	$htmlbody .= "<h2>$res[0]</h2>".$res[7];
 my $confer;
 my @files = split(/\t/, $res[5]);
-foreach my $file (@files) {
-	my @elements = split(/\//, $file);
-	$confer .= "<a href=\"files/$elements[0]\">$elements[1]</a> ";
-}
-	$htmlfoot .= "Last-modified: $res[1], Created: $res[2], Tags: $res[3], AutoTags: $res[4]<br />$res[6]<br />Cf.<br />$confer";
+	foreach my $file (@files) {
+		my @elements = split(/\//, $file);
+		$confer .= "<a href=\"files/$elements[0]\">$elements[1]</a> ";
+	}
+	my $filenum = @files;
+$htmlbody .= "<h2>$res[0]</h2>".$res[7];
+$htmlbody .= '</section><section><h2>Attached File</h2>'.$confer.'</section>' if $filenum == 1;
+$htmlbody .= '</section><section><h2>Attached Files</h2>'.$confer.'</section>' if $filenum > 1;
+
+	$htmlfoot .= "Last-modified: $res[1], Created: $res[2], Tags: $res[3], AutoTags: $res[4]<br />$res[6]<br />";
 } elsif ($query{'cmd'} eq 'edit') {
 	my @res = (&sql::fetch("select body from pages where title='$pagename';",$data_source));
 	$res[0] =~ s/<br \/>/\n/g;
@@ -130,7 +135,8 @@ __EOM__
 } elsif ($query{'cmd'} eq 'search') {
 	my $query = &security::textalize(&security::exorcism($query{'query'}));
 	$query =~ s/\s/AND/g;
-	my $pageslist = &listpages("select title from pages where body like '%$query%';","<a href=\"./index.pl?page=%s\">%s</a><br />");
+if (defined $query{'query'}) {
+	my $pageslist = &listpages("select title from pages where body like '%$query%';","<a href=\"./index.pl?page=%s\">%s</a><br />") if defined $query{'query'};
 $htmlhead .= '<title>Search &gt; Body@'.$conf_site.'</title>';
 $htmlbody .=<<__EOM__;
 <section>
@@ -138,6 +144,17 @@ $htmlbody .=<<__EOM__;
 $pageslist
 </section>
 __EOM__
+
+} else {
+	my $pageslist = &listpages("select title from pages;","<a href=\"./index.pl?page=%s\">%s</a><br />") if not defined $query{'query'};
+$htmlhead .= '<title>PagesList@'.$conf_site.'</title>';
+$htmlbody .=<<__EOM__;
+<section>
+<h2>List of Pages</h2>
+$pageslist
+</section>
+__EOM__
+}
 } elsif ($query{'cmd'} eq 'category') {
 	my $query = &security::textalize(&security::exorcism($query{'query'}));
 	$query =~ s/\s/AND/g;
@@ -188,7 +205,7 @@ $file = $res[0]."$filename/$original\t";
 
 if ($notable == 0) {
 	my $categorylist = &listcategory("select tags from pages;","<dd><a href=\"./index.pl?cmd=category&amp;query=%s\">%s</a></dd>");
-	my $pageslist = &listpages("select title from pages;","<dd><a href=\"./index.pl?page=%s\">%s</a></dd>");
+	my $pageslist = &listpages("select title from pages order by lastmodified_date desc, title limit 5;","<dd><a href=\"./index.pl?page=%s\">%s</a></dd>");
 #	my $pageslist = &listpages("select title from pages;","<dd><a href=\"./index.pl?page=","</dd>");
 	$sidebar .= "<dt>Category</dt>$categorylist";
 	$sidebar .= "<dt>Pages</dt>$pageslist";
