@@ -20,6 +20,13 @@ my $element = $2;
 		} elsif ($hcnt == 3) {
 			$markup = "<h5>$element</h5>";
 		}
+} elsif ($match =~ /\[p:(.+)\]/){
+my $img = $1;
+$img =~ m/(.+)\s(\d+?)x(\d+?)$/;
+$markup = "<a href=\"$1\" target=\"KeiSpade_img\"><img src=\"$1\" alt=\"$1\" width=\"$2\" height=\"$3\"></a>";
+} elsif ($match =~ /\[v:(.+)\]/) {
+$markup = "<video src=\"$1\" controls=\"controls\" preload=\"preload\"><a href=\"$1\">Link to this Video</a></video>";
+
 } elsif ($match =~ /^(-+|\++)(.+?)$/) {
 
 #push (@list, "$match");

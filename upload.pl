@@ -8,8 +8,8 @@ use lib './lib';
 
 my $buffer;
 my $query = CGI->new;
-my $fh    = $query->upload('file') or die(qq(Invalid file handle returned.)); # Get $fh
-my $file  = $query->param('file');
+my $fh = $query->upload('file') or die(qq(Invalid file handle returned.)); # Get $fh
+my $file = $query->param('file');
 my $back = $query->param('backpage');
 
         my $tmp = $ENV{'REMOTE_ADDR'}.time;
@@ -30,3 +30,4 @@ my $back = $query->param('backpage');
         move( '/tmp/'.$tmp, './files/'.$filename.'.'.$ext);
 
 print $query->redirect("index.pl?cmd=addfile&page=$back&filename=$filename.$ext&orig=$file");
+
