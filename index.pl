@@ -4,6 +4,7 @@ use strict;
 use warnings;
 use DBI;
 use lib './lib';
+#use Text::Hatena;
 
 require 'cgidec.pl';
 require 'security.pl';
@@ -55,10 +56,16 @@ __EOM__
 
 
 if ((not defined $query{'cmd'}) and (defined $query{'page'})) {
-require 'convert.pl';
+#require 'convert.pl';
 	my @res = (&sql::fetch("select * from pages where title='$pagename';",$data_source));
 	$htmlhead .= '<title>'.$res[0].'@'.$conf_site.'</title>';
-	&convert::tohtml(\$res[7]);
+	#&convert::tohtml(\$res[7]);
+
+require 'Text/Hatena.pm';
+#my $parser = Text::Hatena->new;
+$htmlbody .= "<h2>$res[0]</h2>";
+$htmlbody .= Text::Hatena->parse($res[7]);
+
 my $confer;
 my @files = split(/\t/, $res[5]);
 	foreach my $file (@files) {
@@ -66,7 +73,6 @@ my @files = split(/\t/, $res[5]);
 		$confer .= "<a href=\"files/$elements[0]\">$elements[1]</a> ";
 	}
 	my $filenum = @files;
-$htmlbody .= "<h2>$res[0]</h2>".$res[7];
 $htmlbody .= '</section><section><h2>Attached File</h2>'.$confer.'</section>' if $filenum == 1;
 $htmlbody .= '</section><section><h2>Attached Files</h2>'.$confer.'</section>' if $filenum > 1;
 
