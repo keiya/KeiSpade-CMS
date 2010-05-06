@@ -31,9 +31,10 @@ my $database = "./dat/kspade.db";
 my $data_source = "dbi:SQLite:dbname=$database";
 
 $htmlbdhd .=<<__EOM__;
-<h1><span>$conf_site</span> $conf_desc</h1>
+<h1><span><a href="./index.pl">$conf_site</a></span> $conf_desc</h1>
 <nav>
 <ul>
+<li><a href="./index.pl"><span>Top</span></a></li>
 <li><a href="./index.pl?page=$pagenamens&amp;cmd=edit"><span>Edit</span></a></li>
 <li><a href="./index.pl?cmd=new"><span>New</span></a></li>
 <li><a href="./index.pl?page=$pagenamens&amp;cmd=del"><span>Delete</span></a></li>
@@ -54,8 +55,19 @@ $sidebar.=<<__EOM__;
 </dd>
 __EOM__
 
+if ((defined $query{'init'} and $query{'init'} eq 'yes') and (&sql::tableexists($data_source) == 0)) {
+	&sql::create_table($data_source);
+	my $modified_date = &date::spridate('%04d/%02d/%02d %02d:%02d:%02d');
+	my $created_date = $modified_date;
+my $body=<<__EOM__;
+ここにチュートリアル的なの書く
+__EOM__
+	&sql::do("insert into pages (title,lastmodified_date,created_date,tags,autotags,copyright,body) values ('TopPage','$modified_date','$created_date','Help','Help','Copyleft','$body');",$data_source);
+	$htmlhead .= '<title>Miracle! Table was created!</title>';
+	$htmlbody .= '<p>Table was created. Please reload.</p>';
+}
 
-if ((not defined $query{'cmd'}) and (defined $query{'page'})) {
+if ((not defined $query{'cmd'}) and (defined $pagename)) {
 #require 'convert.pl';
 	my @res = (&sql::fetch("select * from pages where title='$pagename';",$data_source));
 	$htmlhead .= '<title>'.$res[0].'@'.$conf_site.'</title>';
@@ -196,17 +208,6 @@ $file = $res[0]."$filename/$original\t";
 
 	&sql::do("update pages set lastmodified_date='$modifieddate', confer='$file' where title='$pagename';",$data_source);
 } else {
-	if (&sql::tableexists($data_source) == 0) {
-		&sql::create_table($data_source);
-		$htmlhead .= '<title>Miracle! Table was created!</title>';
-		$htmlbody .= '<p>Table was created. Please reload.</p>';
-	} else {
-		require 'convert.pl';
-		my @res = (&sql::fetch("select * from pages where title='TopPage';",$data_source));
-		$htmlhead .= '<title>Top@'.$conf_site.'</title>';
-		$htmlbody .= "<h2>Top</h2>".&convert::tohtml($res[7]);
-		$htmlfoot .= "Last-modified: $res[1], Created: $res[2], Tags: $res[3], AutoTags: $res[4]<br />$res[6]<br />Cf.<br />$res[5]";
-	}
 }
 
 if ($notable == 0) {
