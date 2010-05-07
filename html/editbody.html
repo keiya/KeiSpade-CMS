@@ -1,0 +1,12 @@
+<section><h2>Editing <TMPL_VAR NAME=PageName></h2>
+<form action="./index.pl?cmd=post&amp;page=<TMPL_VAR NAME=NoSpacePageName>" method="post" name="editform" accept-charset="utf-8">
+Title:<br />
+<input type="text" value="<TMPL_VAR NAME=PageName>" name="title"><br />
+Body:<br />
+<textarea name="body" rows="20" cols="80">
+<TMPL_VAR NAME=DBody>
+</textarea><br />
+<button value="Post" name="bodysend" type="submit">Post</button>
+</form>
+</section>
+
