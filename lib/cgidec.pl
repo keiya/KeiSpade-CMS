@@ -33,6 +33,13 @@ sub getline {
 	return %QUERY;
 }
 
+sub getfile {
+#	my $files = $_[]
+
+}
+
+
+
 sub getform {
 
 

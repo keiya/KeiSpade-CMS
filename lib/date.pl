@@ -14,5 +14,17 @@ sub spridate {
     $mon = $mon + 1;
     return sprintf($_[0], $year, $mon, $day, $hour, $min, $sec);
 }
+
+sub spridatearg {
+    my ($day, $mon, $year) = (localtime ($_[1]))[3,4,5];
+    $year = $year + 1900;
+    $mon = $mon + 1;
+    return sprintf($_[0], $year, $mon, $day);
+}
+
+sub spritimearg {
+    my ($sec, $min, $hour) = (localtime ($_[1]))[0,1,2];
+    return sprintf($_[0], $hour, $min, $sec);
+}
 1;
 

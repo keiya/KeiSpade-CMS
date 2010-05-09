@@ -1,5 +1,5 @@
 <section><h2>Upload to <TMPL_VAR NAME=PageName></h2>
-<form action="./upload.pl" method="post" enctype='multipart/form-data'>
+<form action="./index.pl?page=<TMPL_VAR NAME=NoSpacePageName>&amp;cmd=addfile" method="post" enctype='multipart/form-data'>
   <input type="file" name="file" /> <input type="hidden" name="backpage" value="<TMPL_VAR NAME=NoSpacePageName>"> <input type="submit" /> 
 </form>
 </section>
