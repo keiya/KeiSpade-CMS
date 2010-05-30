@@ -35,16 +35,10 @@ $vars{'NoSpacePageName'} =~ tr/ /+/;
 my $database = "./dat/kspade.db";
 my $dbargs = {PrintError=>1};
 my $data_source = "dbi:SQLite:dbname=$database","","",$dbargs;
-
-
-$htmlbdhd .= &tmpl2html('html/bodyhead.html',\%vars);
-$vars{'SidebarCategoryList'} = &listcategory("select tags from pages;"
-                                 ,"<dd><a href=\"./index.pl?cmd=category&amp;query=%s\">%s</a></dd>");
-$vars{'SidebarPagesList'} = &listpages("select title from pages order by lastmodified_date desc, title limit 5;"
-                           ,"<dd><a href=\"./index.pl?page=%s\">%s</a></dd>");
-$sidebar  = &tmpl2html('html/sidebar.html',\%vars);
+print $data_source;
 
 if ((defined $query{'init'} and $query{'init'} eq 'yes') and (&sql::tableexists($data_source) == 0)) {
+print "init mode";
 # database initialize (create the table)
 	&sql::create_table($data_source);
 	my $modified_date = &date::spridate('%04d/%02d/%02d %02d:%02d:%02d');
@@ -57,8 +51,28 @@ if ((defined $query{'init'} and $query{'init'} eq 'yes') and (&sql::tableexists(
 	$htmlbody .= '<p>Table was created. Please reload.</p>';
 }
 
+$htmlbdhd .= &tmpl2html('html/bodyhead.html',\%vars);
+$vars{'SidebarCategoryList'} = &listcategory("select tags from pages;"
+                                 ,"<dd><a href=\"./index.pl?cmd=category&amp;query=%s\">%s</a></dd>");
+$vars{'SidebarPagesList'} = &listpages("select title from pages order by lastmodified_date desc, title limit 5;"
+                           ,"<dd><a href=\"./index.pl?page=%s\">%s</a></dd>");
+$sidebar  = &tmpl2html('html/sidebar.html',\%vars);
+
+
+
 if ((not defined $query{'cmd'}) and (defined $vars{'PageName'})) {
+#if ((not defined $query{'cmd'}) ) {
+	&page;
+} elsif (defined $query{'cmd'}) {
+	no strict 'refs';
+	&{$query{'cmd'}};
+}
+#	elsif ($query{'cmd'} eq 'edit') 
+#elsif ($query{'cmd'} eq 'post') 
+
+
 # print page
+sub page { 
 	my @res = (&sql::fetch("select * from pages where title='".$vars{'PageName'}."';",$data_source));
 	my $modified = $res[1];
 	my $created  = $res[2];
@@ -70,64 +84,75 @@ if ((not defined $query{'cmd'}) and (defined $vars{'PageName'})) {
 
 	require 'Text/Hatena.pm';
 	$htmlbody .= "<h2>$res[0]</h2>";
-	my $parsed .= Text::Hatena->parse($res[7]);
-	$htmlbody .= &security::noscript($parsed);
+	my $parsed .= Text::Hatena->parse(&security::noscript($res[7]));
+	$htmlbody .= $parsed;
 
 	my $confer;
-	my @files = split(/\t/, $res[5]);
-	foreach my $file (@files) {
-		my @elements = split(/\//, $file);
+	my @filedatas= split(/\]\[/, $res[5]);
+	foreach my $filedata (@filedatas) {
+		my @elements = split(/\//, $filedata);
 		$confer .= "<a href=\"files/$elements[0]\">$elements[1]</a> ";
+		$confer =~ s/[\[\]]+//g;
 	}
-	my $filenum = @files;
+	
+	my $filenum = @filedatas;
 	$htmlbody .= '</section><section><h2>Attached File</h2>'.$confer.'</section>' if $filenum == 1;
 	$htmlbody .= '</section><section><h2>Attached Files</h2>'.$confer.'</section>' if $filenum > 1;
 
 	$htmlfoot .= "Last-modified: $modified, Created: $created, Tags: $res[3], AutoTags: $res[4]<br />$res[6]<br />";
 
-} elsif ($query{'cmd'} eq 'edit') {
+} 
+sub edit {
 # print edit page form
 	my @res = (&sql::fetch("select body from pages where title='$vars{'PageName'}';",$data_source));
 	#$res[0] =~ s/<br \/>/\n/g;
 	$vars{'DBody'} = $res[0];
+	#$vars{'Token'} = rand)
 	$htmlhead .= '<title>'.$vars{'PageName'}.' &gt; Edit@'.$vars{'SiteName'}.'</title>';
 	$htmlbody .= &tmpl2html('html/editbody.html',\%vars);
 	delete $vars{'DBody'};
 
-} elsif ($query{'cmd'} eq 'post') {
+} 
+sub post {
 # submit edited text
 	my $pagename = $vars{'PageName'};
-	my ($title,$modifieddate,$tags,$autotags,$copyright,$body) = (&edit)[0,1,3,4,6,7];
+
+	my ($title,$modifieddate,$tags,$autotags,$copyright,$body) = (&fetch2edit)[0,1,3,4,6,7];
 	&sql::do("update pages set title='$title', lastmodified_date='$modifieddate', tags='$tags',
 	          autotags='$autotags', copyright='$copyright', body='$body' where title='".$vars{'PageName'}."';"
 	          ,$data_source);
 
-} elsif ($query{'cmd'} eq 'new') {
+} 
+sub new {
 # print new page form
 	$htmlhead .= '<title> New@'.$vars{'SiteName'}.'</title>';
 	$htmlbody .= &tmpl2html('html/newbody.html',\%vars);
 
-} elsif ($query{'cmd'} eq 'newpost') {
+}
+sub newpost {
 # submit new page
-	my ($title,$created_date,$tags,$autotags,$copyright,$body) = (&edit)[0,2,3,4,6,7];	
+	my ($title,$created_date,$tags,$autotags,$copyright,$body) = (&fetch2edit)[0,2,3,4,6,7];	
 	$title = 'undefined'.rand(16384) if $title eq '';
 	&sql::do("insert into pages (title,lastmodified_date,created_date,tags,autotags,copyright,body)
 	          values ('$title','$created_date','$created_date','$tags','$autotags','$copyright','$body');"
 	          ,$data_source);
 
-} elsif ($query{'cmd'} eq 'del') {
+}
+sub del {
 # print delete confirm
 
 	$htmlhead .= '<title>'.$vars{'PageName'}.' &gt; Delete@'.$vars{'SiteName'}.'</title>';
 	$htmlbody .= &tmpl2html('html/delete.html',\%vars);
 
-} elsif ($query{'cmd'} eq 'delpage') {
+}
+sub delpage {
 # delete page
 	read (STDIN, my $postdata, $ENV{'CONTENT_LENGTH'});
 	#my %form = &cgidec::getline($postdata);
 		&sql::do("delete from pages where title='".$vars{'PageName'}."'",$data_source);
 
-} elsif ($query{'cmd'} eq 'search') {
+}
+sub search {
 	my $query = &security::textalize(&security::exorcism($query{'query'}));
 	$query =~ s/\s/AND/g;
 		$vars{'Query'} = $query{'query'};
@@ -149,7 +174,8 @@ if ((not defined $query{'cmd'}) and (defined $vars{'PageName'})) {
 	}
 	delete $vars{'Query'};
 
-} elsif ($query{'cmd'} eq 'category') {
+} 
+sub category {
 # print categories
 	my $query = &security::textalize(&security::exorcism($query{'query'}));
 	$query =~ s/\s/AND/g;
@@ -161,49 +187,34 @@ if ((not defined $query{'cmd'}) and (defined $vars{'PageName'})) {
 	delete $vars{'CategoryList'};
 	delete $vars{'Query'};
 
-} elsif ($query{'cmd'} eq 'upload') {
+} 
+sub upload {
 # print upload form
 	$htmlhead .= '<title>'.$vars{'PageName'}. ' &gt; Upload@'.$vars{'SiteName'}.'</title>';
 	$htmlbody .= &tmpl2html('html/upload.html',\%vars);
 
-} elsif ($query{'cmd'} eq 'addfile') {
+} 
+sub addfile {
 # submit file
-	my ($modifieddate,$file,$body);
-	$modifieddate = &date::spridate('%04d/%02d/%02d %02d:%02d:%02d');
-#my $buffer;
-#my $query = CGI->new;
-#my $fh = $query->upload('file') or die(qq(Invalid file handle returned.)); # Get $fh
-#my $file = $query->param('file');
-#my $back = $query->param('backpage');
-
-#        my $tmp = $ENV{'REMOTE_ADDR'}.time;
-        #my $file_name = ($file =~ /([^\\\/:]+)$/) ? $1 : 'uploaded.bin';
-        #sha2()
-#        open(OUT, ">/tmp/$tmp") or die(qq(Can't open "$tmp".));
-#        binmode OUT;
-#        while (read($fh, $buffer, 1024)) { # Read from $fh insted of $file
-#            print OUT $buffer;
-#        }
-#        close OUT;
-#        require Digest::SHA::PurePerl;
-#        my $sha = Digest::SHA::PurePerl->new(256);
-#        $file =~ m/\.([\d\w]+)$/;
-#        my $ext = $1;
-#        $sha->addfile('/tmp/'.$tmp);
-#        my $filename = $sha->hexdigest;
-#        move( '/tmp/'.$tmp, './files/'.$filename.'.'.$ext);
+	my ($title,$modifieddate) = (&fetch2edit)[0,1];
 
 	$htmlhead .= '<title>'.$vars{'PageName'}. ' &gt; UploadProcess@'.$vars{'SiteName'}.'</title>';
 	my $filename = &security::html(&security::exorcism($query{'filename'}));
 	my $original = &security::html(&security::exorcism($query{'orig'}));
-	my @res = (&sql::fetch("select confer from pages where title='$vars{'PageName'}';",$data_source));
+my @res = (&sql::fetch("select confer from pages where title='$vars{'PageName'}';",$data_source));
+	#my @res = (&sql::fetch("select confer from pages where title='$vars{'PageName'}';",$data_source));
+my $files = $res[0];
+if ($files =~ /$filename/) {
 
-	$file = $res[0]."$filename/$original\t";
-
-	&sql::do("update pages set lastmodified_date='$modifieddate', confer='$file' where title='$vars{'PageName'}';"
-	         ,$data_source);
 } else {
+my $tmp  = &date::spridate('%04d %2d %2d %2d:%02d:%02d');
+$files .= "[$filename/$original($tmp)]";
+		&sql::do("update pages set lastmodified_date='$modifieddate', confer='$files' where title='$vars{'PageName'}';"
+	         ,$data_source);
 }
+}
+#else {
+#}
 
 
 
@@ -225,7 +236,7 @@ print "</body></html>";
 
 
 # ページ編集・作成用共通サブルーチン
-sub edit {
+sub fetch2edit {
 	my ($title,$modified_date,$created_date,$tags,$autotags,$confer,$copyright,$body);
 	read (STDIN, my $postdata, $ENV{'CONTENT_LENGTH'});
 	my %form = &cgidec::getline($postdata);
@@ -302,3 +313,5 @@ sub relative_time {
 	}
 
 }
+
+

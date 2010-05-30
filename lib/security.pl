@@ -25,8 +25,7 @@ sub textalize {
 
 sub noscript {
 	my $tmp = $_[0];
-	$tmp =~ s/<\/?script>/--cannot use script tag--/g;
-	$tmp =~ s/<\/?iframe>/--cannot use iframe tag--/g;
+	$tmp =~ s/<.+>//g;
 	return $tmp;
 }
 
