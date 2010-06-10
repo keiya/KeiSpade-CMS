@@ -1,6 +1,22 @@
-<section><h2>Upload to <TMPL_VAR NAME=PageName></h2>
-<form action="./upload.pl" method="post" enctype='multipart/form-data'>
-  <input type="file" name="file" /> <input type="hidden" name="backpage" value="<TMPL_VAR NAME=NoSpacePageName>"> <input type="submit" /> 
+<section>
+<h2>Upload to <TMPL_VAR NAME=PageName></h2>
+<form action="./upload.pl" target="upload" method="post" enctype='multipart/form-data'>
+	<input type="file" name="file" /> 
+	<input type="hidden" name="backpage" value="<TMPL_VAR NAME=NoSpacePageName>">
+	<input type="submit" /> 
 </form>
+
+<!-- ファイル情報が返ってくるiframeを作成。表示上は見えないようにスタイル指定 -->
+<iframe src="about:blank" name="upload" style="width:0px; height:0px; display:none;">
+	<!--
+	UpLoad中であることを表示する。
+	upload.plからの返答はここへ帰ってくるので、
+	UpLoadの進捗状況を表示する事もできるはず。
+	HTML5なら、ファイル名だけでなく、ファイルサイズも送信する事ができるので、
+	のこり n% という表記もできる。
+	けど、私にはできない。by Haro
+	-->
+</iframe>
+
 </section>
 
