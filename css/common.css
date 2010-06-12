@@ -23,3 +23,7 @@ div#main_container .page_top a{
  div#main_container .page_top a:hover{
     color: #690;
 }
+
+blockquote {
+	background-color:#EEEEFF;
+}
