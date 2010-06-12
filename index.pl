@@ -19,22 +19,29 @@ my $conf_desc = 'i\'m hackin\' it';
 my %vars = ('SiteName'=>'keiyac.org','SiteDescription'=>'i\'m hackin\' it');
 
 # http header + html meta header
-print "Content-Type: text/html; charset=UTF-8\n\n";
+print "Content-Type: text/html; charse=UTF-8\n\n";
 my $htmlhead = "<meta charset=utf-8 /><link href=\"./css/kspade.css\" rel=\"stylesheet\" type=\"text/css\" media=\"screen,print\">";
 
 my ($htmlbdhd, $htmlbody, $sidebar, $htmlfoot) = ( '', '', '', '');
 
 # process cgi args
 my %query = &cgidec::getline($ENV{'QUERY_STRING'});
-$vars{'PageName'} = &security::exorcism($query{'page'});
-$vars{'PageName'} = 'TopPage' unless $vars{'PageName'} =~ /.+/;
+
+&setpagename($query{'page'});
+
+sub setpagename {
+$vars{'PageName'} = &security::exorcism($_[0]);
+if (not defined $vars{'PageName'} or not $vars{'PageName'} =~ /.+/) {
+	$vars{'PageName'} = 'TopPage'
+}
 $vars{'NoSpacePageName'} = $vars{'PageName'};
 $vars{'NoSpacePageName'} =~ tr/ /+/;
+}
 
 # connect to DB
-my $database = "./dat/kspade.db";
+my $database = './dat/kspade.db';
 my $dbargs = {PrintError=>1};
-my $data_source = "dbi:SQLite:dbname=$database","","",$dbargs;
+my $data_source = "dbi:SQLite:dbname=$database",$dbargs;
 
 if ((defined $query{'init'} and $query{'init'} eq 'yes') and (&sql::tableexists($data_source) == 0)) {
 # database initialize (create the table)
@@ -50,11 +57,6 @@ if ((defined $query{'init'} and $query{'init'} eq 'yes') and (&sql::tableexists(
 }
 
 $htmlbdhd .= &tmpl2html('html/bodyhead.html',\%vars);
-$vars{'SidebarCategoryList'} = &listcategory("select tags from pages;"
-	,"<dd><a href=\"./index.pl?cmd=category&amp;query=%s\">%s</a></dd>");
-$vars{'SidebarPagesList'} = &listpages("select title from pages order by lastmodified_date desc, title limit 5;"
-	,"<dd><a href=\"./index.pl?page=%s\">%s</a></dd>");
-$sidebar  = &tmpl2html('html/sidebar.html',\%vars);
 
 
 
@@ -65,8 +67,6 @@ if ((not defined $query{'cmd'}) and (defined $vars{'PageName'})) {
 	no strict 'refs';
 	&{$query{'cmd'}};
 }
-#	elsif ($query{'cmd'} eq 'edit') 
-#elsif ($query{'cmd'} eq 'post') 
 
 
 # print page
@@ -86,19 +86,20 @@ sub page {
 	$htmlbody .= $parsed;
 
 	my $confer;
+	if (defined $res[5]) {
 	my @filedatas= split(/\]\[/, $res[5]);
 	foreach my $filedata (@filedatas) {
 		my @elements = split(/\//, $filedata);
-		$confer .= "<a href=\"files/$elements[0]\">$elements[1]</a> ";
+		$confer .= "<a href=\"files/$elements[0]\">$elements[1]</a> [<a href=\"./index.pl?&page=$vars{'PageName'}&amp;filename=$elements[0]&amp;cmd=delupload\">X</a>] ";
 		$confer =~ s/[\[\]]+//g;
 	}
+	
 
 	my $filenum = @filedatas;
 	$htmlbody .= '</section><section><h2>Attached File</h2>'.$confer.'</section>' if $filenum == 1;
 	$htmlbody .= '</section><section><h2>Attached Files</h2>'.$confer.'</section>' if $filenum > 1;
-
+}
 	$htmlfoot .= "Last-modified: $modified, Created: $created, Tags: $res[3], AutoTags: $res[4]<br />$res[6]<br />";
-
 } 
 sub edit {
 # print edit page form
@@ -109,7 +110,6 @@ sub edit {
 	$htmlhead .= '<title>'.$vars{'PageName'}.' &gt; Edit@'.$vars{'SiteName'}.'</title>';
 	$htmlbody .= &tmpl2html('html/editbody.html',\%vars);
 	delete $vars{'DBody'};
-
 } 
 sub post {
 # submit edited text
@@ -119,13 +119,15 @@ sub post {
 	&sql::do("update pages set title='$title', lastmodified_date='$modifieddate', tags='$tags',
 		autotags='$autotags', copyright='$copyright', body='$body' where title='".$vars{'PageName'}."';"
 		,$data_source);
-
+	if ($pagename eq $title) {
+		&setpagename($title);
+		&page;
+	}
 } 
 sub new {
 # print new page form
 	$htmlhead .= '<title> New@'.$vars{'SiteName'}.'</title>';
 	$htmlbody .= &tmpl2html('html/newbody.html',\%vars);
-
 }
 sub newpost {
 # submit new page
@@ -134,30 +136,32 @@ sub newpost {
 	&sql::do("insert into pages (title,lastmodified_date,created_date,tags,autotags,copyright,body)
 		values ('$title','$created_date','$created_date','$tags','$autotags','$copyright','$body');"
 		,$data_source);
-
+	
 }
 sub del {
 # print delete confirm
 
 	$htmlhead .= '<title>'.$vars{'PageName'}.' &gt; Delete@'.$vars{'SiteName'}.'</title>';
 	$htmlbody .= &tmpl2html('html/delete.html',\%vars);
-
 }
 sub delpage {
 # delete page
-	read (STDIN, my $postdata, $ENV{'CONTENT_LENGTH'});
+	#read (STDIN, my $postdata, $ENV{'CONTENT_LENGTH'});
 	#my %form = &cgidec::getline($postdata);
-	&sql::do("delete from pages where title='".$vars{'PageName'}."'",$data_source);
-
+	if ($ENV{'REQUEST_METHOD'} eq 'POST') {
+		&sql::do("delete from pages where title='".$vars{'PageName'}."'",$data_source);
+	}
+	&setpagename('TopPage');
+	&page;
 }
 sub search {
 	my $query = &security::textalize(&security::exorcism($query{'query'}));
-	$query =~ s/\s/AND/g;
+	$query =~ s/\s/AND/g if defined $query;
 	$vars{'Query'} = $query{'query'};
 	if (defined $query{'query'}) {
 		# normal search
 		$vars{'PagesList'} = &listpages("select title from pages where body like '%$query%';"
-			,"<a href=\"./index.pl?page=%s\">%s</a><br />") if defined $query{'query'};
+			,"<a href=\"./index.pl?page=%s\">%s</a><br />");
 		$htmlhead .= '<title>Search &gt; Body@'.$vars{'SiteName'}.'</title>';
 		$htmlbody .= &tmpl2html('html/search.html',\%vars);
 		delete $vars{'PagesList'};
@@ -165,7 +169,7 @@ sub search {
 	} else {
 		# print all pages
 		$vars{'PagesList'} = &listpages("select title from pages;"
-			,"<a href=\"./index.pl?page=%s\">%s</a><br />") if not defined $query{'query'};
+			,"<a href=\"./index.pl?page=%s\">%s</a><br />");
 		$htmlhead .= '<title>PagesList@'.$vars{'SiteName'}.'</title>';
 		$htmlbody .= &tmpl2html('html/list.html',\%vars);
 		delete $vars{'PagesList'};
@@ -193,21 +197,32 @@ sub upload {
 
 } 
 sub delupload {
+# print delete confirm
 	my $filename = &security::html(&security::exorcism($query{'filename'}));
 	$vars{'DeleteFileName'} = $filename;
-	$vars{'PagesList'} = &listpages("select title from pages where confer like '%$filename%';");
+	#$vars{'PagesList'} = &listpages("select title from pages where confer like '%$filename%';");
+	my @pages = &sql::fetch("select title from pages where confer like '%$filename%';",$data_source);
+	$vars{'PagesList'} = &listpages("select title from pages where confer like '%$filename%';"
+		,"<a href=\"./index.pl?page=%s\">%s</a><br />");
 	$htmlhead .= '<title>'.$filename. ' &gt; Delete Uploaded Files@'.$vars{'SiteName'}.'</title>';
 	$htmlbody .= &tmpl2html('html/delupload.html',\%vars);
 }
 
 sub delfile {
+	if ($ENV{'REQUEST_METHOD'} eq 'POST') {
 	my $filename = &security::html(&security::exorcism($query{'filename'}));
-	unlink('./files/'.$filename);
-	my $files = &listpages("select title from pages where confer like '%$filename%';");
-	$files =~ s/\[$files\/.+?\]//g;
-	my $modifieddate = time();
-	&sql::do("update pages set lastmodified_date='$modifieddate', confer='$files' where title='$vars{'PageName'}';"
-		,$data_source);
+	my @pages = &sql::fetch("select title from pages where confer like '%$filename%';",$data_source,0);
+	foreach my $tmp (@pages) {
+		my @files = &sql::fetch("select confer from pages where title='$tmp';",$data_source);
+		$files[0] =~ s/\[$filename\/.+?\]//g;
+		unlink('./files/'.$filename);
+		my $modifieddate = time();
+		&sql::do("update pages set lastmodified_date='$modifieddate', confer='$files[0]' where title='$tmp';"
+			,$data_source);
+	}
+	&setpagename($vars{'PageName'});
+	&page;
+	}
 }
 
 sub addfile {
@@ -231,9 +246,12 @@ sub addfile {
 	$htmlbody = "";
 	$sidebar = "";
 }
-#else {
-#}
 
+$vars{'SidebarCategoryList'} = &listcategory("select tags from pages;"
+	,"<dd><a href=\"./index.pl?cmd=category&amp;query=%s\">%s</a></dd>");
+$vars{'SidebarPagesList'} = &listpages("select title from pages order by lastmodified_date desc, title limit 5;"
+	,"<dd><a href=\"./index.pl?page=%s\">%s</a></dd>");
+$sidebar  = &tmpl2html('html/sidebar.html',\%vars);
 $htmlfoot .= "<hr /><address>KeiSpade CMS $VER by Keiya Chinen</address>";
 print '<!DOCTYPE html><head>'.$htmlhead.'</head><body><header>'.$htmlbdhd.'</header><div id="container"><div id="main_container"><section>'.$htmlbody.'</section><hr /></div><aside><dl id="page_menu">'.$sidebar.'</dl></aside></div><footer>'.$htmlfoot.'</footer>';
 print "</body></html>";
@@ -241,13 +259,14 @@ print "</body></html>";
 
 # ページ編集・作成用共通サブルーチン
 sub fetch2edit {
-	my ($title,$modified_date,$created_date,$tags,$autotags,$confer,$copyright,$body);
+	my ($title,$modified_date,$created_date,$tags,$autotags,$confer,$copyright,$body) = ('','','','','','','','');
 	read (STDIN, my $postdata, $ENV{'CONTENT_LENGTH'});
 	my %form = &cgidec::getline($postdata);
 	$body = &security::exorcism($form{'body'});
 	$title = &security::textalize(&security::exorcism($form{'title'}));
 
 	my $tagstr = $title;
+	if (defined $tagstr) {
 	$tagstr =~ s/^\[(.+)\](.+)/$1/g;
 	if (defined $2) {
 		my @tagstrs= split(/\]\[/, $tagstr);
@@ -255,6 +274,7 @@ sub fetch2edit {
 			$tag =~ s/[\[\]]+//g;
 			$tags .= $tag.'|';
 		}
+	}
 	}
 	$modified_date = time();
 	$created_date = time();
