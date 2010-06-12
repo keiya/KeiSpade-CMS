@@ -19,7 +19,7 @@ my $conf_desc = 'i\'m hackin\' it';
 my %vars = ('SiteName'=>'keiyac.org','SiteDescription'=>'i\'m hackin\' it');
 
 # http header + html meta header
-print "Content-Type: text/html; charse=UTF-8\n\n";
+print "Content-Type: text/html; charset=UTF-8\n\n";
 my $htmlhead = "<meta charset=utf-8 /><link href=\"./css/kspade.css\" rel=\"stylesheet\" type=\"text/css\" media=\"screen,print\">";
 
 my ($htmlbdhd, $htmlbody, $sidebar, $htmlfoot) = ( '', '', '', '');
