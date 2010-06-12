@@ -24,9 +24,14 @@ close OUT;
 require Digest::SHA::PurePerl;
 
 my $sha = Digest::SHA::PurePerl->new(256);
-$file =~ m/\.([\d\w]+)$/;
 
+# Ext. check
+$file =~ m/\.([\d\w]+)$/;
 my $ext = $1;
+
+# delimiter
+$file =~ s/[\[\]\/]+//g;
+
 $sha->addfile('/tmp/'.$tmp);
 
 my $filename = $sha->hexdigest;

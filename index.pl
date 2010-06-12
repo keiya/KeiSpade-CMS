@@ -192,6 +192,24 @@ sub upload {
 	$htmlbody .= &tmpl2html('html/upload.html',\%vars);
 
 } 
+sub delupload {
+	my $filename = &security::html(&security::exorcism($query{'filename'}));
+	$vars{'DeleteFileName'} = $filename;
+	$vars{'PagesList'} = &listpages("select title from pages where confer like '%$filename%';");
+	$htmlhead .= '<title>'.$filename. ' &gt; Delete Uploaded Files@'.$vars{'SiteName'}.'</title>';
+	$htmlbody .= &tmpl2html('html/delupload.html',\%vars);
+}
+
+sub delfile {
+	my $filename = &security::html(&security::exorcism($query{'filename'}));
+	unlink('./files/'.$filename);
+	my $files = &listpages("select title from pages where confer like '%$filename%';");
+	$files =~ s/\[$files\/.+?\]//g;
+	my $modifieddate = time();
+	&sql::do("update pages set lastmodified_date='$modifieddate', confer='$files' where title='$vars{'PageName'}';"
+		,$data_source);
+}
+
 sub addfile {
 	# submit file
 	my ($title,$modifieddate) = (&fetch2edit)[0,1];
