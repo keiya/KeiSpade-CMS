@@ -312,12 +312,6 @@ sub listcategory {
 	return $categorylist;
 }
 
-sub sha2 {
-	require Digest::SHA::PurePerl;
-	my $sha = Digest::SHA::PurePerl->new(256);
-	return $sha->add($_[0])->hexdigest;
-}
-
 sub tmpl2html {
 	my $template = HTML::Template->new(filename => $_[0],die_on_bad_params => 0,cache => 1);
 	$template->param(%{$_[1]});

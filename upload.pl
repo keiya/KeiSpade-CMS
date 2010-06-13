@@ -2,6 +2,7 @@
 use strict;
 use CGI;
 use File::Copy;
+use File::Temp qw/ tempfile /;
 use lib './lib';
 
 my $buffer;
@@ -10,20 +11,18 @@ my $fh = $query->upload('file') or die(qq(Invalid file handle returned.)); # Get
 my $file = $query->param('file');
 my $back = $query->param('backpage');
 
-my $tmp = $ENV{'REMOTE_ADDR'}.time;
+#my $tmp = $ENV{'REMOTE_ADDR'}.time;
 #my $file_name = ($file =~ /([^\\\/:]+)$/) ? $1 : 'uploaded.bin';
 #sha2()
 
-open(OUT, ">/tmp/$tmp") or die(qq(Can't open "$tmp".));
-binmode OUT;
+my($tmp_fh, $tmpfile) = tempfile(UNLINK => 1);
+binmode $tmp_fh;
 while (read($fh, $buffer, 1024)) { # Read from $fh insted of $file
-	print OUT $buffer;
+	print $tmp_fh $buffer;
 }
-close OUT;
+close $tmp_fh;
+close $fh;
 
-require Digest::SHA::PurePerl;
-
-my $sha = Digest::SHA::PurePerl->new(256);
 
 # Ext. check
 $file =~ m/\.([\d\w]+)$/;
@@ -32,10 +31,37 @@ my $ext = $1;
 # delimiter
 $file =~ s/[\[\]\/]+//g;
 
-$sha->addfile('/tmp/'.$tmp);
-
-my $filename = $sha->hexdigest;
-move( '/tmp/'.$tmp, './files/'.$filename.'.'.$ext) or die;
+my $filename = &sha($tmpfile);
+move( $tmpfile, './files/'.$filename.'.'.$ext) or die;
 
 print $query->redirect( "index.pl?cmd=addfile&page=$back&filename=$filename.$ext&orig=$file");
+sub sha {
+	my $file = $_[0];
+	$file =~ s/|//g;
+	my $sha;
+	if (open(SHA1SUM, "sha256sum $file |")) {
+		my $tmp;
+		while (<SHA1SUM>) {
+			$tmp .= $_;
+		}
+		$tmp =~ s/[\n\r]+//g;
+		chomp $tmp;
+		$sha = $tmp;
+		$sha =~ m/([\w\d]+)/;
+		$sha = $1;
+		close(SHA1SUM);
+		if ($?) {
+			$sha = &shaperl($file);
+		}
+	} else {
+		$sha = &shaperl($file);
+	}
+	return $sha;
+}
+sub shaperl {
+	require Digest::SHA::PurePerl;
+	my $sha = Digest::SHA::PurePerl->new(256);
+	return $sha->add($_[0])->hexdigest;
+}
+
 
