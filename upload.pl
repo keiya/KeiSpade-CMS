@@ -15,6 +15,11 @@ my $back = $query->param('backpage');
 #my $file_name = ($file =~ /([^\\\/:]+)$/) ? $1 : 'uploaded.bin';
 #sha2()
 
+if (!-d './files') {
+	warn "[KeiSpade-CMS] Directory './files/' not found. Please mkdir.";
+	mkdir './files';
+}
+
 my($tmp_fh, $tmpfile) = tempfile(UNLINK => 1);
 binmode $tmp_fh;
 while (read($fh, $buffer, 1024)) { # Read from $fh insted of $file
@@ -32,7 +37,11 @@ my $ext = $1;
 $file =~ s/[\[\]\/]+//g;
 
 my $filename = &sha($tmpfile);
-move( $tmpfile, './files/'.$filename.'.'.$ext) or die;
+
+my $writeto = './files/'.$filename.'.'.$ext;
+if (!move( $tmpfile, $writeto)) {
+	warn "[KeiSpade-CMS] Cannot write to $writeto. Please check permission.";
+}
 
 print $query->redirect( "index.pl?cmd=addfile&page=$back&filename=$filename.$ext&orig=$file");
 sub sha {
