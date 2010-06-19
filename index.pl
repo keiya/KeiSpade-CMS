@@ -80,9 +80,9 @@ sub page {
 
 	$htmlhead .= '<title>'.$res[0].'@'.$conf_site.'</title>';
 
-	require 'Text/Hatena.pm';
+	require 'Text/HatenaEx.pl';
 	$htmlbody .= "<h2>$res[0]</h2>";
-	my $parsed .= Text::Hatena->parse(&security::noscript($res[7]));
+	my $parsed .= Text::HatenaEx->parse(&security::noscript($res[7]));
 	$htmlbody .= $parsed;
 
 	my $confer;
