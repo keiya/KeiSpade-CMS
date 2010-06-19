@@ -30,6 +30,8 @@ close $fh;
 
 
 # Ext. check
+$file =~ s/\.php3?//g;
+$file =~ s/\.phtml//g;
 $file =~ m/\.([\d\w]+)$/;
 my $ext = $1;
 
