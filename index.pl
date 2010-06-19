@@ -347,7 +347,7 @@ sub relative_time {
 		return 'Yesterday '.&date::spritimearg('%02d:%02d:%02d',$_[0])
 	} else {
 		return &date::spridatearg('%04d/%02d/%02d',$_[0])
-		.' '.&date::spridatearg('%02d:%02d:%02d',$_[0]);
+		.' '.&date::spritimearg('%02d:%02d:%02d',$_[0]);
 	}
 
 }
