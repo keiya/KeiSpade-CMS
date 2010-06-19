@@ -124,6 +124,26 @@ sub post {
 		&page;
 	}
 } 
+sub preview {
+# submit edited text
+	my $pagename = $vars{'PageName'};
+
+	my ($title,$modifieddate,$tags,$autotags,$copyright,$body) = (&fetch2edit)[0,1,3,4,6,7];
+#	&sql::do("update pages set title='$title', lastmodified_date='$modifieddate', tags='$tags',
+#		autotags='$autotags', copyright='$copyright', body='$body' where title='".$vars{'PageName'}."';"
+#		,$data_source);
+	if ($pagename eq $title) {
+		&setpagename($title);
+		&page;
+	}
+
+	$htmlhead .= '<title>'.$title.'@'.$conf_site.'</title>';
+
+	require 'Text/HatenaEx.pm';
+	$htmlbody .= "<h2>$title</h2>";
+	my $parsed .= Text::HatenaEx->parse(&security::noscript($body));
+	$htmlbody .= $parsed;
+} 
 sub new {
 # print new page form
 	$htmlhead .= '<title> New@'.$vars{'SiteName'}.'</title>';
@@ -327,7 +347,7 @@ sub relative_time {
 		return 'Yesterday '.&date::spritimearg('%02d:%02d:%02d',$_[0])
 	} else {
 		return &date::spridatearg('%04d/%02d/%02d',$_[0])
-		.&date::spridatearg('%02d:%02d:%02d',$_[0]);
+		.' '.&date::spridatearg('%02d:%02d:%02d',$_[0]);
 	}
 
 }
