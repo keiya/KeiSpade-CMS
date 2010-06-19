@@ -1,12 +1,12 @@
-#!/usr/bin/perl
-use lib './lib';
-
 #
 # Text::Hatenaを拡張したクラス
 #
 package Text::HatenaEx;
+use strict;
+use warnings;
 use utf8;
-use base Text::Hatena;
+use base qw(Text::Hatena);
+
 __PACKAGE__->syntax(q(
 	block	: h6
 	| h5
@@ -26,7 +26,7 @@ sub h6 {
 	my $class = shift;
 	my $items = shift->{items};
 	my $title = $class->expand($items->[1]);
-	return "<H6>$title</H6>";
+	return "<h6>$title</h6>";
 }
 
 
