@@ -23,12 +23,9 @@ __PACKAGE__->syntax(q(
 ));
 
 sub h6 {
-	print ">>>>> h6\n";
 	my $class = shift;
 	my $items = shift->{items};
 	my $title = $class->expand($items->[1]);
-
-	print "<<<<< h6\n";
 	return "<H6>$title</H6>";
 }
 
