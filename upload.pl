@@ -47,6 +47,7 @@ print $query->redirect( "index.pl?cmd=addfile&page=$back&filename=$filename.$ext
 sub sha {
 	my $file = $_[0];
 	$file =~ s/|//g;
+	$file =~ s/`//g;
 	my $sha;
 	if (open(SHA1SUM, "sha256sum $file |")) {
 		my $tmp;
