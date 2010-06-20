@@ -14,9 +14,18 @@ require 'sql.pl';
 require 'date.pl';
 
 my $VER = '0.0.1';
-my $conf_site = 'keiyac.org';
-my $conf_desc = 'i\'m hackin\' it';
-my %vars = ('SiteName'=>'keiyac.org','SiteDescription'=>'i\'m hackin\' it');
+my %vars = ('SiteName'=>'KeiSpade','SiteDescription'=>'The Multimedia Wiki');
+my $config_file = './dat/kspade.conf';
+if (-r $config_file) {
+	open(CONF,$config_file) || die("$0: Unable to load config file ($config_file): $!\n");
+	while (<CONF>) {
+	  chomp;
+	  next if /^#/ || /^$/;
+	  my ($key,$value) = split(/\s/,$_,2);
+	  $vars{$key} = $value;
+	}
+	close(CONF);
+}
 
 # http header + html meta header
 print "Content-Type: text/html; charset=UTF-8\n\n";
@@ -78,7 +87,7 @@ sub page {
 	$modified = &relative_time($modified);
 	$created = &relative_time($created);
 
-	$htmlhead .= '<title>'.$res[0].'@'.$conf_site.'</title>';
+	$htmlhead .= '<title>'.$res[0].'@'.$vars{'SiteName'}.'</title>';
 
 	require 'Text/HatenaEx.pm';
 	$htmlbody .= "<h2>$res[0]</h2>";
@@ -137,7 +146,7 @@ sub preview {
 		&page;
 	}
 
-	$htmlhead .= '<title>'.$title.'@'.$conf_site.'</title>';
+	$htmlhead .= '<title>'.$title.'@'.$vars{'SiteName'}.'</title>';
 
 	require 'Text/HatenaEx.pm';
 	$htmlbody .= "<h2>$title</h2>";
