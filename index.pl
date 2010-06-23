@@ -19,10 +19,10 @@ my $config_file = './dat/kspade.conf';
 if (-r $config_file) {
 	open(CONF,$config_file) || die("$0: Unable to load config file ($config_file): $!\n");
 	while (<CONF>) {
-	  chomp;
-	  next if /^#/ || /^$/;
-	  my ($key,$value) = split(/\s/,$_,2);
-	  $vars{$key} = $value;
+		chomp;
+		next if /^#/ || /^$/;
+		my ($key,$value) = split(/\s/,$_,2);
+		$vars{$key} = $value;
 	}
 	close(CONF);
 }
@@ -83,6 +83,7 @@ sub page {
 	my @res = (&sql::fetch("select * from pages where title='".$vars{'PageName'}."';",$data_source));
 	my $modified = $res[1];
 	my $created  = $res[2];
+	chop $res[3];
 
 	$modified = &relative_time($modified);
 	$created = &relative_time($created);
@@ -99,7 +100,7 @@ sub page {
 	my @filedatas= split(/\]\[/, $res[5]);
 	foreach my $filedata (@filedatas) {
 		my @elements = split(/\//, $filedata);
-		$confer .= "<a href=\"files/$elements[0]\">$elements[1]</a> [<a href=\"./index.pl?&page=$vars{'PageName'}&amp;filename=$elements[0]&amp;cmd=delupload\">X</a>] ";
+		$confer .= "<a href=\"files/$elements[0]\">$elements[1]</a> [<a href=\"./index.pl?&page=$vars{'PageName'}&amp;filename=$elements[0]&amp;cmd=delupload\" rel=\"nofollow\">X</a>] ";
 		$confer =~ s/[\[\]]+//g;
 	}
 	
@@ -125,6 +126,7 @@ sub post {
 	my $pagename = $vars{'PageName'};
 
 	my ($title,$modifieddate,$tags,$autotags,$copyright,$body) = (&fetch2edit)[0,1,3,4,6,7];
+	$title = 'undefined'.rand(16384) if $title eq '';
 	&sql::do("update pages set title='$title', lastmodified_date='$modifieddate', tags='$tags',
 		autotags='$autotags', copyright='$copyright', body='$body' where title='".$vars{'PageName'}."';"
 		,$data_source);
