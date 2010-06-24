@@ -29,7 +29,10 @@ if (-r $config_file) {
 
 # http header + html meta header
 print "Content-Type: text/html; charset=UTF-8\n\n";
-my $htmlhead = "<meta charset=utf-8 /><link href=\"./css/kspade.css\" rel=\"stylesheet\" type=\"text/css\" media=\"screen,print\">";
+my $htmlhead = '<meta charset=utf-8 /><link href="./css/kspade.css" rel="stylesheet" type="text/css" media="screen,print">';
+$htmlhead .= '<link rel="contents" href="./index.pl?cmd=search">';
+$htmlhead .= '<link rel="start" href="./index.pl?page=TopPage">';
+$htmlhead .= '<link rel="index" href="./index.pl?cmd=category">';
 
 my ($htmlbdhd, $htmlbody, $sidebar, $htmlfoot) = ( '', '', '', '');
 
@@ -213,8 +216,13 @@ sub category {
 	my $query = &security::textalize(&security::exorcism($query{'query'}));
 	$query =~ s/\s/AND/g;
 	$vars{'Query'} = $query{'query'};
-	$vars{'CategoryList'} = &listcategory("select title from pages where tags like '%$query%';"
-		,"<a href=\"./index.pl?page=%s\">%s</a><br />");
+	if ($vars{'Query'} eq '') {
+		$vars{'CategoryList'} = &listcategory("select tags from pages;"
+		,"<dd><a href=\"./index.pl?cmd=category&amp;query=%s\">%s</a></dd>");
+	} else {
+		$vars{'CategoryList'} = &listcategory("select title from pages where tags like '%$query%';"
+			,"<a href=\"./index.pl?page=%s\">%s</a><br />");
+	}
 	$htmlhead .= '<title>Search &gt; Category@'.$vars{'SiteName'}.'</title>';
 	$htmlbody .= &tmpl2html('html/category.html',\%vars);
 	delete $vars{'CategoryList'};
