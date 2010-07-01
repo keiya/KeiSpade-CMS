@@ -53,7 +53,7 @@ $vars{'NoSpacePageName'} =~ tr/ /+/;
 # connect to DB
 my $database = './dat/kspade.db';
 my $dbargs = {PrintError=>1};
-my $data_source = "dbi:SQLite:dbname=$database",$dbargs;
+my $data_source = "dbi:SQLite:dbname=$database";
 
 if ((defined $query{'init'} and $query{'init'} eq 'yes') and (&sql::tableexists($data_source) == 0)) {
 # database initialize (create the table)
