@@ -4,8 +4,9 @@
 package Text::HatenaEx;
 use strict;
 use warnings;
-use utf8;
 use base qw(Text::Hatena);
+
+my @footnote;
 
 __PACKAGE__->syntax(q(
 	block	: h6
@@ -27,6 +28,38 @@ sub h6 {
 	my $items = shift->{items};
 	my $title = $class->expand($items->[1]);
 	return "<h6>$title</h6>";
+}
+
+sub parse {
+	my $class = shift;
+	my $text = shift or return;
+	$text =~ s/\r//g;
+	$text = "\n" . $text unless $text =~ /^\n/;
+	$text .= "\n" unless $text =~ /\n$/;
+	my $node = shift || 'body';
+	my $html = $class->parser->$node($text);
+
+	# 脚注
+	if(@footnote) {
+		$html .= '<br>';
+		for( my $i = 1; @footnote; $i++) {
+			$html .= "*$i: " . shift(@footnote) .  '<br>';
+		}
+	}
+	return $html;
+}
+
+sub inline {
+	my $class = shift;
+	my $items = shift->{items};
+	my $item = $items->[0] or return;
+	$item = Text::Hatena::AutoLink->parse($item);
+	if($item =~ /\(\((.+)\)\)/) {
+		push @footnote, $1;
+		my $count = @footnote;
+		$item = "(*$count)";
+	}
+	return $item;
 }
 
 sub video {
