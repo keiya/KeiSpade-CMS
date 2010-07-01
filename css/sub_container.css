@@ -15,6 +15,18 @@ dl#page_menu {
     border-bottom: solid 3px #AACD06;
     text-transform: uppercase;
 }
+#page_menu dt a:link {
+	text-decoration: none;
+	color: #555;
+}
+#page_menu dt a:visited {
+	text-decoration: none;
+	color: #856;
+}
+#page_menu dt a:hover {
+	text-decoration: none;
+	color: #690;
+}
 #page_menu dd {
     margin:0 1px;
     background-color: #fffff0;

@@ -120,6 +120,7 @@ sub edit {
 	#$res[0] =~ s/<br \/>/\n/g;
 	$vars{'DBody'} = $res[0];
 	#$vars{'Token'} = rand)
+	$htmlhead .= '<meta http-equiv="Pragma" content="no-cache">';
 	$htmlhead .= '<title>'.$vars{'PageName'}.' &gt; Edit@'.$vars{'SiteName'}.'</title>';
 	$htmlbody .= &tmpl2html('html/editbody.html',\%vars);
 	delete $vars{'DBody'};
@@ -160,6 +161,7 @@ sub preview {
 } 
 sub new {
 # print new page form
+	$htmlhead .= '<meta http-equiv="Pragma" content="no-cache">';
 	$htmlhead .= '<title> New@'.$vars{'SiteName'}.'</title>';
 	$htmlbody .= &tmpl2html('html/newbody.html',\%vars);
 }
@@ -217,14 +219,19 @@ sub category {
 	$query =~ s/\s/AND/g;
 	$vars{'Query'} = $query{'query'};
 	if ($vars{'Query'} eq '') {
-		$vars{'CategoryList'} = &listcategory("select tags from pages;"
-		,"<dd><a href=\"./index.pl?cmd=category&amp;query=%s\">%s</a></dd>");
+		$vars{'CategoryTitle'} = "Index of Categories";
+		$vars{'CategoryList'} = '<ul>';
+		$vars{'CategoryList'} .= &listcategory("select tags from pages;"
+		,"<li><a href=\"./index.pl?cmd=category&amp;query=%s\">%s</a></li>");
+		$vars{'CategoryList'} .= '</ul>';
 	} else {
+		$vars{'CategoryTitle'} = "Pages related to '$vars{'Query'}'";
 		$vars{'CategoryList'} = &listcategory("select title from pages where tags like '%$query%';"
 			,"<a href=\"./index.pl?page=%s\">%s</a><br />");
 	}
 	$htmlhead .= '<title>Search &gt; Category@'.$vars{'SiteName'}.'</title>';
 	$htmlbody .= &tmpl2html('html/category.html',\%vars);
+	delete $vars{'CategoryTitle'};
 	delete $vars{'CategoryList'};
 	delete $vars{'Query'};
 
