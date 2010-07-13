@@ -13,30 +13,21 @@ require 'cgidec.pl';
 require 'security.pl';
 require 'sql.pl';
 require 'date.pl';
+require 'kscconf.pl';
 
 # script file name
 my $myname = basename($0, '');
 
 my $VER = '0.0.1';
-my %vars = ('SiteName'=>'KeiSpade','SiteDescription'=>'The Multimedia Wiki');
-my $config_file = './dat/kspade.conf';
-if (-r $config_file) {
-	open(CONF,$config_file) || die("$0: Unable to load config file ($config_file): $!\n");
-	while (<CONF>) {
-		chomp;
-		next if /^#/ || /^$/;
-		my ($key,$value) = split(/\s/,$_,2);
-		$vars{$key} = $value;
-	}
-	close(CONF);
-}
+my %vars = ('SiteName'=>'KeiSpade','SiteDescription'=>'The Multimedia Wiki','ScriptName'=>$myname,'UploaderName'=>'upload.pl');
+%vars = (%vars,&kscconf::load('./dat/kspade.conf'));
 
 # http header + html meta header
 print "Content-Type: text/html; charset=UTF-8\n\n";
 my $htmlhead = '<meta charset=utf-8 /><link href="./css/kspade.css" rel="stylesheet" type="text/css" media="screen,print">';
-$htmlhead .= "<link rel=\"contents\" href=\"./$myname?cmd=search\">";
-$htmlhead .= "<link rel=\"start\" href=\"./$myname?page=TopPage\">";
-$htmlhead .= "<link rel=\"index\" href=\"./$myname?cmd=category\">";
+$htmlhead .= "<link rel=\"contents\" href=\"./$vars{'ScriptName'}?cmd=search\">";
+$htmlhead .= "<link rel=\"start\" href=\"./$vars{'ScriptName'}?page=TopPage\">";
+$htmlhead .= "<link rel=\"index\" href=\"./$vars{'ScriptName'}?cmd=category\">";
 
 my ($htmlbdhd, $htmlbody, $sidebar, $htmlfoot) = ( '', '', '', '');
 
@@ -107,7 +98,7 @@ sub page {
 	my @filedatas= split(/\]\[/, $res[5]);
 	foreach my $filedata (@filedatas) {
 		my @elements = split(/\//, $filedata);
-		$confer .= "<a href=\"files/$elements[0]\">$elements[1]</a> [<a href=\"./$myname?&page=$vars{'PageName'}&amp;filename=$elements[0]&amp;cmd=delupload\" rel=\"nofollow\">X</a>] ";
+		$confer .= "<a href=\"files/$elements[0]\">$elements[1]</a> [<a href=\"./$vars{'ScriptName'}?&page=$vars{'PageName'}&amp;filename=$elements[0]&amp;cmd=delupload\" rel=\"nofollow\">X</a>] ";
 		$confer =~ s/[\[\]]+//g;
 	}
 	
@@ -201,7 +192,7 @@ sub search {
 	if (defined $query{'query'}) {
 		# normal search
 		$vars{'PagesList'} = &listpages("select title from pages where body like '%$query%';"
-			,"<a href=\"./$myname?page=%s\">%s</a><br />");
+			,"<a href=\"./$vars{'ScriptName'}?page=%s\">%s</a><br />");
 		$htmlhead .= '<title>Search &gt; Body@'.$vars{'SiteName'}.'</title>';
 		$htmlbody .= &tmpl2html('html/search.html',\%vars);
 		delete $vars{'PagesList'};
@@ -209,7 +200,7 @@ sub search {
 	} else {
 		# print all pages
 		$vars{'PagesList'} = &listpages("select title from pages;"
-			,"<a href=\"./$myname?page=%s\">%s</a><br />");
+			,"<a href=\"./$vars{'ScriptName'}?page=%s\">%s</a><br />");
 		$htmlhead .= '<title>PagesList@'.$vars{'SiteName'}.'</title>';
 		$htmlbody .= &tmpl2html('html/list.html',\%vars);
 		delete $vars{'PagesList'};
@@ -226,12 +217,12 @@ sub category {
 		$vars{'CategoryTitle'} = "Index of Categories";
 		$vars{'CategoryList'} = '<ul>';
 		$vars{'CategoryList'} .= &listcategory("select tags from pages;"
-		,"<li><a href=\"./$myname?cmd=category&amp;query=%s\">%s</a></li>");
+		,"<li><a href=\"./$vars{'ScriptName'}?cmd=category&amp;query=%s\">%s</a></li>");
 		$vars{'CategoryList'} .= '</ul>';
 	} else {
 		$vars{'CategoryTitle'} = "Pages related to '$vars{'Query'}'";
 		$vars{'CategoryList'} = &listcategory("select title from pages where tags like '%$query%';"
-			,"<a href=\"./$myname?page=%s\">%s</a><br />");
+			,"<a href=\"./$vars{'ScriptName'}?page=%s\">%s</a><br />");
 	}
 	$htmlhead .= '<title>Search &gt; Category@'.$vars{'SiteName'}.'</title>';
 	$htmlbody .= &tmpl2html('html/category.html',\%vars);
@@ -253,7 +244,7 @@ sub delupload {
 	#$vars{'PagesList'} = &listpages("select title from pages where confer like '%$filename%';");
 	my @pages = &sql::fetch("select title from pages where confer like '%$filename%';",$data_source);
 	$vars{'PagesList'} = &listpages("select title from pages where confer like '%$filename%';"
-		,"<a href=\"./$myname?page=%s\">%s</a><br />");
+		,"<a href=\"./$vars{'ScriptName'}?page=%s\">%s</a><br />");
 	$htmlhead .= '<title>'.$filename. ' &gt; Delete Uploaded Files@'.$vars{'SiteName'}.'</title>';
 	$htmlbody .= &tmpl2html('html/delupload.html',\%vars);
 }
@@ -298,9 +289,9 @@ sub addfile {
 }
 
 $vars{'SidebarCategoryList'} = &listcategory("select tags from pages;"
-	,"<dd><a href=\"./$myname?cmd=category&amp;query=%s\">%s</a></dd>");
+	,"<dd><a href=\"./$vars{'ScriptName'}?cmd=category&amp;query=%s\">%s</a></dd>");
 $vars{'SidebarPagesList'} = &listpages("select title from pages order by lastmodified_date desc, title limit 5;"
-	,"<dd><a href=\"./$myname?page=%s\">%s</a></dd>");
+	,"<dd><a href=\"./$vars{'ScriptName'}?page=%s\">%s</a></dd>");
 $sidebar  = &tmpl2html('html/sidebar.html',\%vars);
 $htmlfoot .= "<hr /><address>KeiSpade CMS $VER by Keiya Chinen</address>";
 print '<!DOCTYPE html><head>'.$htmlhead.'</head><body><header>'.$htmlbdhd.'</header><div id="container"><div id="main_container"><section>'.$htmlbody.'</section><hr /></div><aside><dl id="page_menu">'.$sidebar.'</dl></aside></div><footer>'.$htmlfoot.'</footer>';

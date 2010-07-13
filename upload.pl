@@ -4,12 +4,17 @@ use CGI;
 use File::Copy;
 use File::Temp qw/ tempfile /;
 use lib './lib';
+require 'kscconf.pl';
 
 my $buffer;
 my $query = CGI->new;
 my $fh = $query->upload('file') or die(qq(Invalid file handle returned.)); # Get $fh
 my $file = $query->param('file');
 my $back = $query->param('backpage');
+my %vars;
+$vars{'ScriptName'} = 'index.pl';
+%vars = (%vars,&kscconf::load('./dat/kspade.conf'));
+my $scriptname = $vars{'ScriptName'};
 
 #my $tmp = $ENV{'REMOTE_ADDR'}.time;
 #my $file_name = ($file =~ /([^\\\/:]+)$/) ? $1 : 'uploaded.bin';
@@ -45,7 +50,7 @@ if (!move( $tmpfile, $writeto)) {
 	warn "[KeiSpade-CMS] Cannot write to $writeto. Please check permission.";
 }
 
-print $query->redirect( "index.pl?cmd=addfile&page=$back&filename=$filename.$ext&orig=$file");
+print $query->redirect( "$scriptname?cmd=addfile&page=$back&filename=$filename.$ext&orig=$file");
 sub sha {
 	my $file = $_[0];
 	$file =~ s/|//g;

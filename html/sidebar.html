@@ -1,10 +1,10 @@
 <dt>Search</dt>
 <dd>
-<form action="./index.pl" method="get" name="searchform" accept-charset="utf-8">
+<form action="./<TMPL_VAR NAME=ScriptName>" method="get" name="searchform" accept-charset="utf-8">
 <input type="text" name="query" placeholder="..." size="15">
 <input type="hidden" name="cmd" value="search">
 <button value="Search" name="querysend" type="submit">Go</button>
 </form>
 </dd>
-<dt><a href="./index.pl?cmd=category" class="sidebar">Category</a></dt><TMPL_VAR NAME=SidebarCategoryList>
-<dt><a href="./index.pl?cmd=search" class="sidebar">Pages</a></dt><TMPL_VAR NAME=SidebarPagesList>
+<dt><a href="./<TMPL_VAR NAME=ScriptName>?cmd=category" class="sidebar">Category</a></dt><TMPL_VAR NAME=SidebarCategoryList>
+<dt><a href="./<TMPL_VAR NAME=ScriptName>?cmd=search" class="sidebar">Pages</a></dt><TMPL_VAR NAME=SidebarPagesList>

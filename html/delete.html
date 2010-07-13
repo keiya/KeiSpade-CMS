@@ -2,7 +2,7 @@
 <p>Are you sure you want to delete <TMPL_VAR NAME=PageName>?
 Attached files won't be deleted.
 </p>
-<form action="./index.pl?page=<TMPL_VAR NAME=NoSpacePageName>&amp;cmd=delpage" method="post" name="confirmform" accept-charset="utf-8">
+<form action="./<TMPL_VAR NAME=ScriptName>?page=<TMPL_VAR NAME=NoSpacePageName>&amp;cmd=delpage" method="post" name="confirmform" accept-charset="utf-8">
 <button value="Delete" name="confirmsend" type="submit">Yes, I want to DELETE</button>
 </form>
 </section>
