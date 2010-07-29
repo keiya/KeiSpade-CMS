@@ -18,8 +18,9 @@ require 'kscconf.pl';
 # script file name
 my $myname = basename($0, '');
 
-my $VER = '0.0.1';
-my %vars = ('SiteName'=>'KeiSpade','SiteDescription'=>'The Multimedia Wiki','ScriptName'=>$myname,'UploaderName'=>'upload.pl');
+my $VER = '0.1.0';
+my %vars = ('SiteName'=>'KeiSpade','SiteDescription'=>'The Multimedia Wiki','ScriptName'=>$myname,'UploaderName'=>'upload.pl',
+	'SidebarPagesListLimit'=>'10');
 %vars = (%vars,&kscconf::load('./dat/kspade.conf'));
 
 # http header + html meta header
@@ -37,12 +38,12 @@ my %query = &cgidec::getline($ENV{'QUERY_STRING'});
 &setpagename($query{'page'});
 
 sub setpagename {
-$vars{'PageName'} = &security::exorcism($_[0]);
-if (not defined $vars{'PageName'} or not $vars{'PageName'} =~ /.+/) {
-	$vars{'PageName'} = 'TopPage'
-}
-$vars{'NoSpacePageName'} = $vars{'PageName'};
-$vars{'NoSpacePageName'} =~ tr/ /+/;
+	$vars{'PageName'} = &security::exorcism($_[0]);
+	if (not defined $vars{'PageName'} or not $vars{'PageName'} =~ /.+/) {
+		$vars{'PageName'} = 'TopPage'
+	}
+	$vars{'NoSpacePageName'} = $vars{'PageName'};
+	$vars{'NoSpacePageName'} =~ tr/ /+/;
 }
 
 # connect to DB
@@ -95,18 +96,18 @@ sub page {
 
 	my $confer;
 	if (defined $res[5]) {
-	my @filedatas= split(/\]\[/, $res[5]);
-	foreach my $filedata (@filedatas) {
-		my @elements = split(/\//, $filedata);
-		$confer .= "<a href=\"files/$elements[0]\">$elements[1]</a> [<a href=\"./$vars{'ScriptName'}?&page=$vars{'PageName'}&amp;filename=$elements[0]&amp;cmd=delupload\" rel=\"nofollow\">X</a>] ";
-		$confer =~ s/[\[\]]+//g;
-	}
+		my @filedatas= split(/\]\[/, $res[5]);
+		foreach my $filedata (@filedatas) {
+			my @elements = split(/\//, $filedata);
+			$confer .= "<a href=\"files/$elements[0]\">$elements[1]</a> [<a href=\"./$vars{'ScriptName'}?&page=$vars{'PageName'}&amp;filename=$elements[0]&amp;cmd=delupload\" rel=\"nofollow\">X</a>] ";
+			$confer =~ s/[\[\]]+//g;
+		}
 	
 
-	my $filenum = @filedatas;
-	$htmlbody .= '</section><section><h2>Attached File</h2>'.$confer.'</section>' if $filenum == 1;
-	$htmlbody .= '</section><section><h2>Attached Files</h2>'.$confer.'</section>' if $filenum > 1;
-}
+		my $filenum = @filedatas;
+		$htmlbody .= '</section><section><h2>Attached File</h2>'.$confer.'</section>' if $filenum == 1;
+		$htmlbody .= '</section><section><h2>Attached Files</h2>'.$confer.'</section>' if $filenum > 1;
+	}
 	$htmlfoot .= "Last-modified: $modified, Created: $created, Tags: $res[3], AutoTags: $res[4]<br />$res[6]<br />";
 } 
 sub edit {
@@ -290,7 +291,7 @@ sub addfile {
 
 $vars{'SidebarCategoryList'} = &listcategory("select tags from pages;"
 	,"<dd><a href=\"./$vars{'ScriptName'}?cmd=category&amp;query=%s\">%s</a></dd>");
-$vars{'SidebarPagesList'} = &listpages("select title from pages order by lastmodified_date desc, title limit 5;"
+$vars{'SidebarPagesList'} = &listpages("select title from pages order by lastmodified_date desc, title limit $vars{'SidebarPagesListLimit'};"
 	,"<dd><a href=\"./$vars{'ScriptName'}?page=%s\">%s</a></dd>");
 $sidebar  = &tmpl2html('html/sidebar.html',\%vars);
 $htmlfoot .= "<hr /><address>KeiSpade CMS $VER by Keiya Chinen</address>";
