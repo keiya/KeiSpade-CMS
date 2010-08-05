@@ -21,11 +21,12 @@ my $myname = basename($0, '');
 my $VER = '0.1.0';
 my %vars = ('SiteName'=>'KeiSpade','SiteDescription'=>'The Multimedia Wiki','ScriptName'=>$myname,'UploaderName'=>'upload.pl',
 	'SidebarPagesListLimit'=>'10');
-%vars = (%vars,&kscconf::load('./dat/kspade.conf'));
+%vars = (%vars, &kscconf::load('./dat/kspade.conf'));
 
 # http header + html meta header
 print "Content-Type: text/html; charset=UTF-8\n\n";
 my $htmlhead = '<meta charset=utf-8 /><link href="./css/kspade.css" rel="stylesheet" type="text/css" media="screen,print">';
+$htmlhead .= '<link href="./css/light.css" rel="stylesheet" type="text/css">';
 $htmlhead .= "<link rel=\"contents\" href=\"./$vars{'ScriptName'}?cmd=search\">";
 $htmlhead .= "<link rel=\"start\" href=\"./$vars{'ScriptName'}?page=TopPage\">";
 $htmlhead .= "<link rel=\"index\" href=\"./$vars{'ScriptName'}?cmd=category\">";
@@ -51,7 +52,10 @@ my $database = './dat/kspade.db';
 my $dbargs = {PrintError=>1};
 my $data_source = "dbi:SQLite:dbname=$database";
 
-if ((defined $query{'init'} and $query{'init'} eq 'yes') and (&sql::tableexists($data_source) == 0)) {
+if (
+	(defined $query{'init'} and $query{'init'} eq 'yes')
+	and (&sql::tableexists($data_source) == 0))
+	{
 # database initialize (create the table)
 	&sql::create_table($data_source);
 	my $modified_date = &date::spridate('%04d/%02d/%02d %02d:%02d:%02d');

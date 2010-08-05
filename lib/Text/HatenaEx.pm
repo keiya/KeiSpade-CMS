@@ -5,22 +5,24 @@ package Text::HatenaEx;
 use strict;
 use warnings;
 use base qw(Text::Hatena);
+use Text::VimColor;
 
 my @footnote;
 
 __PACKAGE__->syntax(q(
 	block	: h6
-		| h5
-		| h4
-		| blockquote
-		| dl
-		| list
-		| super_pre
-		| pre
-		| table
-		| cdata
-		| p
+	| h5
+	| h4
+	| blockquote
+	| dl
+	| list
+	| super_pre
+	| pre
+	| table
+	| cdata
+	| p
 	h6	: "\n****" inline(s)
+super_pre	: /\n>\|(\w*)\|/o text_line(s) "\n||<" ..."\n"
 ));
 
 sub h6 {
@@ -76,7 +78,26 @@ sub audio {
 
 # AutoLinkを拡張する
 Text::Hatena::AutoLink->syntax({
-	'\[(.*):video\]' => \&Text::HatenaEx::video,
-	'\[(.*):audio\]' => \&Text::HatenaEx::audio,
-});
+		'\[(.*):video\]' => \&Text::HatenaEx::video,
+		'\[(.*):audio\]' => \&Text::HatenaEx::audio,
+	});
+
+sub super_pre {
+	my $class = shift;
+	my $items = shift->{items};
+	my $filter = $1 || '';
+	my $texts = $class->expand($items->[1]);
+
+	if($items->[0] =~ /\>\|(.{1,8})\|/) {
+		my $lang = $1;
+		my $syntax = Text::VimColor->new(
+			filetype => $lang,
+		);
+		$syntax->syntax_mark_string( $texts);
+		return "<pre>\n" . $syntax->html() . "\n</pre>";
+	}
+	else {
+		return "<pre>\n$texts</pre>\n";
+	}
+}
 
