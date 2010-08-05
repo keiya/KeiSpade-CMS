@@ -5,7 +5,7 @@
 
 /* header */
 header{
-    width:50em;
+    width:75em;
     margin:6px auto;
     text-align:left;
     display:block;
@@ -13,14 +13,14 @@ header{
 
 /* container */
 div#container{
-    width:49.6em;
+    width:75.0em;
     margin:12px auto;
     text-align:left;
 }
 
 /* main_container */
 div#main_container{
-    width:33em;
+    width:58em;
     float: right;
     padding-bottom: 12px;
     background-color: white;
@@ -40,6 +40,6 @@ footer{
     clear:both;
     color:white;
     background-color: #000;
-    width:50em;
+    width:75em;
     margin:6px auto;
 }
