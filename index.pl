@@ -26,7 +26,6 @@ my %vars = ('SiteName'=>'KeiSpade','SiteDescription'=>'The Multimedia Wiki','Scr
 # http header + html meta header
 print "Content-Type: text/html; charset=UTF-8\n\n";
 my $htmlhead = '<meta charset=utf-8 /><link href="./css/kspade.css" rel="stylesheet" type="text/css" media="screen,print">';
-$htmlhead .= '<link href="./css/light.css" rel="stylesheet" type="text/css">';
 $htmlhead .= "<link rel=\"contents\" href=\"./$vars{'ScriptName'}?cmd=search\">";
 $htmlhead .= "<link rel=\"start\" href=\"./$vars{'ScriptName'}?page=TopPage\">";
 $htmlhead .= "<link rel=\"index\" href=\"./$vars{'ScriptName'}?cmd=category\">";
@@ -64,6 +63,7 @@ if (
 	&sql::do("insert into pages (title,lastmodified_date,created_date,tags,autotags,copyright,body)
 		values ('TopPage','$modified_date','$created_date','Help','Help','Copyleft','$body');"
 		,$data_source);
+	$htmlhead .= '<link href="./css/light.css" rel="stylesheet" type="text/css">';
 	$htmlhead .= '<title>Miracle! Table was created!</title>';
 	$htmlbody .= '<p>Table was created. Please reload.</p>';
 }
@@ -119,6 +119,8 @@ sub edit {
 	my @res = (&sql::fetch("select body from pages where title='$vars{'PageName'}';",$data_source));
 	#$res[0] =~ s/<br \/>/\n/g;
 	$vars{'DBody'} = $res[0];
+	require 'sha.pl';
+	$vars{'BodyHash'} = &sha::pureperl($res[0]);
 	#$vars{'Token'} = rand)
 	$htmlhead .= '<meta http-equiv="Pragma" content="no-cache">';
 	$htmlhead .= '<title>'.$vars{'PageName'}.' &gt; Edit@'.$vars{'SiteName'}.'</title>';
@@ -129,15 +131,31 @@ sub post {
 # submit edited text
 	my $pagename = $vars{'PageName'};
 
-	my ($title,$modifieddate,$tags,$autotags,$copyright,$body) = (&fetch2edit)[0,1,3,4,6,7];
-	$title = 'undefined'.rand(16384) if $title eq '';
-	&sql::do("update pages set title='$title', lastmodified_date='$modifieddate', tags='$tags',
-		autotags='$autotags', copyright='$copyright', body='$body' where title='".$vars{'PageName'}."';"
-		,$data_source);
-	if ($pagename eq $title) {
-		&setpagename($title);
-		&page;
-	}
+	my ($title,$modifieddate,$tags,$autotags,$copyright,$body,$bodyhash) = (&fetch2edit)[0,1,3,4,6,7,8];
+	require 'sha.pl';
+	my @res = (&sql::fetch("select * from pages where title='".$vars{'PageName'}."';",$data_source));
+	my $hashparent = &sha::pureperl($res[7]);
+	if (($bodyhash eq $hashparent) or ($bodyhash =~ /Conflict/)) {
+		$title = 'undefined'.rand(16384) if $title eq '';
+		&sql::do("update pages set title='$title', lastmodified_date='$modifieddate', tags='$tags',
+			autotags='$autotags', copyright='$copyright', body='$body' where title='".$vars{'PageName'}."';"
+			,$data_source);
+		if ($pagename eq $title) {
+			&setpagename($title);
+			&page;
+		}
+	} else {
+		require Text::Diff;
+		my $diff = Text::Diff::diff(\$res[7],\$body);
+		$diff =~ s/\n/<br \/>/g;
+		$vars{'Diff'} = $diff;
+		$vars{'Body'} = $res[7];
+		$vars{'DBody'} = $body;
+		$htmlhead .= '<title>'.$vars{'PageName'}.' &gt; Error@'.$vars{'SiteName'}.'</title>';
+		$htmlbody .= &tmpl2html('html/conflict.html',\%vars);
+		delete $vars{'Diff'};
+		delete $vars{'Body'};
+}
 } 
 sub preview {
 # submit edited text
@@ -298,7 +316,7 @@ $vars{'SidebarCategoryList'} = &listcategory("select tags from pages;"
 $vars{'SidebarPagesList'} = &listpages("select title from pages order by lastmodified_date desc, title limit $vars{'SidebarPagesListLimit'};"
 	,"<dd><a href=\"./$vars{'ScriptName'}?page=%s\">%s</a></dd>");
 $sidebar  = &tmpl2html('html/sidebar.html',\%vars);
-$htmlfoot .= "<hr /><address>KeiSpade CMS $VER by Keiya Chinen</address>";
+$htmlfoot .= "<hr /><address>KeiSpade CMS $VER by <a href=\"http://keispade.keiyac.org/\">KeiSpade Development Team</a></address>";
 print '<!DOCTYPE html><head>'.$htmlhead.'</head><body><header>'.$htmlbdhd.'</header><div id="container"><div id="main_container"><section>'.$htmlbody.'</section><hr /></div><aside><dl id="page_menu">'.$sidebar.'</dl></aside></div><footer>'.$htmlfoot.'</footer>';
 print "</body></html>";
 
@@ -309,6 +327,7 @@ sub fetch2edit {
 	read (STDIN, my $postdata, $ENV{'CONTENT_LENGTH'});
 	my %form = &cgidec::getline($postdata);
 	$body = &security::exorcism($form{'body'});
+	my $bodyhash = &security::exorcism($form{'bodyhash'});
 	$title = &security::textalize(&security::exorcism($form{'title'}));
 
 	my $tagstr = $title;
@@ -325,8 +344,8 @@ sub fetch2edit {
 	$modified_date = time();
 	$created_date = time();
 
-	chomp ($title,$modified_date,$created_date,$tags,$autotags,$confer,$copyright,$body);
-	return ($title,$modified_date,$created_date,$tags,$autotags,$confer,$copyright,$body);
+	chomp ($title,$modified_date,$created_date,$tags,$autotags,$confer,$copyright,$body,$bodyhash);
+	return ($title,$modified_date,$created_date,$tags,$autotags,$confer,$copyright,$body,$bodyhash);
 }
 
 sub listpages {
