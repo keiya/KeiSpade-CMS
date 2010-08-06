@@ -17,14 +17,14 @@ sub sha {
 		$sha = $1;
 		close(SHA1SUM);
 		if ($?) {
-			$sha = &shaperl($file);
+			$sha = &pureperl($file);
 		}
 	} else {
-		$sha = &shaperl($file);
+		$sha = &pureperl($file);
 	}
 	return $sha;
 }
-sub shaperl {
+sub pureperl {
 	require Digest::SHA::PurePerl;
 	my $sha = Digest::SHA::PurePerl->new(256);
 	return $sha->add($_[0])->hexdigest;
