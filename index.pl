@@ -186,6 +186,8 @@ sub new {
 sub newpost {
 # submit new page
 	my ($title,$created_date,$tags,$autotags,$copyright,$body) = (&fetch2edit)[0,2,3,4,6,7];	
+	my @res = (&sql::fetch("select count(*) from pages where title='".$title."';",$data_source));
+	$title = $title.rand(16384) unless $res[0] == 0;
 	$title = 'undefined'.rand(16384) if $title eq '';
 	&sql::do("insert into pages (title,lastmodified_date,created_date,tags,autotags,copyright,body)
 		values ('$title','$created_date','$created_date','$tags','$autotags','$copyright','$body');"
