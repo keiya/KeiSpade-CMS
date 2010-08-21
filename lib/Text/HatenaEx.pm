@@ -57,9 +57,9 @@ sub inline {
 	my $item = $items->[0] or return;
 	$item = Text::Hatena::AutoLink->parse($item);
 	if($item =~ /\(\((.+)\)\)/) {
-		push @footnote, $1;
-		my $count = @footnote;
-		$item = "(*$count)";
+		my $matched = $1;
+		$item = $` . "(*" . (@footnote+1) . ")" . $';
+		push @footnote, $matched;
 	}
 	return $item;
 }
