@@ -20,7 +20,7 @@ my $myname = basename($0, '');
 
 my $VER = '0.1.0';
 my %vars = ('SiteName'=>'KeiSpade','SiteDescription'=>'The Multimedia Wiki','ScriptName'=>$myname,'UploaderName'=>'upload.pl',
-	'SidebarPagesListLimit'=>'10');
+	'SidebarPagesListLimit'=>'10','ContentLanguage'=>'ja');
 %vars = (%vars, &kscconf::load('./dat/kspade.conf'));
 
 # http header + html meta header
@@ -319,7 +319,7 @@ $vars{'SidebarPagesList'} = &listpages("select title from pages order by lastmod
 	,"<dd><a href=\"./$vars{'ScriptName'}?page=%s\">%s</a></dd>");
 $sidebar  = &tmpl2html('html/sidebar.html',\%vars);
 $htmlfoot .= "<hr /><address>KeiSpade CMS $VER by <a href=\"http://keispade.keiyac.org/\">KeiSpade Development Team</a></address>";
-print '<!DOCTYPE html><head>'.$htmlhead.'</head><body><header>'.$htmlbdhd.'</header><div id="container"><div id="main_container"><section>'.$htmlbody.'</section><hr /></div><aside><dl id="page_menu">'.$sidebar.'</dl></aside></div><footer>'.$htmlfoot.'</footer>';
+print '<!DOCTYPE html><html lang="'.$vars{'ContentLanguage'}.'"><head>'.$htmlhead.'</head><body><header>'.$htmlbdhd.'</header><div id="container"><div id="main_container"><section>'.$htmlbody.'</section><hr /></div><aside><dl id="page_menu">'.$sidebar.'</dl></aside></div><footer>'.$htmlfoot.'</footer>';
 print "</body></html>";
 
 
