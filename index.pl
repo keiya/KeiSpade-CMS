@@ -57,7 +57,7 @@ if (
 	{
 # database initialize (create the table)
 	&sql::create_table($data_source);
-	my $modified_date = &date::spridate('%04d/%02d/%02d %02d:%02d:%02d');
+	my $modified_date = time();
 	my $created_date = $modified_date;
 	my $body = &tmpl2html('html/tutorial.txt',\%vars);
 	&sql::do("insert into pages (title,lastmodified_date,created_date,tags,autotags,copyright,body)
