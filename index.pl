@@ -155,7 +155,7 @@ sub post {
 		$htmlbody .= &tmpl2html('html/conflict.html',\%vars);
 		delete $vars{'Diff'};
 		delete $vars{'Body'};
-}
+	}
 } 
 sub preview {
 # submit edited text
@@ -189,10 +189,12 @@ sub newpost {
 	my @res = (&sql::fetch("select count(*) from pages where title='".$title."';",$data_source));
 	$title = $title.rand(16384) unless $res[0] == 0;
 	$title = 'undefined'.rand(16384) if $title eq '';
+	$vars{'PageName'} = $title;
 	&sql::do("insert into pages (title,lastmodified_date,created_date,tags,autotags,copyright,body)
 		values ('$title','$created_date','$created_date','$tags','$autotags','$copyright','$body');"
 		,$data_source);
-	
+	&setpagename($vars{'PageName'});
+	&page;
 }
 sub del {
 # print delete confirm
