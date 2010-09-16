@@ -1,5 +1,5 @@
 *Wikiの記法
-基本的には
+記法は書きやすく分かりやすいはてな記法をベースとしており、はてな記法を記述することでページが作成できます。
 
 **見出し
 「*」（半角アスタリスク）で始まる行は自動的に見出しになります。たとえば、
@@ -113,6 +113,7 @@ URLやid記法の場合は、その部分を半角角カッコ [ 〜 ] で囲め
 >||
 SiteName [site name]
 SiteDescription [site description]
+UploaderName [uploader script filename] 
 ||<
 
 **SiteName
@@ -120,3 +121,7 @@ Wikiタイトルです。大きく上に表示される他、HTMLのタイトル
 
 **SiteDescription
 Wikiの解説文です。
+
+**UploaderName
+uploader.plのファイル名を変更したときは、この設定項目を追加してください。
+
