@@ -1,0 +1,8 @@
+How to install KeiSpade CMS
+      $ sudo sh install.sh
+    or
+      # sh install.sh
+    as root
+
+if you need further information,
+visit http://keispade.keiyac.org/
