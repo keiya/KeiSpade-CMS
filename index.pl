@@ -9,7 +9,7 @@ use DBI;
 use lib './lib';
 
 use HTML::Template;
-require 'cgidec.pl';
+use CGIDec;
 require 'security.pl';
 require 'sql.pl';
 require 'date.pl';
@@ -18,7 +18,7 @@ require 'kscconf.pl';
 # script file name
 my $myname = basename($0, '');
 
-my $VER = '0.1.0';
+my $VER = '0.2.0';
 my %vars = ('SiteName'=>'KeiSpade','SiteDescription'=>'The Multimedia Wiki','ScriptName'=>$myname,'UploaderName'=>'upload.pl',
 	'SidebarPagesListLimit'=>'10','ContentLanguage'=>'ja');
 %vars = (%vars, &kscconf::load('./dat/kspade.conf'));
@@ -33,7 +33,9 @@ $htmlhead .= "<link rel=\"index\" href=\"./$vars{'ScriptName'}?cmd=category\">";
 my ($htmlbdhd, $htmlbody, $sidebar, $htmlfoot) = ( '', '', '', '');
 
 # process cgi args
-my %query = &cgidec::getline($ENV{'QUERY_STRING'});
+my $cgidec = new CGIDec;
+my %query = $cgidec->getline($ENV{'QUERY_STRING'});
+#my %query = &cgidec::getline($ENV{'QUERY_STRING'});
 
 &setpagename($query{'page'});
 
@@ -131,26 +133,31 @@ sub post {
 # submit edited text
 	my $pagename = $vars{'PageName'};
 
-	my ($title,$modifieddate,$tags,$autotags,$copyright,$body,$bodyhash) = (&fetch2edit)[0,1,3,4,6,7,8];
+
+	#my ($title,$modifieddate,$tags,$autotags,$copyright,$body,$bodyhash) = (&fetch2edit)[0,1,3,4,6,7,8];
+	#my %page = &fetch2edit( title => $title, modified_date => $modified_date, tags => $tags,
+	#            autotags => $autotags, copyright => $copyright, body => $body, bodyhash => $bodyhash);
+	my %page = &fetch2edit();
 	require 'sha.pl';
 	my @res = (&sql::fetch("select * from pages where title='".$vars{'PageName'}."';",$data_source));
 	my $hashparent = &sha::pureperl($res[7]);
-	if (($bodyhash eq $hashparent) or ($bodyhash =~ /Conflict/)) {
-		$title = 'undefined'.rand(16384) if $title eq '';
-		&sql::do("update pages set title='$title', lastmodified_date='$modifieddate', tags='$tags',
-			autotags='$autotags', copyright='$copyright', body='$body' where title='".$vars{'PageName'}."';"
+	print "'$page{'title'}'";
+	if (($page{'bodyhash'} eq $hashparent) or ($page{'bodyhash'} =~ /Conflict/)) {
+		$page{'title'} = 'undefined'.rand(16384) if $page{'title'} eq '';
+		&sql::do("update pages set title='$page{'title'}', lastmodified_date='$page{'modified_date'}', tags='$page{'tags'}',
+			autotags='$page{'autotags'}', copyright='$page{'copyright'}', body='$page{'body'}' where title='".$vars{'PageName'}."';"
 			,$data_source);
-		if ($pagename eq $title) {
-			&setpagename($title);
+		if ($pagename eq $page{'title'}) {
+			&setpagename($page{'title'});
 			&page;
 		}
 	} else {
 		require Text::Diff;
-		my $diff = Text::Diff::diff(\$res[7],\$body);
+		my $diff = Text::Diff::diff(\$res[7],\$page{'body'});
 		$diff =~ s/\n/<br \/>/g;
 		$vars{'Diff'} = $diff;
 		$vars{'Body'} = $res[7];
-		$vars{'DBody'} = $body;
+		$vars{'DBody'} = $page{'body'};
 		$htmlhead .= '<title>'.$vars{'PageName'}.' &gt; Error@'.$vars{'SiteName'}.'</title>';
 		$htmlbody .= &tmpl2html('html/conflict.html',\%vars);
 		delete $vars{'Diff'};
@@ -161,20 +168,21 @@ sub preview {
 # submit edited text
 	my $pagename = $vars{'PageName'};
 
-	my ($title,$modifieddate,$tags,$autotags,$copyright,$body) = (&fetch2edit)[0,1,3,4,6,7];
-#	&sql::do("update pages set title='$title', lastmodified_date='$modifieddate', tags='$tags',
+	#my ($title,$modifieddate,$tags,$autotags,$copyright,$body) = (&fetch2edit)[0,1,3,4,6,7];
+	my %page = &fetch2edit();
+#	&sql::do("update pages set title='$title', lastmodified_date='$modified_date', tags='$tags',
 #		autotags='$autotags', copyright='$copyright', body='$body' where title='".$vars{'PageName'}."';"
 #		,$data_source);
-	if ($pagename eq $title) {
-		&setpagename($title);
+	if ($pagename eq $page{'title'}) {
+		&setpagename($page{'title'});
 		&page;
 	}
 
-	$htmlhead .= '<title>'.$title.'@'.$vars{'SiteName'}.'</title>';
+	$htmlhead .= '<title>'.$page{'title'}.'@'.$vars{'SiteName'}.'</title>';
 
 	require 'Text/HatenaEx.pm';
-	$htmlbody .= "<h2>$title</h2>";
-	my $parsed .= Text::HatenaEx->parse(&security::noscript($body));
+	$htmlbody .= "<h2>$page{'title'}</h2>";
+	my $parsed .= Text::HatenaEx->parse(&security::noscript($page{'body'}));
 	$htmlbody .= $parsed;
 } 
 sub new {
@@ -185,13 +193,16 @@ sub new {
 }
 sub newpost {
 # submit new page
-	my ($title,$created_date,$tags,$autotags,$copyright,$body) = (&fetch2edit)[0,2,3,4,6,7];	
-	my @res = (&sql::fetch("select count(*) from pages where title='".$title."';",$data_source));
-	$title = $title.rand(16384) unless $res[0] == 0;
-	$title = 'undefined'.rand(16384) if $title eq '';
-	$vars{'PageName'} = $title;
+		#my ($title,$created_date,$tags,$autotags,$copyright,$body) = (&fetch2edit)[0,2,3,4,6,7];	
+	#my %page = &fetch2edit( title => $title, created_date => $created_date, tags => $tags,
+	#             autotags => $autotags, copyright => $copyright, body=> $body );
+	my %page = &fetch2edit();
+	my @res = (&sql::fetch("select count(*) from pages where title='".$page{'title'}."';",$data_source));
+	$page{'title'} = $page{'title'}.rand(16384) unless $res[0] == 0;
+	$page{'title'} = 'undefined'.rand(16384) if $page{'title'} eq '';
+	$vars{'PageName'} = $page{'title'};
 	&sql::do("insert into pages (title,lastmodified_date,created_date,tags,autotags,copyright,body)
-		values ('$title','$created_date','$created_date','$tags','$autotags','$copyright','$body');"
+		values ('$page{'title'}','$page{'created_date'}','$page{'created_date'}','$page{'tags'}','$page{'autotags'}','$page{'copyright'}','$page{'body'}');"
 		,$data_source);
 	&setpagename($vars{'PageName'});
 	&page;
@@ -295,7 +306,8 @@ sub delfile {
 
 sub addfile {
 	# submit file
-	my ($title,$modifieddate) = (&fetch2edit)[0,1];
+	#my ($title,$modifieddate) = (&fetch2edit)[0,1];
+	my %page = &fetch2edit();
 
 	$htmlhead .= '<title>'.$vars{'PageName'}. ' &gt; UploadProcess@'.$vars{'SiteName'}.'</title>';
 	my $filename = &security::html(&security::exorcism($query{'filename'}));
@@ -307,7 +319,7 @@ sub addfile {
 	} else {
 		my $tmp  = &date::spridate('%04d %2d %2d %2d:%02d:%02d');
 		$files .= "[$filename/$original($tmp)]";
-		&sql::do("update pages set lastmodified_date='$modifieddate', confer='$files' where title='$vars{'PageName'}';"
+		&sql::do("update pages set lastmodified_date='$page{'modified_date'}', confer='$files' where title='$vars{'PageName'}';"
 			,$data_source);
 	}
 	# TODO: これはあくまで暫定処置 いずれ全体的な構造を見直す
@@ -327,29 +339,33 @@ print "</body></html>";
 
 # ページ編集・作成用共通サブルーチン
 sub fetch2edit {
-	my ($title,$modified_date,$created_date,$tags,$autotags,$confer,$copyright,$body) = ('','','','','','','','');
+		#my ($title,$modified_date,$created_date,$tags,$autotags,$confer,$copyright,$body) = ('','','','','','','','');
+		#my %args = (@_);
+		my %args;
 	read (STDIN, my $postdata, $ENV{'CONTENT_LENGTH'});
-	my %form = &cgidec::getline($postdata);
-	$body = &security::exorcism($form{'body'});
-	my $bodyhash = &security::exorcism($form{'bodyhash'});
-	$title = &security::textalize(&security::exorcism($form{'title'}));
+	my %form = $cgidec->getline($postdata);
+	$args{'body'} = &security::exorcism($form{'body'});
+	$args{'bodyhash'} = &security::exorcism($form{'bodyhash'});
+	$args{'title'} = &security::textalize(&security::exorcism($form{'title'}));
 
-	my $tagstr = $title;
+	my $tagstr = $args{'title'};
 	if (defined $tagstr) {
 	$tagstr =~ s/^\[(.+)\](.+)/$1/g;
 	if (defined $2) {
 		my @tagstrs= split(/\]\[/, $tagstr);
 		foreach my $tag (@tagstrs) {
 			$tag =~ s/[\[\]]+//g;
-			$tags .= $tag.'|';
+			$args{'tags'} .= $tag.'|';
 		}
 	}
 	}
-	$modified_date = time();
-	$created_date = time();
+	$args{'modified_date'} = time();
+	$args{'created_date'} = time();
 
-	chomp ($title,$modified_date,$created_date,$tags,$autotags,$confer,$copyright,$body,$bodyhash);
-	return ($title,$modified_date,$created_date,$tags,$autotags,$confer,$copyright,$body,$bodyhash);
+	#chomp ($title,$modified_date,$created_date,$tags,$autotags,$confer,$copyright,$body,$bodyhash);
+	#return ($title,$modified_date,$created_date,$tags,$autotags,$confer,$copyright,$body,$bodyhash);
+	chomp(%args);
+	return(%args);
 }
 
 sub listpages {
