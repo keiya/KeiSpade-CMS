@@ -55,7 +55,7 @@ my $database = './dat/kspade.db';
 my $data_source = "dbi:SQLite:dbname=$database";
 my $sql = new SQL($data_source);
 
-if ((defined $query{'init'} and $query{'init'} eq 'yes') and ($sql->tableexists == 0)) {
+if ($sql->tableexists == 0) {
 	# database initialize (create the table)
 	$sql->create_table;
 	my $modified_date = time();
