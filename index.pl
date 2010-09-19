@@ -10,7 +10,8 @@ use lib './lib';
 
 use HTML::Template;
 use CGIDec;
-require 'security.pl';
+use Security;
+use SQL;
 require 'sql.pl';
 require 'date.pl';
 require 'kscconf.pl';
@@ -18,9 +19,10 @@ require 'kscconf.pl';
 # script file name
 my $myname = basename($0, '');
 
+# constants, default values
 my $VER = '0.2.0';
-my %vars = ('SiteName'=>'KeiSpade','SiteDescription'=>'The Multimedia Wiki','ScriptName'=>$myname,'UploaderName'=>'upload.pl',
-	'SidebarPagesListLimit'=>'10','ContentLanguage'=>'ja');
+my %vars = ( 'SiteName'=>'KeiSpade','SiteDescription'=>'The Multimedia Wiki','ScriptName'=>$myname,'UploaderName'=>'upload.pl',
+             'SidebarPagesListLimit'=>'10','ContentLanguage'=>'ja');
 %vars = (%vars, &kscconf::load('./dat/kspade.conf'));
 
 # http header + html meta header
@@ -35,12 +37,12 @@ my ($htmlbdhd, $htmlbody, $sidebar, $htmlfoot) = ( '', '', '', '');
 # process cgi args
 my $cgidec = new CGIDec;
 my %query = $cgidec->getline($ENV{'QUERY_STRING'});
-#my %query = &cgidec::getline($ENV{'QUERY_STRING'});
 
+my $sanitize = new Security;
 &setpagename($query{'page'});
 
 sub setpagename {
-	$vars{'PageName'} = &security::exorcism($_[0]);
+	$vars{'PageName'} = $sanitize->exorcism($_[0]);
 	if (not defined $vars{'PageName'} or not $vars{'PageName'} =~ /.+/) {
 		$vars{'PageName'} = 'TopPage'
 	}
@@ -50,21 +52,17 @@ sub setpagename {
 
 # connect to DB
 my $database = './dat/kspade.db';
-my $dbargs = {PrintError=>1};
 my $data_source = "dbi:SQLite:dbname=$database";
+my $sql = new SQL($data_source);
 
-if (
-	(defined $query{'init'} and $query{'init'} eq 'yes')
-	and (&sql::tableexists($data_source) == 0))
-	{
-# database initialize (create the table)
-	&sql::create_table($data_source);
+if ((defined $query{'init'} and $query{'init'} eq 'yes') and ($sql->tableexists == 0)) {
+	# database initialize (create the table)
+	$sql->create_table;
 	my $modified_date = time();
 	my $created_date = $modified_date;
 	my $body = &tmpl2html('html/tutorial.txt',\%vars);
-	&sql::do("insert into pages (title,lastmodified_date,created_date,tags,autotags,copyright,body)
-		values ('TopPage','$modified_date','$created_date','Help','Help','Copyleft','$body');"
-		,$data_source);
+	$sql->do("insert into pages (title,lastmodified_date,created_date,tags,autotags,copyright,body)
+		values ('TopPage','$modified_date','$created_date','Help','Help','Copyleft','$body');");
 	$htmlhead .= '<link href="./css/light.css" rel="stylesheet" type="text/css">';
 	$htmlhead .= '<title>Miracle! Table was created!</title>';
 	$htmlbody .= '<p>Table was created. Please reload.</p>';
@@ -85,7 +83,7 @@ if ((not defined $query{'cmd'}) and (defined $vars{'PageName'})) {
 
 # print page
 sub page { 
-	my @res = (&sql::fetch("select * from pages where title='".$vars{'PageName'}."';",$data_source));
+	my @res = ($sql->fetch("select * from pages where title='".$vars{'PageName'}."';"));
 	my $modified = $res[1];
 	my $created  = $res[2];
 	chop $res[3];
@@ -97,7 +95,7 @@ sub page {
 
 	require 'Text/HatenaEx.pm';
 	$htmlbody .= "<h2>$res[0]</h2>";
-	my $parsed .= Text::HatenaEx->parse(&security::noscript($res[7]));
+	my $parsed .= Text::HatenaEx->parse($sanitize->noscript($res[7]));
 	$htmlbody .= $parsed;
 
 	my $confer;
@@ -118,7 +116,7 @@ sub page {
 } 
 sub edit {
 # print edit page form
-	my @res = (&sql::fetch("select body from pages where title='$vars{'PageName'}';",$data_source));
+	my @res = ($sql->fetch("select body from pages where title='$vars{'PageName'}';"));
 	#$res[0] =~ s/<br \/>/\n/g;
 	$vars{'DBody'} = $res[0];
 	require 'sha.pl';
@@ -139,14 +137,13 @@ sub post {
 	#            autotags => $autotags, copyright => $copyright, body => $body, bodyhash => $bodyhash);
 	my %page = &fetch2edit();
 	require 'sha.pl';
-	my @res = (&sql::fetch("select * from pages where title='".$vars{'PageName'}."';",$data_source));
+	my @res = ($sql->fetch("select * from pages where title='".$vars{'PageName'}."';"));
 	my $hashparent = &sha::pureperl($res[7]);
 	print "'$page{'title'}'";
 	if (($page{'bodyhash'} eq $hashparent) or ($page{'bodyhash'} =~ /Conflict/)) {
 		$page{'title'} = 'undefined'.rand(16384) if $page{'title'} eq '';
-		&sql::do("update pages set title='$page{'title'}', lastmodified_date='$page{'modified_date'}', tags='$page{'tags'}',
-			autotags='$page{'autotags'}', copyright='$page{'copyright'}', body='$page{'body'}' where title='".$vars{'PageName'}."';"
-			,$data_source);
+		$sql->do("update pages set title='$page{'title'}', lastmodified_date='$page{'modified_date'}', tags='$page{'tags'}',
+			autotags='$page{'autotags'}', copyright='$page{'copyright'}', body='$page{'body'}' where title='".$vars{'PageName'}."';");
 		if ($pagename eq $page{'title'}) {
 			&setpagename($page{'title'});
 			&page;
@@ -182,7 +179,7 @@ sub preview {
 
 	require 'Text/HatenaEx.pm';
 	$htmlbody .= "<h2>$page{'title'}</h2>";
-	my $parsed .= Text::HatenaEx->parse(&security::noscript($page{'body'}));
+	my $parsed .= Text::HatenaEx->parse($sanitize->noscript($page{'body'}));
 	$htmlbody .= $parsed;
 } 
 sub new {
@@ -197,13 +194,12 @@ sub newpost {
 	#my %page = &fetch2edit( title => $title, created_date => $created_date, tags => $tags,
 	#             autotags => $autotags, copyright => $copyright, body=> $body );
 	my %page = &fetch2edit();
-	my @res = (&sql::fetch("select count(*) from pages where title='".$page{'title'}."';",$data_source));
+	my @res = ($sql->fetch("select count(*) from pages where title='".$page{'title'}."';"));
 	$page{'title'} = $page{'title'}.rand(16384) unless $res[0] == 0;
 	$page{'title'} = 'undefined'.rand(16384) if $page{'title'} eq '';
 	$vars{'PageName'} = $page{'title'};
-	&sql::do("insert into pages (title,lastmodified_date,created_date,tags,autotags,copyright,body)
-		values ('$page{'title'}','$page{'created_date'}','$page{'created_date'}','$page{'tags'}','$page{'autotags'}','$page{'copyright'}','$page{'body'}');"
-		,$data_source);
+	$sql->do("insert into pages (title,lastmodified_date,created_date,tags,autotags,copyright,body)
+		values ('$page{'title'}','$page{'created_date'}','$page{'created_date'}','$page{'tags'}','$page{'autotags'}','$page{'copyright'}','$page{'body'}');");
 	&setpagename($vars{'PageName'});
 	&page;
 }
@@ -218,13 +214,13 @@ sub delpage {
 	#read (STDIN, my $postdata, $ENV{'CONTENT_LENGTH'});
 	#my %form = &cgidec::getline($postdata);
 	if ($ENV{'REQUEST_METHOD'} eq 'POST') {
-		&sql::do("delete from pages where title='".$vars{'PageName'}."'",$data_source);
+		$sql->do("delete from pages where title='".$vars{'PageName'}."'");
 	}
 	&setpagename('TopPage');
 	&page;
 }
 sub search {
-	my $query = &security::textalize(&security::exorcism($query{'query'}));
+	my $query = $sanitize->htmlexor($query{'query'});
 	$query =~ s/\s/AND/g if defined $query;
 	$vars{'Query'} = $query{'query'};
 	if (defined $query{'query'}) {
@@ -248,7 +244,7 @@ sub search {
 } 
 sub category {
 	# print categories
-	my $query = &security::textalize(&security::exorcism($query{'query'}));
+	my $query = &sanitize->htmlexor($query{'query'});
 	$query =~ s/\s/AND/g;
 	$vars{'Query'} = $query{'query'};
 	if ($vars{'Query'} eq '') {
@@ -277,10 +273,10 @@ sub upload {
 } 
 sub delupload {
 # print delete confirm
-	my $filename = &security::html(&security::exorcism($query{'filename'}));
+	my $filename = $sanitize->htmlexor($query{'filename'});
 	$vars{'DeleteFileName'} = $filename;
 	#$vars{'PagesList'} = &listpages("select title from pages where confer like '%$filename%';");
-	my @pages = &sql::fetch("select title from pages where confer like '%$filename%';",$data_source);
+	my @pages = $sql->fetch("select title from pages where confer like '%$filename%';");
 	$vars{'PagesList'} = &listpages("select title from pages where confer like '%$filename%';"
 		,"<a href=\"./$vars{'ScriptName'}?page=%s\">%s</a><br />");
 	$htmlhead .= '<title>'.$filename. ' &gt; Delete Uploaded Files@'.$vars{'SiteName'}.'</title>';
@@ -289,15 +285,14 @@ sub delupload {
 
 sub delfile {
 	if ($ENV{'REQUEST_METHOD'} eq 'POST') {
-	my $filename = &security::html(&security::exorcism($query{'filename'}));
-	my @pages = &sql::fetch("select title from pages where confer like '%$filename%';",$data_source,0);
+	my $filename = $sanitize->htmlexor($query{'filename'});
+	my @pages = $sql->fetch("select title from pages where confer like '%$filename%';",0);
 	foreach my $tmp (@pages) {
-		my @files = &sql::fetch("select confer from pages where title='$tmp';",$data_source);
+		my @files = $sql->fetch("select confer from pages where title='$tmp';");
 		$files[0] =~ s/\[$filename\/.+?\]//g;
 		unlink('./files/'.$filename);
 		my $modifieddate = time();
-		&sql::do("update pages set lastmodified_date='$modifieddate', confer='$files[0]' where title='$tmp';"
-			,$data_source);
+		$sql->do("update pages set lastmodified_date='$modifieddate', confer='$files[0]' where title='$tmp';");
 	}
 	&setpagename($vars{'PageName'});
 	&page;
@@ -310,17 +305,16 @@ sub addfile {
 	my %page = &fetch2edit();
 
 	$htmlhead .= '<title>'.$vars{'PageName'}. ' &gt; UploadProcess@'.$vars{'SiteName'}.'</title>';
-	my $filename = &security::html(&security::exorcism($query{'filename'}));
-	my $original = &security::html(&security::exorcism($query{'orig'}));
-	my @res = (&sql::fetch("select confer from pages where title='$vars{'PageName'}';",$data_source));
+	my $filename = $sanitize->htmlexor($query{'filename'});
+	my $original = $sanitize->htmlexor($query{'orig'});
+	my @res = ($sql->fetch("select confer from pages where title='$vars{'PageName'}';"));
 	my $files = $res[0];
 	if ($files =~ /$filename/) {
 
 	} else {
 		my $tmp  = &date::spridate('%04d %2d %2d %2d:%02d:%02d');
 		$files .= "[$filename/$original($tmp)]";
-		&sql::do("update pages set lastmodified_date='$page{'modified_date'}', confer='$files' where title='$vars{'PageName'}';"
-			,$data_source);
+		$sql->do("update pages set lastmodified_date='$page{'modified_date'}', confer='$files' where title='$vars{'PageName'}';");
 	}
 	# TODO: これはあくまで暫定処置 いずれ全体的な構造を見直す
 	$htmlbody = "";
@@ -344,9 +338,9 @@ sub fetch2edit {
 		my %args;
 	read (STDIN, my $postdata, $ENV{'CONTENT_LENGTH'});
 	my %form = $cgidec->getline($postdata);
-	$args{'body'} = &security::exorcism($form{'body'});
-	$args{'bodyhash'} = &security::exorcism($form{'bodyhash'});
-	$args{'title'} = &security::textalize(&security::exorcism($form{'title'}));
+	$args{'body'} = $sanitize->exorcism($form{'body'});
+	$args{'bodyhash'} = $sanitize->exorcism($form{'bodyhash'});
+	$args{'title'} = $sanitize->textalize($sanitize->exorcism($form{'title'}));
 
 	my $tagstr = $args{'title'};
 	if (defined $tagstr) {
@@ -369,7 +363,7 @@ sub fetch2edit {
 }
 
 sub listpages {
-	my @res = (&sql::fetch($_[0],$data_source,0));
+	my @res = ($sql->fetch($_[0],0));
 	my $pageslist;
 	my $format = $_[1];
 	foreach my $tmp (@res) {
@@ -381,7 +375,7 @@ sub listpages {
 }
 
 sub listcategory {
-	my @res = (&sql::fetch($_[0],$data_source,0));
+	my @res = ($sql->fetch($_[0],0));
 	my $categorylist;
 	my $format = $_[1];
 	my %category;
