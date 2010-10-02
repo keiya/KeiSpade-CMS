@@ -132,44 +132,40 @@ sub post {
 	my $pagename = $vars{'PageName'};
 
 
-	#my ($title,$modifieddate,$tags,$autotags,$copyright,$body,$bodyhash) = (&fetch2edit)[0,1,3,4,6,7,8];
-	#my %page = &fetch2edit( title => $title, modified_date => $modified_date, tags => $tags,
-	#            autotags => $autotags, copyright => $copyright, body => $body, bodyhash => $bodyhash);
-	my %page = &fetch2edit();
-	require 'sha.pl';
-	my @res = ($sql->fetch("select * from pages where title='".$vars{'PageName'}."';"));
-	my $hashparent = &sha::pureperl($res[7]);
-	print "'$page{'title'}'";
-	if (($page{'bodyhash'} eq $hashparent) or ($page{'bodyhash'} =~ /Conflict/)) {
-		$page{'title'} = 'undefined'.rand(16384) if $page{'title'} eq '';
-		$sql->do("update pages set title='$page{'title'}', lastmodified_date='$page{'modified_date'}', tags='$page{'tags'}',
-			autotags='$page{'autotags'}', copyright='$page{'copyright'}', body='$page{'body'}' where title='".$vars{'PageName'}."';");
-		if ($pagename eq $page{'title'}) {
-			&setpagename($page{'title'});
-			&page;
+
+	if ($ENV{'REQUEST_METHOD'} eq 'POST') {
+		my %page = &fetch2edit();
+		require 'sha.pl';
+		my @res = ($sql->fetch("select * from pages where title='".$vars{'PageName'}."';"));
+		my $hashparent = &sha::pureperl($res[7]);
+		print "'$page{'title'}'";
+		if (($page{'bodyhash'} eq $hashparent) or ($page{'bodyhash'} =~ /Conflict/)) {
+			$page{'title'} = 'undefined'.rand(16384) if $page{'title'} eq '';
+			$sql->do("update pages set title='$page{'title'}', lastmodified_date='$page{'modified_date'}', tags='$page{'tags'}',
+				autotags='$page{'autotags'}', copyright='$page{'copyright'}', body='$page{'body'}' where title='".$vars{'PageName'}."';");
+			if ($pagename eq $page{'title'}) {
+				&setpagename($page{'title'});
+				&page;
+			}
+		} else {
+			require Text::Diff;
+			my $diff = Text::Diff::diff(\$res[7],\$page{'body'});
+			$diff =~ s/\n/<br \/>/g;
+			$vars{'Diff'} = $diff;
+			$vars{'Body'} = $res[7];
+			$vars{'DBody'} = $page{'body'};
+			$htmlhead .= '<title>'.$vars{'PageName'}.' &gt; Error@'.$vars{'SiteName'}.'</title>';
+			$htmlbody .= &tmpl2html('html/conflict.html',\%vars);
+			delete $vars{'Diff'};
+			delete $vars{'Body'};
 		}
-	} else {
-		require Text::Diff;
-		my $diff = Text::Diff::diff(\$res[7],\$page{'body'});
-		$diff =~ s/\n/<br \/>/g;
-		$vars{'Diff'} = $diff;
-		$vars{'Body'} = $res[7];
-		$vars{'DBody'} = $page{'body'};
-		$htmlhead .= '<title>'.$vars{'PageName'}.' &gt; Error@'.$vars{'SiteName'}.'</title>';
-		$htmlbody .= &tmpl2html('html/conflict.html',\%vars);
-		delete $vars{'Diff'};
-		delete $vars{'Body'};
 	}
 } 
 sub preview {
 # submit edited text
 	my $pagename = $vars{'PageName'};
 
-	#my ($title,$modifieddate,$tags,$autotags,$copyright,$body) = (&fetch2edit)[0,1,3,4,6,7];
 	my %page = &fetch2edit();
-#	&sql::do("update pages set title='$title', lastmodified_date='$modified_date', tags='$tags',
-#		autotags='$autotags', copyright='$copyright', body='$body' where title='".$vars{'PageName'}."';"
-#		,$data_source);
 	if ($pagename eq $page{'title'}) {
 		&setpagename($page{'title'});
 		&page;
@@ -190,18 +186,17 @@ sub new {
 }
 sub newpost {
 # submit new page
-		#my ($title,$created_date,$tags,$autotags,$copyright,$body) = (&fetch2edit)[0,2,3,4,6,7];	
-	#my %page = &fetch2edit( title => $title, created_date => $created_date, tags => $tags,
-	#             autotags => $autotags, copyright => $copyright, body=> $body );
-	my %page = &fetch2edit();
-	my @res = ($sql->fetch("select count(*) from pages where title='".$page{'title'}."';"));
-	$page{'title'} = $page{'title'}.rand(16384) unless $res[0] == 0;
-	$page{'title'} = 'undefined'.rand(16384) if $page{'title'} eq '';
-	$vars{'PageName'} = $page{'title'};
-	$sql->do("insert into pages (title,lastmodified_date,created_date,tags,autotags,copyright,body)
-		values ('$page{'title'}','$page{'created_date'}','$page{'created_date'}','$page{'tags'}','$page{'autotags'}','$page{'copyright'}','$page{'body'}');");
-	&setpagename($vars{'PageName'});
-	&page;
+	if ($ENV{'REQUEST_METHOD'} eq 'POST') {
+		my %page = &fetch2edit();
+		my @res = ($sql->fetch("select count(*) from pages where title='".$page{'title'}."';"));
+		$page{'title'} = $page{'title'}.rand(16384) unless $res[0] == 0;
+		$page{'title'} = 'undefined'.rand(16384) if $page{'title'} eq '';
+		$vars{'PageName'} = $page{'title'};
+		$sql->do("insert into pages (title,lastmodified_date,created_date,tags,autotags,copyright,body)
+			values ('$page{'title'}','$page{'created_date'}','$page{'created_date'}','$page{'tags'}','$page{'autotags'}','$page{'copyright'}','$page{'body'}');");
+		&setpagename($vars{'PageName'});
+		&page;
+	}
 }
 sub del {
 # print delete confirm
@@ -211,8 +206,6 @@ sub del {
 }
 sub delpage {
 # delete page
-	#read (STDIN, my $postdata, $ENV{'CONTENT_LENGTH'});
-	#my %form = &cgidec::getline($postdata);
 	if ($ENV{'REQUEST_METHOD'} eq 'POST') {
 		$sql->do("delete from pages where title='".$vars{'PageName'}."'");
 	}
@@ -301,7 +294,6 @@ sub delfile {
 
 sub addfile {
 	# submit file
-	#my ($title,$modifieddate) = (&fetch2edit)[0,1];
 	my %page = &fetch2edit();
 
 	$htmlhead .= '<title>'.$vars{'PageName'}. ' &gt; UploadProcess@'.$vars{'SiteName'}.'</title>';
@@ -333,9 +325,7 @@ print "</body></html>";
 
 # ページ編集・作成用共通サブルーチン
 sub fetch2edit {
-		#my ($title,$modified_date,$created_date,$tags,$autotags,$confer,$copyright,$body) = ('','','','','','','','');
-		#my %args = (@_);
-		my %args;
+	my %args;
 	read (STDIN, my $postdata, $ENV{'CONTENT_LENGTH'});
 	my %form = $cgidec->getline($postdata);
 	$args{'body'} = $sanitize->exorcism($form{'body'});
@@ -356,8 +346,6 @@ sub fetch2edit {
 	$args{'modified_date'} = time();
 	$args{'created_date'} = time();
 
-	#chomp ($title,$modified_date,$created_date,$tags,$autotags,$confer,$copyright,$body,$bodyhash);
-	#return ($title,$modified_date,$created_date,$tags,$autotags,$confer,$copyright,$body,$bodyhash);
 	chomp(%args);
 	return(%args);
 }
