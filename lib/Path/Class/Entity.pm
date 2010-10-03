@@ -1,6 +1,6 @@
 package Path::Class::Entity;
 
-$VERSION = '0.19';
+$VERSION = '0.21';
 
 use strict;
 use File::Spec;

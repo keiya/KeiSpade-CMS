@@ -1,6 +1,6 @@
 package Path::Class::File;
 
-$VERSION = '0.19';
+$VERSION = '0.21';
 
 use strict;
 use Path::Class::Dir;
@@ -299,7 +299,7 @@ for the C<chomp> or C<chomped> parameters:
 
   my @lines = $file->slurp(chomp => 1);
 
-You may also use the C<iomode> paramter to pass in an IO mode to use
+You may also use the C<iomode> parameter to pass in an IO mode to use
 when opening the file, usually IO layers (though anything accepted by
 the MODE argument of C<open()> is accepted here).  Just make sure it's
 a I<reading> mode.
@@ -334,7 +334,7 @@ stats the link instead of the file the link points to.
 
 Returns the class which should be used to create directory objects.
 
-Generally overriden whenever this class is subclassed.
+Generally overridden whenever this class is subclassed.
 
 =back
 
