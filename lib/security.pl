@@ -1,4 +1,4 @@
-package security;
+#package security;
 
 sub exorcism {
 	my $tmp = $_[0];
@@ -19,7 +19,7 @@ sub html {
 sub textalize {
 	my $tmp = $_[0];
 	#$tmp =~ s/[^\w\d_\-\(\) ぁ-ヶ亜-黑]+//g;
-        $tmp =~ s/[\n\t~`!@#\$%^&\*=\+\{\}\\;:'"<>\?\/]+//g;
+	$tmp =~ s/[\n\t~`!@#\$%^&\*=\+\{\}\\;:'"<>\?\/]+//g;
 	return $tmp;
 }
 
@@ -27,6 +27,11 @@ sub noscript {
 	my $tmp = $_[0];
 	$tmp =~ s/<.+>//g;
 	return $tmp;
+}
+
+sub htmlexor {
+	my $tmp = $_[0];
+	return &textalize(&exorcism($tmp));
 }
 
 1;

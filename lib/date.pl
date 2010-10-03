@@ -5,7 +5,7 @@
 # Version 1.0.0 alpha
 # some useful subroutine
 
-package date;
+#package date;
 
 # 現在の日付時刻を取得し，引数の書式に整形した上で返却
 sub spridate {

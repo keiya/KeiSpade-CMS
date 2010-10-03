@@ -1,5 +1,9 @@
 package SQL;
 
+use strict;
+use warnings;
+use DBI;
+
 sub new {
 	my ($class,$datasource) = @_;
 	my $dbh = DBI->connect($datasource);
@@ -13,7 +17,6 @@ sub fetch {
 	my $sth = $dbh->prepare($statement);
 	my $rv = $sth->execute;
 	my @row;
-#	print "SQL COMMAND: [$_[0]] from table '$_[1]'<br />";
 	my $i = 0;
 	while ( my $arr_ref = $sth->fetchrow_arrayref ){
 		if (defined $_[2]) {
@@ -24,8 +27,6 @@ sub fetch {
 	} continue {
 			$i++;
 	}
-	#my $arr_ref = $th->fetchrow_arrayref;
-	#@row = @$arr_ref; 
 	$sth->finish;
 	return(@row);
 }
@@ -40,7 +41,7 @@ sub do {
 sub create_table {
 	my ($self, $recdata) = @_;
 	my $dbh = $self->{dbh};
-       	$notable = 1;
+	#my $notable = 1;
        	my $create_table = "create table pages (" .
        	                       "title," .
        	                       "lastmodified_date," .
@@ -65,7 +66,7 @@ sub tableexists {
 sub DESTROY {
 	my $self = shift;
 	my $dbh = $self->{dbh};
-	$dbh->disconnect;
+	$dbh->disconnect if $dbh;
 }
 
 1;

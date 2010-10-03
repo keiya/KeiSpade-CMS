@@ -5,21 +5,20 @@ use warnings;
 
 # include modules
 use File::Basename qw(basename);
-use DBI;
-use lib './lib';
 
+use lib './lib';
 use HTML::Template;
-use CGIDec;
-use Security;
 use SQL;
+require 'cgidec.pl';
 require 'date.pl';
 require 'kscconf.pl';
+require 'security.pl';
 
 # script file name
 my $myname = basename($0, '');
 
 # constants, default values
-my $VER = '0.2.0';
+my $VER = '0.3.0';
 my %vars = ( 'SiteName'=>'KeiSpade','SiteDescription'=>'The Multimedia Wiki','ScriptName'=>$myname,'UploaderName'=>'upload.pl',
              'SidebarPagesListLimit'=>'10','ContentLanguage'=>'ja');
 %vars = (%vars, &kscconf::load('./dat/kspade.conf'));
@@ -34,14 +33,12 @@ $htmlhead .= "<link rel=\"index\" href=\"./$vars{'ScriptName'}?cmd=category\">";
 my ($htmlbdhd, $htmlbody, $sidebar, $htmlfoot) = ( '', '', '', '');
 
 # process cgi args
-my $cgidec = new CGIDec;
-my %query = $cgidec->getline($ENV{'QUERY_STRING'});
+my %query = &getline($ENV{'QUERY_STRING'});
 
-my $sanitize = new Security;
 &setpagename($query{'page'});
 
 sub setpagename {
-	$vars{'PageName'} = $sanitize->exorcism($_[0]);
+	$vars{'PageName'} = &exorcism($_[0]);
 	if (not defined $vars{'PageName'} or not $vars{'PageName'} =~ /.+/) {
 		$vars{'PageName'} = 'TopPage'
 	}
@@ -52,7 +49,7 @@ sub setpagename {
 # connect to DB
 my $database = './dat/kspade.db';
 my $data_source = "dbi:SQLite:dbname=$database";
-my $sql = new SQL($data_source);
+my $sql = SQL->new($data_source);
 
 if ($sql->tableexists == 0) {
 	# database initialize (create the table)
@@ -94,7 +91,7 @@ sub page {
 
 	require 'Text/HatenaEx.pm';
 	$htmlbody .= "<h2>$res[0]</h2>";
-	my $parsed .= Text::HatenaEx->parse($sanitize->noscript($res[7]));
+	my $parsed .= Text::HatenaEx->parse(&noscript($res[7]));
 	$htmlbody .= $parsed;
 
 	my $confer;
@@ -173,7 +170,7 @@ sub preview {
 
 	require 'Text/HatenaEx.pm';
 	$htmlbody .= "<h2>$page{'title'}</h2>";
-	my $parsed .= Text::HatenaEx->parse($sanitize->noscript($page{'body'}));
+	my $parsed .= Text::HatenaEx->parse(&noscript($page{'body'}));
 	$htmlbody .= $parsed;
 } 
 sub new {
@@ -198,7 +195,6 @@ sub newpost {
 }
 sub del {
 # print delete confirm
-
 	$htmlhead .= '<title>'.$vars{'PageName'}.' &gt; Delete@'.$vars{'SiteName'}.'</title>';
 	$htmlbody .= &tmpl2html('html/delete.html',\%vars);
 }
@@ -207,11 +203,11 @@ sub delpage {
 	if ($ENV{'REQUEST_METHOD'} eq 'POST') {
 		$sql->do("delete from pages where title='".$vars{'PageName'}."'");
 	}
-	&setpagename('TopPage');
-	&page;
+	$htmlhead .= '<title>'.$vars{'PageName'}.' &gt; Deleted@'.$vars{'SiteName'}.'</title>';
+	$htmlbody .= &tmpl2html('html/deleted.html',\%vars);
 }
 sub search {
-	my $query = $sanitize->htmlexor($query{'query'});
+	my $query = &htmlexor($query{'query'});
 	$query =~ s/\s/AND/g if defined $query;
 	$vars{'Query'} = $query{'query'};
 	if (defined $query{'query'}) {
@@ -235,7 +231,7 @@ sub search {
 } 
 sub category {
 	# print categories
-	my $query = &sanitize->htmlexor($query{'query'});
+	my $query = &htmlexor($query{'query'});
 	$query =~ s/\s/AND/g;
 	$vars{'Query'} = $query{'query'};
 	if ($vars{'Query'} eq '') {
@@ -264,7 +260,7 @@ sub upload {
 } 
 sub delupload {
 # print delete confirm
-	my $filename = $sanitize->htmlexor($query{'filename'});
+	my $filename = &htmlexor($query{'filename'});
 	$vars{'DeleteFileName'} = $filename;
 	#$vars{'PagesList'} = &listpages("select title from pages where confer like '%$filename%';");
 	my @pages = $sql->fetch("select title from pages where confer like '%$filename%';");
@@ -276,7 +272,7 @@ sub delupload {
 
 sub delfile {
 	if ($ENV{'REQUEST_METHOD'} eq 'POST') {
-	my $filename = $sanitize->htmlexor($query{'filename'});
+	my $filename = &htmlexor($query{'filename'});
 	my @pages = $sql->fetch("select title from pages where confer like '%$filename%';",0);
 	foreach my $tmp (@pages) {
 		my @files = $sql->fetch("select confer from pages where title='$tmp';");
@@ -295,14 +291,14 @@ sub addfile {
 	my %page = &fetch2edit();
 
 	$htmlhead .= '<title>'.$vars{'PageName'}. ' &gt; UploadProcess@'.$vars{'SiteName'}.'</title>';
-	my $filename = $sanitize->htmlexor($query{'filename'});
-	my $original = $sanitize->htmlexor($query{'orig'});
+	my $filename = &htmlexor($query{'filename'});
+	my $original = &htmlexor($query{'orig'});
 	my @res = ($sql->fetch("select confer from pages where title='$vars{'PageName'}';"));
 	my $files = $res[0];
 	if ($files =~ /$filename/) {
 
 	} else {
-		my $tmp  = &date::spridate('%04d %2d %2d %2d:%02d:%02d');
+		my $tmp  = &spridate('%04d %2d %2d %2d:%02d:%02d');
 		$files .= "[$filename/$original($tmp)]";
 		$sql->do("update pages set lastmodified_date='$page{'modified_date'}', confer='$files' where title='$vars{'PageName'}';");
 	}
@@ -317,32 +313,41 @@ $vars{'SidebarPagesList'} = &listpages("select title from pages order by lastmod
 	,"<dd><a href=\"./$vars{'ScriptName'}?page=%s\">%s</a></dd>");
 $sidebar  = &tmpl2html('html/sidebar.html',\%vars);
 $htmlfoot .= "<hr /><address>KeiSpade CMS $VER by <a href=\"http://keispade.keiyac.org/\">KeiSpade Development Team</a></address>";
-print '<!DOCTYPE html><html lang="'.$vars{'ContentLanguage'}.'"><head>'.$htmlhead.'</head><body><header>'.$htmlbdhd.'</header><div id="container"><div id="main_container"><section>'.$htmlbody.'</section><hr /></div><aside><dl id="page_menu">'.$sidebar.'</dl></aside></div><footer>'.$htmlfoot.'</footer>';
+print '<!DOCTYPE html><html lang="'.$vars{'ContentLanguage'}.'"><head>'.$htmlhead.'</head><body><header>'.$htmlbdhd.'</header>
+       <div id="container"><div id="main_container"><section>'.$htmlbody.'</section><hr /></div><aside><dl id="page_menu">'.$sidebar.'</dl></aside></div>
+       <footer>'.$htmlfoot.'</footer>';
 print "</body></html>";
 
 
 # ページ編集・作成用共通サブルーチン
 sub fetch2edit {
-	my %args;
+	my %args = ();
 	read (STDIN, my $postdata, $ENV{'CONTENT_LENGTH'});
-	my %form = $cgidec->getline($postdata);
-	$args{'body'} = $sanitize->exorcism($form{'body'});
-	$args{'bodyhash'} = $sanitize->exorcism($form{'bodyhash'});
-	$args{'title'} = $sanitize->textalize($sanitize->exorcism($form{'title'}));
+	my %form = &getline($postdata);
+
+	$args{'title'} = &textalize(&exorcism($form{'title'}));
+	$args{'modified_date'} = time();
+	$args{'created_date'} = time();
+	$args{'tags'} = '';
+	$args{'autotags'} = '';
+	$args{'confer'} = '';
+	$args{'copyright'} = '';
+	$args{'body'} = &exorcism($form{'body'});
+	$args{'bodyhash'} = &exorcism($form{'bodyhash'});
+
+	$args{'title'} =~ s/ +$//;
 
 	my $tagstr = $args{'title'};
 	if (defined $tagstr) {
-	$tagstr =~ s/^\[(.+)\](.+)/$1/g;
-	if (defined $2) {
-		my @tagstrs= split(/\]\[/, $tagstr);
-		foreach my $tag (@tagstrs) {
-			$tag =~ s/[\[\]]+//g;
-			$args{'tags'} .= $tag.'|';
+		$tagstr =~ s/^\[(.+)\](.+)/$1/g;
+		if (defined $2) {
+			my @tagstrs= split(/\]\[/, $tagstr);
+			foreach my $tag (@tagstrs) {
+				$tag =~ s/[\[\]]+//g;
+				$args{'tags'} .= $tag.'|';
+			}
 		}
 	}
-	}
-	$args{'modified_date'} = time();
-	$args{'created_date'} = time();
 
 	chomp(%args);
 	return(%args);
@@ -387,12 +392,12 @@ sub relative_time {
 	my $elapsed = time() - $_[0];
 
 	if ($elapsed <= 86400) {
-		return 'Today '.&date::spritimearg('%02d:%02d:%02d',$_[0])
+		return 'Today '.spritimearg('%02d:%02d:%02d',$_[0])
 	} elsif ($elapsed > 86400 and $elapsed <= 172800) {
-		return 'Yesterday '.&date::spritimearg('%02d:%02d:%02d',$_[0])
+		return 'Yesterday '.spritimearg('%02d:%02d:%02d',$_[0])
 	} else {
-		return &date::spridatearg('%04d/%02d/%02d',$_[0])
-		.' '.&date::spritimearg('%02d:%02d:%02d',$_[0]);
+		return spridatearg('%04d/%02d/%02d',$_[0])
+		.' '.spritimearg('%02d:%02d:%02d',$_[0]);
 	}
 
 }
