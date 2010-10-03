@@ -12,7 +12,6 @@ use HTML::Template;
 use CGIDec;
 use Security;
 use SQL;
-require 'sql.pl';
 require 'date.pl';
 require 'kscconf.pl';
 
@@ -138,7 +137,6 @@ sub post {
 		require 'sha.pl';
 		my @res = ($sql->fetch("select * from pages where title='".$vars{'PageName'}."';"));
 		my $hashparent = &sha::pureperl($res[7]);
-		print "'$page{'title'}'";
 		if (($page{'bodyhash'} eq $hashparent) or ($page{'bodyhash'} =~ /Conflict/)) {
 			$page{'title'} = 'undefined'.rand(16384) if $page{'title'} eq '';
 			$sql->do("update pages set title='$page{'title'}', lastmodified_date='$page{'modified_date'}', tags='$page{'tags'}',
