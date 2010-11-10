@@ -37,10 +37,10 @@ my $abspath = $absuri;
 $abspath =~ s/$myname.+$//;
 
 # constants, default values
-my $VER = '0.3.1';
 my %vars = ( 'SiteName'=>'KeiSpade','SiteDescription'=>'The Multimedia Wiki','ScriptName'=>$myname,'UploaderName'=>'upload.pl',
              'ScriptAbsolutePath'=>$abspath, 'SidebarPagesListLimit'=>'10','ContentLanguage'=>'ja' );
 %vars = (%vars, &kscconf::load('./dat/kspade.conf'));
+$vars{'Version'}  = '0.3.1';
 
 # http header + html meta header
 my $httpstatus = "Status: 200 OK";
