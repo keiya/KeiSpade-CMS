@@ -17,14 +17,34 @@ require 'security.pl';
 # script file name
 my $myname = basename($0, '');
 
+# generate absolute uri
+my $absuri = '';
+if ($ENV{'SERVER_PORT'} == 443) {
+	$absuri .= 'https://'
+} else {
+	$absuri .= 'http://'
+}
+
+if ($ENV{'SERVER_NAME'} ne '') {
+	$absuri .= $ENV{'SERVER_NAME'};
+} else {
+	$absuri .= $ENV{'HTTP_HOST'};
+}
+
+$absuri .= $ENV{'REQUEST_URI'};
+
+my $abspath = $absuri;
+$abspath =~ s/$myname.+$//;
+
 # constants, default values
-my $VER = '0.3.0';
+my $VER = '0.3.1';
 my %vars = ( 'SiteName'=>'KeiSpade','SiteDescription'=>'The Multimedia Wiki','ScriptName'=>$myname,'UploaderName'=>'upload.pl',
-             'SidebarPagesListLimit'=>'10','ContentLanguage'=>'ja');
+             'ScriptAbsolutePath'=>$abspath, 'SidebarPagesListLimit'=>'10','ContentLanguage'=>'ja' );
 %vars = (%vars, &kscconf::load('./dat/kspade.conf'));
 
 # http header + html meta header
-print "Content-Type: text/html; charset=UTF-8\n\n";
+my $httpstatus = "Status: 200 OK";
+my $contype = "Content-Type: text/html; charset=UTF-8";
 my $htmlhead = '<meta charset=utf-8 /><link href="./css/kspade.css" rel="stylesheet" type="text/css" media="screen,print">';
 $htmlhead .= "<link rel=\"contents\" href=\"./$vars{'ScriptName'}?cmd=search\">";
 $htmlhead .= "<link rel=\"start\" href=\"./$vars{'ScriptName'}?page=TopPage\">";
@@ -69,7 +89,6 @@ $htmlbdhd .= &tmpl2html('html/bodyhead.html',\%vars);
 
 
 if ((not defined $query{'cmd'}) and (defined $vars{'PageName'})) {
-#if ((not defined $query{'cmd'}) ) {
 	&page;
 } elsif (defined $query{'cmd'}) {
 	no strict 'refs';
@@ -80,35 +99,40 @@ if ((not defined $query{'cmd'}) and (defined $vars{'PageName'})) {
 # print page
 sub page { 
 	my @res = ($sql->fetch("select * from pages where title='".$vars{'PageName'}."';"));
-	my $modified = $res[1];
-	my $created  = $res[2];
-	chop $res[3];
+	if (defined $res[0]) {
+		my $modified = $res[1];
+		my $created  = $res[2];
+		chop $res[3];
 
-	$modified = &relative_time($modified);
-	$created = &relative_time($created);
+		$modified = &relative_time($modified);
+		$created = &relative_time($created);
 
-	$htmlhead .= '<title>'.$res[0].'@'.$vars{'SiteName'}.'</title>';
+		$htmlhead .= '<title>'.$res[0].'@'.$vars{'SiteName'}.'</title>';
 
-	require 'Text/HatenaEx.pm';
-	$htmlbody .= "<h2>$res[0]</h2>";
-	my $parsed .= Text::HatenaEx->parse(&noscript($res[7]));
-	$htmlbody .= $parsed;
+		require 'Text/HatenaEx.pm';
+		$htmlbody .= "<h2>$res[0]</h2>";
+		my $parsed .= Text::HatenaEx->parse(&noscript($res[7]));
+		$htmlbody .= $parsed;
 
-	my $confer;
-	if (defined $res[5]) {
-		my @filedatas= split(/\]\[/, $res[5]);
-		foreach my $filedata (@filedatas) {
-			my @elements = split(/\//, $filedata);
-			$confer .= "<a href=\"files/$elements[0]\">$elements[1]</a> [<a href=\"./$vars{'ScriptName'}?&page=$vars{'PageName'}&amp;filename=$elements[0]&amp;cmd=delupload\" rel=\"nofollow\">X</a>] ";
-			$confer =~ s/[\[\]]+//g;
-		}
+		my $confer;
+		if (defined $res[5]) {
+			my @filedatas= split(/\]\[/, $res[5]);
+			foreach my $filedata (@filedatas) {
+				my @elements = split(/\//, $filedata);
+				$confer .= "<a href=\"files/$elements[0]\">$elements[1]</a> [<a href=\"./$vars{'ScriptName'}?&page=$vars{'PageName'}&amp;filename=$elements[0]&amp;cmd=delupload\" rel=\"nofollow\">X</a>] ";
+				$confer =~ s/[\[\]]+//g;
+			}
 	
 
-		my $filenum = @filedatas;
-		$htmlbody .= '</section><section><h2>Attached File</h2>'.$confer.'</section>' if $filenum == 1;
-		$htmlbody .= '</section><section><h2>Attached Files</h2>'.$confer.'</section>' if $filenum > 1;
+			my $filenum = @filedatas;
+			$htmlbody .= '</section><section><h2>Attached File</h2>'.$confer.'</section>' if $filenum == 1;
+			$htmlbody .= '</section><section><h2>Attached Files</h2>'.$confer.'</section>' if $filenum > 1;
+		}
+		$vars{'MetaInfo'} = "Last-modified: $modified, Created: $created, Tags: $res[3], AutoTags: $res[4]<br />$res[6]<br />";
+	} else {
+		$htmlhead .= '<title>Not Found'.'@'.$vars{'SiteName'}.'</title>';
+		$httpstatus = 'Status: 404 Not Found';
 	}
-	$htmlfoot .= "Last-modified: $modified, Created: $created, Tags: $res[3], AutoTags: $res[4]<br />$res[6]<br />";
 } 
 sub edit {
 # print edit page form
@@ -154,6 +178,8 @@ sub post {
 			delete $vars{'Diff'};
 			delete $vars{'Body'};
 		}
+		$httpstatus = 'Status: 303 See Other';
+		$httpstatus .= "\nLocation: $vars{'ScriptAbsolutePath'}$vars{'ScriptName'}?page=$vars{'PageName'}";
 	}
 } 
 sub preview {
@@ -190,7 +216,9 @@ sub newpost {
 		$sql->do("insert into pages (title,lastmodified_date,created_date,tags,autotags,copyright,body)
 			values ('$page{'title'}','$page{'created_date'}','$page{'created_date'}','$page{'tags'}','$page{'autotags'}','$page{'copyright'}','$page{'body'}');");
 		&setpagename($vars{'PageName'});
-		&page;
+		$httpstatus = 'Status: 303 See Other';
+		$httpstatus .= "\nLocation: ${abspath}$vars{'ScriptName'}?page=$vars{'PageName'}";
+		#&page;
 	}
 }
 sub del {
@@ -312,7 +340,8 @@ $vars{'SidebarCategoryList'} = &listcategory("select tags from pages;"
 $vars{'SidebarPagesList'} = &listpages("select title from pages order by lastmodified_date desc, title limit $vars{'SidebarPagesListLimit'};"
 	,"<dd><a href=\"./$vars{'ScriptName'}?page=%s\">%s</a></dd>");
 $sidebar  = &tmpl2html('html/sidebar.html',\%vars);
-$htmlfoot .= "<hr /><address>KeiSpade CMS $VER by <a href=\"http://keispade.keiyac.org/\">KeiSpade Development Team</a></address>";
+$htmlfoot = &tmpl2html('html/bodyfoot.html',\%vars);
+print "$httpstatus\n$contype\n\n";
 print '<!DOCTYPE html><html lang="'.$vars{'ContentLanguage'}.'"><head>'.$htmlhead.'</head><body><header>'.$htmlbdhd.'</header>
        <div id="container"><div id="main_container"><section>'.$htmlbody.'</section><hr /></div><aside><dl id="page_menu">'.$sidebar.'</dl></aside></div>
        <footer>'.$htmlfoot.'</footer>';

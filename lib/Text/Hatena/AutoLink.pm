@@ -14,6 +14,7 @@ $VERSION = '0.20';
 my $ra;
 my $syntax = {
     '\[\](.+?)\[\]' => \&unbracket,
+    '\[\[(.+?)\]\]' => \&wikilink,
     '(?:\[)?(ftp:\/\/[A-Za-z0-9~\/._\?\&=\-%#\+:\;,\@\']+)(?:\])?' => \&http,
     '(?:\[)?(https?:\/\/[A-Za-z0-9~\/._\?\&=\-%#\+:\;,\@\']+)(?:\])?' => \&http,
     '\[(https?:\/\/[A-Za-z0-9~\/._\?\&=\-%#\+:\;,\@\']+(?:jpg|jpeg|gif|png|bmp)):image(:[hw]\d+)?\]' => \&http_image,
@@ -60,6 +61,11 @@ sub http {
     return sprintf('<a href="%s">%s</a>', $url, $url);
 }
 
+sub wikilink {
+    my $mvar = shift;
+    my $url = $mvar->[1];
+    return sprintf("<a href=\"$main::vars{'ScriptName'}?page=%s\">%s</a>", $url, $url);
+}
 sub http_image {
     my $mvar = shift;
     my $url = $mvar->[1];
