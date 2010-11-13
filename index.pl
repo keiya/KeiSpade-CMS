@@ -131,9 +131,10 @@ sub page {
 		$vars{'MetaInfo'} = "Last-modified: $modified, Created: $created, Tags: $res[3], AutoTags: $res[4]<br />$res[6]<br />";
 	} else {
 		$htmlhead .= '<title>Not Found'.'@'.$vars{'SiteName'}.'</title>';
+		$htmlbody .= "KeiSpade does not have a page with this exact name. <a href=\"$vars{'ScriptName'}?$vars{'PageName'}&cmd=new\">Write the $vars{'PageName'}</a>.";
 		$httpstatus = 'Status: 404 Not Found';
 	}
-} 
+}
 sub edit {
 # print edit page form
 	my @res = ($sql->fetch("select body from pages where title='$vars{'PageName'}';"));
@@ -142,7 +143,7 @@ sub edit {
 	require 'sha.pl';
 	$vars{'BodyHash'} = &sha::pureperl($res[0]);
 	#$vars{'Token'} = rand)
-	$htmlhead .= '<meta http-equiv="Pragma" content="no-cache">';
+	$htmlhead .= '<meta http-equiv="Expires" content="0">';
 	$htmlhead .= '<title>'.$vars{'PageName'}.' &gt; Edit@'.$vars{'SiteName'}.'</title>';
 	$htmlbody .= &tmpl2html('html/editbody.html',\%vars);
 	delete $vars{'DBody'};
