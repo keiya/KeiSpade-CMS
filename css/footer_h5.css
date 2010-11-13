@@ -34,6 +34,10 @@ footer a:link {
     color:#ccc;
     text-decoration:none;
 }
+footer a:visited {
+    color:#ccc;
+    text-decoration:none;
+}
 footer a:hover {
     color:#56A9D9;
     text-decoration: underline;
