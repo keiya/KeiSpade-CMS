@@ -84,7 +84,6 @@ if ($sql->tableexists == 0) {
 	$htmlbody .= '<p>Table was created. Please reload.</p>';
 }
 
-$htmlbdhd .= &tmpl2html('html/bodyhead.html',\%vars);
 
 
 
@@ -167,6 +166,8 @@ sub post {
 				&setpagename($page{'title'});
 				&page;
 			}
+			$httpstatus = 'Status: 303 See Other';
+			$httpstatus .= "\nLocation: $vars{'ScriptAbsolutePath'}$vars{'ScriptName'}?page=$vars{'PageName'}";
 		} else {
 			require Text::Diff;
 			my $diff = Text::Diff::diff(\$res[7],\$page{'body'});
@@ -179,8 +180,6 @@ sub post {
 			delete $vars{'Diff'};
 			delete $vars{'Body'};
 		}
-		$httpstatus = 'Status: 303 See Other';
-		$httpstatus .= "\nLocation: $vars{'ScriptAbsolutePath'}$vars{'ScriptName'}?page=$vars{'PageName'}";
 	}
 } 
 sub preview {
@@ -341,11 +340,11 @@ $vars{'SidebarCategoryList'} = &listcategory("select tags from pages;"
 $vars{'SidebarPagesList'} = &listpages("select title from pages order by lastmodified_date desc, title limit $vars{'SidebarPagesListLimit'};"
 	,"<dd><a href=\"./$vars{'ScriptName'}?page=%s\">%s</a></dd>");
 $sidebar  = &tmpl2html('html/sidebar.html',\%vars);
+$htmlbdhd .= &tmpl2html('html/bodyhead.html',\%vars);
 $htmlfoot = &tmpl2html('html/bodyfoot.html',\%vars);
 print "$httpstatus\n$contype\n\n";
-print '<!DOCTYPE html><html lang="'.$vars{'ContentLanguage'}.'"><head>'.$htmlhead.'</head><body><header>'.$htmlbdhd.'</header>
-       <div id="container"><div id="main_container"><section>'.$htmlbody.'</section><hr /></div><aside><dl id="page_menu">'.$sidebar.'</dl></aside></div>
-       <footer>'.$htmlfoot.'</footer>';
+print '<!DOCTYPE html><html lang="'.$vars{'ContentLanguage'}.'"><head>'.$htmlhead.'</head><body>'.$htmlbdhd.'
+       <div id="container"><div id="main_container"><section>'.$htmlbody.'</section><hr /></div><aside><dl id="page_menu">'.$sidebar.'</dl></aside></div>'.$htmlfoot;
 print "</body></html>";
 
 
