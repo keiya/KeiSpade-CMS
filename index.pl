@@ -45,12 +45,10 @@ $vars{'Version'}  = '0.3.1';
 # http header + html meta header
 my $httpstatus = "Status: 200 OK";
 my $contype = "Content-Type: text/html; charset=UTF-8";
-my $htmlhead = '<meta charset=utf-8 /><link href="./css/kspade.css" rel="stylesheet" type="text/css" media="screen,print">';
-$htmlhead .= "<link rel=\"contents\" href=\"./$vars{'ScriptName'}?cmd=search\">";
-$htmlhead .= "<link rel=\"start\" href=\"./$vars{'ScriptName'}?page=TopPage\">";
-$htmlhead .= "<link rel=\"index\" href=\"./$vars{'ScriptName'}?cmd=category\">";
-
-my ($htmlbdhd, $htmlbody, $sidebar, $htmlfoot) = ( '', '', '', '');
+$vars{'HtmlHead'} = '<meta charset=utf-8 /><link href="./css/kspade.css" rel="stylesheet" type="text/css" media="screen,print">';
+$vars{'HtmlHead'} .= "<link rel=\"contents\" href=\"./$vars{'ScriptName'}?cmd=search\">";
+$vars{'HtmlHead'} .= "<link rel=\"start\" href=\"./$vars{'ScriptName'}?page=TopPage\">";
+$vars{'HtmlHead'} .= "<link rel=\"index\" href=\"./$vars{'ScriptName'}?cmd=category\">";
 
 # process cgi args
 my %query = &getline($ENV{'QUERY_STRING'});
@@ -79,9 +77,9 @@ if ($sql->tableexists == 0) {
 	my $body = &tmpl2html('html/tutorial.txt',\%vars);
 	$sql->do("insert into pages (title,lastmodified_date,created_date,tags,autotags,copyright,body)
 		values ('TopPage','$modified_date','$created_date','Help','Help','Copyleft','$body');");
-	$htmlhead .= '<link href="./css/light.css" rel="stylesheet" type="text/css">';
-	$htmlhead .= '<title>Miracle! Table was created!</title>';
-	$htmlbody .= '<p>Table was created. Please reload.</p>';
+	$vars{'HtmlHead'} .= '<link href="./css/light.css" rel="stylesheet" type="text/css">';
+	$vars{'HtmlHead'} .= '<title>Miracle! Table was created!</title>';
+	$vars{'HtmlBody'} .= '<p>Table was created. Please reload.</p>';
 }
 
 
@@ -106,12 +104,12 @@ sub page {
 		$modified = &relative_time($modified);
 		$created = &relative_time($created);
 
-		$htmlhead .= '<title>'.$res[0].'@'.$vars{'SiteName'}.'</title>';
+		$vars{'HtmlHead'} .= '<title>'.$res[0].'@'.$vars{'SiteName'}.'</title>';
 
 		require 'Text/HatenaEx.pm';
-		$htmlbody .= "<h2>$res[0]</h2>";
+		$vars{'HtmlBody'} .= "<h2>$res[0]</h2>";
 		my $parsed .= Text::HatenaEx->parse(&noscript($res[7]));
-		$htmlbody .= $parsed;
+		$vars{'HtmlBody'} .= $parsed;
 
 		my $confer;
 		if (defined $res[5]) {
@@ -124,13 +122,13 @@ sub page {
 	
 
 			my $filenum = @filedatas;
-			$htmlbody .= '</section><section><h2>Attached File</h2>'.$confer.'</section>' if $filenum == 1;
-			$htmlbody .= '</section><section><h2>Attached Files</h2>'.$confer.'</section>' if $filenum > 1;
+			$vars{'HtmlBody'} .= '</section><section><h2>Attached File</h2>'.$confer.'</section>' if $filenum == 1;
+			$vars{'HtmlBody'} .= '</section><section><h2>Attached Files</h2>'.$confer.'</section>' if $filenum > 1;
 		}
 		$vars{'MetaInfo'} = "Last-modified: $modified, Created: $created, Tags: $res[3], AutoTags: $res[4]<br />$res[6]<br />";
 	} else {
-		$htmlhead .= '<title>Not Found'.'@'.$vars{'SiteName'}.'</title>';
-		$htmlbody .= "KeiSpade does not have a page with this exact name. <a href=\"$vars{'ScriptName'}?$vars{'PageName'}&cmd=new\">Write the $vars{'PageName'}</a>.";
+		$vars{'HtmlHead'} .= '<title>Not Found'.'@'.$vars{'SiteName'}.'</title>';
+		$vars{'HtmlBody'} .= "KeiSpade does not have a page with this exact name. <a href=\"$vars{'ScriptName'}?$vars{'PageName'}&cmd=new\">Write the $vars{'PageName'}</a>.";
 		$httpstatus = 'Status: 404 Not Found';
 	}
 }
@@ -142,9 +140,9 @@ sub edit {
 	require 'sha.pl';
 	$vars{'BodyHash'} = &sha::pureperl($res[0]);
 	#$vars{'Token'} = rand)
-	$htmlhead .= '<meta http-equiv="Expires" content="0">';
-	$htmlhead .= '<title>'.$vars{'PageName'}.' &gt; Edit@'.$vars{'SiteName'}.'</title>';
-	$htmlbody .= &tmpl2html('html/editbody.html',\%vars);
+	$vars{'HtmlHead'} .= '<meta http-equiv="Expires" content="0">';
+	$vars{'HtmlHead'} .= '<title>'.$vars{'PageName'}.' &gt; Edit@'.$vars{'SiteName'}.'</title>';
+	$vars{'HtmlBody'} .= &tmpl2html('html/editbody.html',\%vars);
 	delete $vars{'DBody'};
 } 
 sub post {
@@ -175,8 +173,8 @@ sub post {
 			$vars{'Diff'} = $diff;
 			$vars{'Body'} = $res[7];
 			$vars{'DBody'} = $page{'body'};
-			$htmlhead .= '<title>'.$vars{'PageName'}.' &gt; Error@'.$vars{'SiteName'}.'</title>';
-			$htmlbody .= &tmpl2html('html/conflict.html',\%vars);
+			$vars{'HtmlHead'} .= '<title>'.$vars{'PageName'}.' &gt; Error@'.$vars{'SiteName'}.'</title>';
+			$vars{'HtmlBody'} .= &tmpl2html('html/conflict.html',\%vars);
 			delete $vars{'Diff'};
 			delete $vars{'Body'};
 		}
@@ -192,18 +190,18 @@ sub preview {
 		&page;
 	}
 
-	$htmlhead .= '<title>'.$page{'title'}.'@'.$vars{'SiteName'}.'</title>';
+	$vars{'HtmlHead'} .= '<title>'.$page{'title'}.'@'.$vars{'SiteName'}.'</title>';
 
 	require 'Text/HatenaEx.pm';
-	$htmlbody .= "<h2>$page{'title'}</h2>";
+	$vars{'HtmlBody'} .= "<h2>$page{'title'}</h2>";
 	my $parsed .= Text::HatenaEx->parse(&noscript($page{'body'}));
-	$htmlbody .= $parsed;
+	$vars{'HtmlBody'} .= $parsed;
 } 
 sub new {
 # print new page form
-	$htmlhead .= '<meta http-equiv="Pragma" content="no-cache">';
-	$htmlhead .= '<title> New@'.$vars{'SiteName'}.'</title>';
-	$htmlbody .= &tmpl2html('html/newbody.html',\%vars);
+	$vars{'HtmlHead'} .= '<meta http-equiv="Pragma" content="no-cache">';
+	$vars{'HtmlHead'} .= '<title> New@'.$vars{'SiteName'}.'</title>';
+	$vars{'HtmlBody'} .= &tmpl2html('html/newbody.html',\%vars);
 }
 sub newpost {
 # submit new page
@@ -223,16 +221,16 @@ sub newpost {
 }
 sub del {
 # print delete confirm
-	$htmlhead .= '<title>'.$vars{'PageName'}.' &gt; Delete@'.$vars{'SiteName'}.'</title>';
-	$htmlbody .= &tmpl2html('html/delete.html',\%vars);
+	$vars{'HtmlHead'} .= '<title>'.$vars{'PageName'}.' &gt; Delete@'.$vars{'SiteName'}.'</title>';
+	$vars{'HtmlBody'} .= &tmpl2html('html/delete.html',\%vars);
 }
 sub delpage {
 # delete page
 	if ($ENV{'REQUEST_METHOD'} eq 'POST') {
 		$sql->do("delete from pages where title='".$vars{'PageName'}."'");
 	}
-	$htmlhead .= '<title>'.$vars{'PageName'}.' &gt; Deleted@'.$vars{'SiteName'}.'</title>';
-	$htmlbody .= &tmpl2html('html/deleted.html',\%vars);
+	$vars{'HtmlHead'} .= '<title>'.$vars{'PageName'}.' &gt; Deleted@'.$vars{'SiteName'}.'</title>';
+	$vars{'HtmlBody'} .= &tmpl2html('html/deleted.html',\%vars);
 }
 sub search {
 	my $query = &htmlexor($query{'query'});
@@ -242,16 +240,16 @@ sub search {
 		# normal search
 		$vars{'PagesList'} = &listpages("select title from pages where body like '%$query%';"
 			,"<a href=\"./$vars{'ScriptName'}?page=%s\">%s</a><br />");
-		$htmlhead .= '<title>Search &gt; Body@'.$vars{'SiteName'}.'</title>';
-		$htmlbody .= &tmpl2html('html/search.html',\%vars);
+		$vars{'HtmlHead'} .= '<title>Search &gt; Body@'.$vars{'SiteName'}.'</title>';
+		$vars{'HtmlBody'} .= &tmpl2html('html/search.html',\%vars);
 		delete $vars{'PagesList'};
 
 	} else {
 		# print all pages
 		$vars{'PagesList'} = &listpages("select title from pages;"
 			,"<a href=\"./$vars{'ScriptName'}?page=%s\">%s</a><br />");
-		$htmlhead .= '<title>PagesList@'.$vars{'SiteName'}.'</title>';
-		$htmlbody .= &tmpl2html('html/list.html',\%vars);
+		$vars{'HtmlHead'} .= '<title>PagesList@'.$vars{'SiteName'}.'</title>';
+		$vars{'HtmlBody'} .= &tmpl2html('html/list.html',\%vars);
 		delete $vars{'PagesList'};
 	}
 	delete $vars{'Query'};
@@ -273,8 +271,8 @@ sub category {
 		$vars{'CategoryList'} = &listcategory("select title from pages where tags like '%$query%';"
 			,"<a href=\"./$vars{'ScriptName'}?page=%s\">%s</a><br />");
 	}
-	$htmlhead .= '<title>Search &gt; Category@'.$vars{'SiteName'}.'</title>';
-	$htmlbody .= &tmpl2html('html/category.html',\%vars);
+	$vars{'HtmlHead'} .= '<title>Search &gt; Category@'.$vars{'SiteName'}.'</title>';
+	$vars{'HtmlBody'} .= &tmpl2html('html/category.html',\%vars);
 	delete $vars{'CategoryTitle'};
 	delete $vars{'CategoryList'};
 	delete $vars{'Query'};
@@ -282,8 +280,8 @@ sub category {
 } 
 sub upload {
 	# print upload form
-	$htmlhead .= '<title>'.$vars{'PageName'}. ' &gt; Upload@'.$vars{'SiteName'}.'</title>';
-	$htmlbody .= &tmpl2html('html/upload.html',\%vars);
+	$vars{'HtmlHead'} .= '<title>'.$vars{'PageName'}. ' &gt; Upload@'.$vars{'SiteName'}.'</title>';
+	$vars{'HtmlBody'} .= &tmpl2html('html/upload.html',\%vars);
 
 } 
 sub delupload {
@@ -294,8 +292,8 @@ sub delupload {
 	my @pages = $sql->fetch("select title from pages where confer like '%$filename%';");
 	$vars{'PagesList'} = &listpages("select title from pages where confer like '%$filename%';"
 		,"<a href=\"./$vars{'ScriptName'}?page=%s\">%s</a><br />");
-	$htmlhead .= '<title>'.$filename. ' &gt; Delete Uploaded Files@'.$vars{'SiteName'}.'</title>';
-	$htmlbody .= &tmpl2html('html/delupload.html',\%vars);
+	$vars{'HtmlHead'} .= '<title>'.$filename. ' &gt; Delete Uploaded Files@'.$vars{'SiteName'}.'</title>';
+	$vars{'HtmlBody'} .= &tmpl2html('html/delupload.html',\%vars);
 }
 
 sub delfile {
@@ -318,7 +316,7 @@ sub addfile {
 	# submit file
 	my %page = &fetch2edit();
 
-	$htmlhead .= '<title>'.$vars{'PageName'}. ' &gt; UploadProcess@'.$vars{'SiteName'}.'</title>';
+	$vars{'HtmlHead'} .= '<title>'.$vars{'PageName'}. ' &gt; UploadProcess@'.$vars{'SiteName'}.'</title>';
 	my $filename = &htmlexor($query{'filename'});
 	my $original = &htmlexor($query{'orig'});
 	my @res = ($sql->fetch("select confer from pages where title='$vars{'PageName'}';"));
@@ -330,22 +328,15 @@ sub addfile {
 		$files .= "[$filename/$original($tmp)]";
 		$sql->do("update pages set lastmodified_date='$page{'modified_date'}', confer='$files' where title='$vars{'PageName'}';");
 	}
-	# TODO: これはあくまで暫定処置 いずれ全体的な構造を見直す
-	$htmlbody = "";
-	$sidebar = "";
 }
 
 $vars{'SidebarCategoryList'} = &listcategory("select tags from pages;"
 	,"<dd><a href=\"./$vars{'ScriptName'}?cmd=category&amp;query=%s\">%s</a></dd>");
 $vars{'SidebarPagesList'} = &listpages("select title from pages order by lastmodified_date desc, title limit $vars{'SidebarPagesListLimit'};"
 	,"<dd><a href=\"./$vars{'ScriptName'}?page=%s\">%s</a></dd>");
-$sidebar  = &tmpl2html('html/sidebar.html',\%vars);
-$htmlbdhd .= &tmpl2html('html/bodyhead.html',\%vars);
-$htmlfoot = &tmpl2html('html/bodyfoot.html',\%vars);
+my $html = &tmpl2html('html/body.html',\%vars);
 print "$httpstatus\n$contype\n\n";
-print '<!DOCTYPE html><html lang="'.$vars{'ContentLanguage'}.'"><head>'.$htmlhead.'</head><body>'.$htmlbdhd.'
-       <div id="container"><div id="main_container"><section>'.$htmlbody.'</section><hr /></div><aside><dl id="page_menu">'.$sidebar.'</dl></aside></div>'.$htmlfoot;
-print "</body></html>";
+print $html;
 
 
 # ページ編集・作成用共通サブルーチン
