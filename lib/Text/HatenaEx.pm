@@ -69,7 +69,12 @@ sub inline {
 sub video {
 	my $mvar = shift;
 	my $url = $mvar->[1];
-	return sprintf( '<video src="%s" controls="controls">%s</video>', $url, $url);
+    my $size = '';
+    if ($mvar->[2] && $mvar->[2] =~ /^:([hw])(\d+)$/o) {
+        my $hw = $1 eq 'h' ? 'height' : 'width';
+        $size = sprintf(qq|$hw="%d" |, $2);
+    }
+	return sprintf( '<video src="%s" %s controls="controls">%s</video>', $url, $size, $url);
 }
 
 sub audio {
@@ -80,7 +85,7 @@ sub audio {
 
 # AutoLinkを拡張する
 Text::Hatena::AutoLink->syntax({
-		'\[(.*):video\]' => \&Text::HatenaEx::video,
+		'\[(.*):video(:[hw]\d+)?\]' => \&Text::HatenaEx::video,
 		'\[(.*):audio\]' => \&Text::HatenaEx::audio,
 	});
 

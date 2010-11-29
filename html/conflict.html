@@ -2,11 +2,12 @@
 <form action="./<TMPL_VAR NAME=ScriptName>?cmd=post&amp;page=<TMPL_VAR NAME=NoSpacePageName>" method="post" name="editform" accept-charset="utf-8">
 <input type="hidden" value="Conflict" name="bodyhash">
 <input type="hidden" value="<TMPL_VAR NAME=PageName>" name="title">
-<h3>Body</h3>
+<h3>Your Post Data</h3>
 <textarea name="body" rows="20" cols="80">
 <TMPL_VAR NAME=DBody>
 </textarea><br />
 <button value="Post" name="bodysend" type="submit">Post</button>
+If you click the [Post], page will be overwrited by your post data.<br />
 <h3>Difference</h3>
 <p>-: stored page data, +:your post data</p>
 <TMPL_VAR NAME=Diff>
