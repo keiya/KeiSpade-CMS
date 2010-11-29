@@ -12,25 +12,28 @@ dl#page_menu {
     padding:8px 7px 4px 9px;
     font-size:1.6em;
     color:#555;
-    border-bottom: solid 3px #AACD06;
+    border-bottom: solid 3px #627D8C;
     text-transform: uppercase;
+    text-shadow: 1px 1px 3px #FFF;
 }
 #page_menu dt a:link {
 	text-decoration: none;
-	color: #555;
+	/*color: #555;*/
+    color:#777;
 }
 #page_menu dt a:visited {
 	text-decoration: none;
-	color: #856;
+    color:#777;
 }
 #page_menu dt a:hover {
 	text-decoration: none;
-	color: #690;
+	/*color: #690;*/
+	color: #56A9D9;
 }
 #page_menu dd {
     margin:0 1px;
     background-color: #fffff0;
-    border-bottom: solid 1px #AACD06;
+    border-bottom: solid 1px #56A9D9;
 }
 #page_menu dd a {
     line-height: 1.4;
@@ -43,5 +46,6 @@ dl#page_menu {
 }
 #page_menu dd a:hover {
     text-decoration: underline;
-    color: #690;
+    /*color: #690;*/
+    color: #56A9D9;
 }
