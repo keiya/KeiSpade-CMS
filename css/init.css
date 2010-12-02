@@ -32,11 +32,11 @@ body {
 
 /* 基本アンカー */
 a:link {
-    color:#56A9D9;
+    color:#f39;
 }
 
 a:hover {
-    color:#55f;
+    color:#09f;
 }
 
 /* テ-ブル内初期値同期 */
