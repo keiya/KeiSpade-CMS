@@ -38,8 +38,8 @@ aside{
 /* footer */
 footer{
     clear:both;
-    color: #2D393F;
-    background-color: white;
+    color:white;
+    background-color: #000;
     width:75em;
     margin:6px auto;
 }

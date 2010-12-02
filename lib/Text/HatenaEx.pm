@@ -4,6 +4,7 @@
 package Text::HatenaEx;
 use strict;
 use warnings;
+use CGI;
 use base qw(Text::Hatena);
 use Text::VimColor;
 
@@ -23,6 +24,7 @@ __PACKAGE__->syntax(q(
 	| p
 	h6	: "\n****" inline(s)
 super_pre	: /\n>\|(\w*)\|/o text_line(s) "\n||<" ..."\n"
+pre        : "\n>|" text_line(s) "\n|<" ..."\n"
 ));
 
 sub h6 {
@@ -105,4 +107,13 @@ sub super_pre {
 		return "<pre>\n$texts</pre>\n";
 	}
 }
+
+sub pre {
+    my $class = shift;
+    my $items = shift->{items};
+    my $lines = $class->expand($items->[1]);
+    return "<pre>\n" . CGI::escapeHTML($lines) . "</pre>\n";
+}
+
+1;
 

@@ -3,23 +3,20 @@
 ------------------------------*/
 /* フッター */
 footer {
-    border-bottom:solid 4px #aaa;
-    width:75em;
+    color:#fff;
     font-family: Arial, Helvetica, sans-serif;
 }
-address {
+address{
     text-align:right;
     padding:20px 8px 4px 0;
     margin:2px 0 0 0;
     border:solid 1px #000;
-    color:#888888;
-    background-color:#2D3940;
-    font-style:normal;
-}
+    background-color:#555;
+    }
 /* フッターナビ */
 footer ul {
     line-height:1.5;
-    color:#2D393F;
+    color:#f1f1f1;
     border-left:solid 1px #f1f1f1;
     display:inline;
     list-style-type: none;
@@ -30,15 +27,10 @@ footer ul li {
     display:inline;
     padding:0 0.6em;
 }
-footer a:link {
-    color:#ccc;
-    text-decoration:none;
-}
-footer a:visited {
-    color:#ccc;
-    text-decoration:none;
+footer a {
+    color:#f1f1f1;
 }
 footer a:hover {
-    color:#56A9D9;
-    text-decoration: underline;
+    color:#fff;
+    text-decoration: none;
 }
