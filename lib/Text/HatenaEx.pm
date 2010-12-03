@@ -85,9 +85,9 @@ sub audio {
 
 # AutoLinkを拡張する
 Text::Hatena::AutoLink->syntax({
-		'\[(.*):video(:[hw]\d+)?\]' => \&Text::HatenaEx::video,
-		'\[(.*):audio\]' => \&Text::HatenaEx::audio,
-	});
+	'\[(.*):video(:[hw]\d+)?\]' => \&Text::HatenaEx::video,
+	'\[(.*):audio\]' => \&Text::HatenaEx::audio,
+});
 
 sub super_pre {
 	my $class = shift;
