@@ -25,7 +25,7 @@ sub textalize {
 
 sub noscript {
 	my $tmp = $_[0];
-	$tmp =~ s/<.+>//g;
+	$tmp =~ s/<(.+?)>/&lt;$1&gt;/g;
 	return $tmp;
 }
 
