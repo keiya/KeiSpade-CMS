@@ -138,7 +138,7 @@ sub atom {
 	my $pupdated = ($sql->fetch("select lastmodified_date from pages order by lastmodified_date desc limit 1"))[0];
 	$pupdated= &spridtarg($pupdated);
 	chomp $pupdated;
-	my $hash_ref = ($sql->fetch_ashash("select * from pages order by lastmodified_date desc;"));
+	my $hash_ref = ($sql->fetch_ashash("select * from pages order by lastmodified_date desc limit 5;"));
 	$vars{'AtomUpdated'} = $pupdated;
 	my ($title, $etitle, $id, $link, $update, $publish, $tags, $author, $body, $pbody, $tmp);
 	my $entry = '';
