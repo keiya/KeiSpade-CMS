@@ -146,7 +146,7 @@ sub atom {
 	foreach my $keys (keys %$hash_ref) {
 		$title  = $hash_ref->{$hash_ref->{$keys}->{'title'}}->{'title'};
 		$etitle = &urlenc($title);
-		$id     = "$title";
+		$id     = "${abspath}$vars{'ScriptName'}?page=$etitle";
 		$link   = "./$vars{'ScriptName'}?page=$etitle";
 		$update = $hash_ref->{$hash_ref->{$keys}->{'title'}}->{'lastmodified_date'};
 		$publish= $hash_ref->{$hash_ref->{$keys}->{'title'}}->{'created_date'};
@@ -168,7 +168,7 @@ sub atom {
 #		$publish = $tmp.'T'.spritimearg('%02d:%02d:%02d',$publish).&localtz;
 		$update  = &spridtarg($update);
 		$publish = &spridtarg($publish);
-		$vars{'AtomEntries'} .= "<entry><title>$title</title><id>$id</id><author>$author</author><link rel=\"alternate\" href=\"$link\" />".
+		$vars{'AtomEntries'} .= "<entry><title>$title</title><id>$id</id><author><name>$author</name></author><link rel=\"alternate\" href=\"$link\" />".
 		                         "<updated>$update</updated><published>$publish</published>$ptag".
                                  "<content type=\"html\">$pbody</content></entry>\n";
 	}
@@ -484,7 +484,7 @@ sub relative_time {
 
 sub urlenc {
 my $string = $_[0];
-$string =~ s/([^\w .-~])/'%'.unpack('H2', $1)/eg;
+$string =~ s/([^\w ])/'%'.unpack('H2', $1)/eg;
 $string =~ tr/ /+/;
 return $string
 }
