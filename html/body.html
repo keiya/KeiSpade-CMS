@@ -1,6 +1,9 @@
 <!DOCTYPE html><html lang=<TMPL_VAR NAME=ContentLanguage>>
 <head>
 	<TMPL_VAR NAME=HtmlHead>
+	<script src="./addons/com/ajaxcom.js"></script>
+	<script src="./addons/upl/upload.js"></script>
+	<link rel="stylesheet" type="text/css" href="./addons/com/ajaxcom.css">
 </head>
 <body>
 <header>
@@ -21,6 +24,12 @@
 <div id="main_container">
 <section>
 <TMPL_VAR NAME="HtmlBody">
+</section>
+
+<hr />
+<section>
+<div id="ajaxcom_here"></div>
+<script>(new AjaxCom("ajaxcom_here")).load();</script>
 </section>
 </div>
 

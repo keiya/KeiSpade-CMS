@@ -8,64 +8,6 @@
     use strict;
     use XML::TreePP;
 # ------------------------------------------------------------------------
-sub output_feed_rss {
-    my $feed = shift;
-    my $file = shift;
-    open( OUT, "> $file" ) or return;
-    print OUT $feed->to_string();
-    close( OUT );
-    chmod( 0666, $file );
-    $file;
-}
-# ------------------------------------------------------------------------
-sub output_feed_json {
-    my $feed = shift;
-    my $file = shift;
-    my $json = &json_dump( $feed ) or return;
-    open( OUT, "> $file" ) or return;
-    print OUT $json;
-    close( OUT );
-    chmod( 0666, $file );
-    $file;
-}
-# ------------------------------------------------------------------------
-sub json_dump {
-    my $data = shift;
-    return JSON::Syck::Dump($data) if defined $JSON::Syck::VERSION;
-    return JSON->new()->objToJson($data) if defined $JSON::VERSION;
-    local $@;
-    eval { require JSON::Syck; };
-    return JSON::Syck::Dump($data) if defined $JSON::Syck::VERSION;
-    eval { require JSON; };
-    return JSON->new()->objToJson($data) if defined $JSON::VERSION;
-    undef;
-}
-# ----------------------------------------------------------------
-sub find_recent_lines {
-    my $basedir = shift or return;
-    my $max_total = shift || 100;   # limit in total
-    my $max_page  = shift ||  10;   # limit each page
-    my $sorted = &find_all_files( $basedir );
-    $#$sorted = $max_total-1 if ( $#$sorted >= $max_total );
-
-    my $bufline = [];
-    foreach my $text ( @$sorted ) {
-        my $file = "$basedir/$text";
-        my $buftail = [];
-        open( TEXT, $file ) or die "$! - $file\n";
-        while ( my $iline = <TEXT> ) {
-            unshift( @$buftail, $iline );
-            $#$buftail = $max_page-1 if ( $#$buftail >= $max_page );
-        }
-        close( TEXT );
-        my $addlist = [ map { [$text,$_] } @$buftail ];
-        $bufline = [ sort {$b->[1] cmp $a->[1]} ( @$bufline, @$addlist ) ];
-        $#$bufline = $max_total-1 if ( $#$bufline >= $max_total );
-    }
-
-    $bufline;
-}
-# ----------------------------------------------------------------
 sub find_all_files {
     my $base = shift;
     my $alltxt = [];

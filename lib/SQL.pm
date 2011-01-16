@@ -11,6 +11,14 @@ sub new {
 	return bless $self, $class;
 }
 
+sub fetch_ashash {
+	my ($self, $statement, $key) = @_;
+	$key = 1 unless defined $key;
+	my $dbh = $self->{dbh};
+	my $arr_ref = $dbh->selectall_hashref($statement,$key);
+	return $arr_ref;
+}
+
 sub fetch {
 	my ($self, $statement) = @_;
 	my $dbh = $self->{dbh};
@@ -50,7 +58,8 @@ sub create_table {
        	                       "autotags," .
        	                       "confer," .
        	                       "copyright," .
-                              "body" .
+                               "body," .
+	                           "author" .
        	                   ");";
        	$dbh->do($create_table);
 }

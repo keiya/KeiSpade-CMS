@@ -59,7 +59,7 @@ sub unbracket {
 sub http {
     my $mvar = shift;
     my $url = $mvar->[0];
-    return sprintf('<a href="%s">%s</a>', $url, $url);
+    return sprintf('<a href="%s" rel="nofollow">%s</a>', $url, $url);
 }
 
 sub wikilink {
@@ -91,7 +91,7 @@ sub http_title {
     my $mvar = shift;
     my $url = $mvar->[1];
     my $title = $mvar->[2];
-    return sprintf('<a href="%s">%s</a>', $url, $title);
+    return sprintf('<a href="%s" rel="nofollow">%s</a>', $url, $title);
 }
 
 sub mailto {

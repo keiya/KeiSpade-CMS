@@ -6,7 +6,7 @@ use File::Temp qw/ tempfile /;
 use lib './lib';
 require 'kscconf.pl';
 
-my $buffer;
+my ($buffer,$filesize);
 my $query = CGI->new;
 my $fh = $query->upload('file') or die(qq(Invalid file handle returned.)); # Get $fh
 my $file = $query->param('file');
@@ -32,7 +32,7 @@ while (read($fh, $buffer, 1024)) { # Read from $fh insted of $file
 }
 close $tmp_fh;
 close $fh;
-
+$filesize = -s $tmpfile;
 
 # Ext. check
 $file =~ s/\.php3?//g;
@@ -50,7 +50,29 @@ if (!move( $tmpfile, $writeto)) {
 	warn "[KeiSpade-CMS] Cannot write to $writeto. Please check permission.";
 }
 
-print $query->redirect( "$scriptname?cmd=addfile&page=$back&filename=$filename.$ext&orig=$file");
+print <<_HTML_;
+Content-type: text/html
+
+
+<html>
+<head>
+<title>fileupload</title>
+<!-- ファイル情報を表示する関数の呼び出し -->
+<script type="text/javascript"><!--
+var fname="$file";
+var fsize="$filesize";
+window.onload=function(){
+		window.parent.GetFile(fname,fsize);
+		location.href="./$scriptname?cmd=addfile&page=$back&filename=$filename.$ext&orig=$file";
+}
+--></script>
+</head>
+<body><p>fileupload</p></body>
+</html>
+_HTML_
+
+
+#print $query->redirect( "$scriptname?cmd=addfile&page=$back&filename=$filename.$ext&orig=$file");
 sub sha {
 	my $file = $_[0];
 	$file =~ s/|//g;
@@ -75,6 +97,7 @@ sub sha {
 	}
 	return $sha;
 }
+
 sub shaperl {
 	require Digest::SHA::PurePerl;
 	my $sha = Digest::SHA::PurePerl->new(256);

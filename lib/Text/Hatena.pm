@@ -151,7 +151,7 @@ sub blockquote {
     }
     $ret .= $body;
     if ($http) {
-        $ret .= qq|<cite><a href="$http->{cite}">$http->{title}</a></cite>\n|;
+        $ret .= qq|<cite><a href="$http->{cite}" rel="nofollow">$http->{title}</a></cite>\n|;
     }
     $ret .= "</blockquote>\n";
     return $ret;

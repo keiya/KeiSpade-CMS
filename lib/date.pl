@@ -26,5 +26,18 @@ sub spritimearg {
     my ($sec, $min, $hour) = (localtime ($_[1]))[0,1,2];
     return sprintf($_[0], $hour, $min, $sec);
 }
+
+sub spridtarg {
+	my $tmp = spridatearg('%02d-%02d-%02d',$_[0]);
+	return $tmp.'T'.spritimearg('%02d:%02d:%02d',$_[0]).&localtz;
+}
+
+sub localtz {
+	my $now = time();
+	my $off = (timegm(localtime($now))-timegm(gmtime($now)))/60;
+	return sprintf( "%+03d:%02d", $off/60, $off%60 );
+}
+
+
 1;
 

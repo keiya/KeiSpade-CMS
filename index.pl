@@ -9,6 +9,7 @@ use File::Basename qw(basename);
 use lib './lib';
 use HTML::Template;
 use SQL;
+use Time::Local;
 require 'cgidec.pl';
 require 'date.pl';
 require 'kscconf.pl';
@@ -40,7 +41,7 @@ $abspath =~ s/$myname.+$//;
 my %vars = ( 'SiteName'=>'KeiSpade','SiteDescription'=>'The Multimedia Wiki','ScriptName'=>$myname,'UploaderName'=>'upload.pl',
              'ScriptAbsolutePath'=>$abspath, 'SidebarPagesListLimit'=>'10','ContentLanguage'=>'ja' );
 %vars = (%vars, &kscconf::load('./dat/kspade.conf'));
-$vars{'Version'}  = '0.3.1';
+$vars{'Version'}  = '0.4.0';
 
 # http header + html meta header
 my $httpstatus = "Status: 200 OK";
@@ -92,28 +93,28 @@ if ((not defined $query{'cmd'}) and (defined $vars{'PageName'})) {
 	&{$query{'cmd'}};
 }
 
-
 # print page
 sub page { 
-	my @res = ($sql->fetch("select * from pages where title='".$vars{'PageName'}."';"));
-	if (defined $res[0]) {
-		my $modified = $res[1];
-		my $created  = $res[2];
-		chop $res[3];
+	my $hash_ref = ($sql->fetch_ashash("select * from pages where title='".$vars{'PageName'}."';"));
+	my $hash_ofpage = $hash_ref->{$vars{'PageName'}};
+	if (defined $hash_ofpage->{'title'}) {
+		my $tags = $hash_ofpage->{'tags'};
+		chop $tags;
 
-		$modified = &relative_time($modified);
-		$created = &relative_time($created);
+		my $modified = &relative_time($hash_ofpage->{'lastmodified_date'});
+		my $created = &relative_time($hash_ofpage->{'created_date'});
 
-		$vars{'HtmlHead'} .= '<title>'.$res[0].'@'.$vars{'SiteName'}.'</title>';
+		$vars{'HtmlHead'} .= '<title>'.$hash_ofpage->{'title'}.'@'.$vars{'SiteName'}.'</title>';
 
 		require 'Text/HatenaEx.pm';
-		$vars{'HtmlBody'} .= "<h2>$res[0]</h2>";
-		my $parsed .= Text::HatenaEx->parse(&noscript($res[7]));
+		$vars{'HtmlBody'} .= "<h2>$hash_ofpage->{'title'}</h2>";
+		my $parsed = '';
+		$parsed .= Text::HatenaEx->parse(&noscript($hash_ofpage->{'body'}));
 		$vars{'HtmlBody'} .= $parsed;
 
 		my $confer;
-		if (defined $res[5]) {
-			my @filedatas= split(/\]\[/, $res[5]);
+		if (defined $hash_ofpage->{'confer'}) {
+			my @filedatas= split(/\]\[/, $hash_ofpage->{'confer'});
 			foreach my $filedata (@filedatas) {
 				my @elements = split(/\//, $filedata);
 				$confer .= "<a href=\"files/$elements[0]\">$elements[1]</a> [<a href=\"./$vars{'ScriptName'}?&page=$vars{'PageName'}&amp;filename=$elements[0]&amp;cmd=delupload\" rel=\"nofollow\">X</a>] ";
@@ -125,12 +126,54 @@ sub page {
 			$vars{'HtmlBody'} .= '</section><section><h2>Attached File</h2>'.$confer.'</section>' if $filenum == 1;
 			$vars{'HtmlBody'} .= '</section><section><h2>Attached Files</h2>'.$confer.'</section>' if $filenum > 1;
 		}
-		$vars{'MetaInfo'} = "Last-modified: $modified, Created: $created, Tags: $res[3], AutoTags: $res[4]<br />$res[6]<br />";
+		$vars{'MetaInfo'} = "Last-modified: $modified, Created: $created, Tags: $hash_ofpage->{'tags'}, AutoTags: $hash_ofpage->{'autotags'}<br />$hash_ofpage->{'copyright'}<br />";
 	} else {
 		$vars{'HtmlHead'} .= '<title>Not Found'.'@'.$vars{'SiteName'}.'</title>';
 		$vars{'HtmlBody'} .= "KeiSpade does not have a page with this exact name. <a href=\"$vars{'ScriptName'}?$vars{'PageName'}&cmd=new\">Write the $vars{'PageName'}</a>.";
 		$httpstatus = 'Status: 404 Not Found';
 	}
+	&showhtml('html/body.html');
+}
+sub atom {
+	my $pupdated = ($sql->fetch("select lastmodified_date from pages order by lastmodified_date desc limit 1"))[0];
+	$pupdated= &spridtarg($pupdated);
+	chomp $pupdated;
+	my $hash_ref = ($sql->fetch_ashash("select * from pages order by lastmodified_date desc;"));
+	$vars{'AtomUpdated'} = $pupdated;
+	my ($title, $etitle, $id, $link, $update, $publish, $tags, $author, $body, $pbody, $tmp);
+	my $entry = '';
+	$vars{'AtomEntries'} .= "<id>${abspath}$vars{'ScriptName'}?cmd=atom</id>";
+	foreach my $keys (keys %$hash_ref) {
+		$title  = $hash_ref->{$hash_ref->{$keys}->{'title'}}->{'title'};
+		$etitle = &urlenc($title);
+		$id     = "$title";
+		$link   = "./$vars{'ScriptName'}?page=$etitle";
+		$update = $hash_ref->{$hash_ref->{$keys}->{'title'}}->{'lastmodified_date'};
+		$publish= $hash_ref->{$hash_ref->{$keys}->{'title'}}->{'created_date'};
+		$tags   = $hash_ref->{$hash_ref->{$keys}->{'title'}}->{'tags'};
+		$author   = $hash_ref->{$hash_ref->{$keys}->{'title'}}->{'author'};
+		$author = 'anonymous' if not defined $author;
+		$body   = $hash_ref->{$hash_ref->{$keys}->{'title'}}->{'body'};
+		$body = 'No text' if $body eq '';
+		require 'Text/HatenaEx.pm';
+		$pbody = Text::HatenaEx->parse(&html(&noscript($body)));
+		my @tag = split(/\|/,$tags);
+		my $ptag = '';
+		foreach my $tmp (@tag) {
+			$ptag .= "<category term=\"$tmp\" />";
+		}
+#		$tmp = spridatearg('%02d-%02d-%02d',$update);
+#		$update = $tmp.'T'.spritimearg('%02d:%02d:%02d',$update).&localtz;
+#		$tmp = spridatearg('%02d-%02d-%02d',$publish);
+#		$publish = $tmp.'T'.spritimearg('%02d:%02d:%02d',$publish).&localtz;
+		$update  = &spridtarg($update);
+		$publish = &spridtarg($publish);
+		$vars{'AtomEntries'} .= "<entry><title>$title</title><id>$id</id><author>$author</author><link rel=\"alternate\" href=\"$link\" />".
+		                         "<updated>$update</updated><published>$publish</published>$ptag".
+                                 "<content type=\"html\">$pbody</content></entry>\n";
+	}
+print "$httpstatus\n$contype\n\n";
+print &tmpl2html('html/atom.xml',\%vars);
 }
 sub edit {
 # print edit page form
@@ -144,6 +187,7 @@ sub edit {
 	$vars{'HtmlHead'} .= '<title>'.$vars{'PageName'}.' &gt; Edit@'.$vars{'SiteName'}.'</title>';
 	$vars{'HtmlBody'} .= &tmpl2html('html/editbody.html',\%vars);
 	delete $vars{'DBody'};
+	&showhtml;
 } 
 sub post {
 # submit edited text
@@ -179,6 +223,7 @@ sub post {
 			delete $vars{'Body'};
 		}
 	}
+	&showhtml;
 } 
 sub preview {
 # submit edited text
@@ -196,12 +241,14 @@ sub preview {
 	$vars{'HtmlBody'} .= "<h2>$page{'title'}</h2>";
 	my $parsed .= Text::HatenaEx->parse(&noscript($page{'body'}));
 	$vars{'HtmlBody'} .= $parsed;
+	&showhtml;
 } 
 sub new {
 # print new page form
 	$vars{'HtmlHead'} .= '<meta http-equiv="Pragma" content="no-cache">';
 	$vars{'HtmlHead'} .= '<title> New@'.$vars{'SiteName'}.'</title>';
 	$vars{'HtmlBody'} .= &tmpl2html('html/newbody.html',\%vars);
+	&showhtml;
 }
 sub newpost {
 # submit new page
@@ -218,11 +265,13 @@ sub newpost {
 		$httpstatus .= "\nLocation: ${abspath}$vars{'ScriptName'}?page=$vars{'PageName'}";
 		#&page;
 	}
+	&showhtml;
 }
 sub del {
 # print delete confirm
 	$vars{'HtmlHead'} .= '<title>'.$vars{'PageName'}.' &gt; Delete@'.$vars{'SiteName'}.'</title>';
 	$vars{'HtmlBody'} .= &tmpl2html('html/delete.html',\%vars);
+	&showhtml;
 }
 sub delpage {
 # delete page
@@ -231,6 +280,7 @@ sub delpage {
 	}
 	$vars{'HtmlHead'} .= '<title>'.$vars{'PageName'}.' &gt; Deleted@'.$vars{'SiteName'}.'</title>';
 	$vars{'HtmlBody'} .= &tmpl2html('html/deleted.html',\%vars);
+	&showhtml;
 }
 sub search {
 	my $query = &htmlexor($query{'query'});
@@ -253,7 +303,7 @@ sub search {
 		delete $vars{'PagesList'};
 	}
 	delete $vars{'Query'};
-
+	&showhtml;
 } 
 sub category {
 	# print categories
@@ -276,13 +326,14 @@ sub category {
 	delete $vars{'CategoryTitle'};
 	delete $vars{'CategoryList'};
 	delete $vars{'Query'};
-
+	&showhtml;
 } 
 sub upload {
 	# print upload form
 	$vars{'HtmlHead'} .= '<title>'.$vars{'PageName'}. ' &gt; Upload@'.$vars{'SiteName'}.'</title>';
 	$vars{'HtmlBody'} .= &tmpl2html('html/upload.html',\%vars);
 
+	&showhtml;
 } 
 sub delupload {
 # print delete confirm
@@ -294,6 +345,7 @@ sub delupload {
 		,"<a href=\"./$vars{'ScriptName'}?page=%s\">%s</a><br />");
 	$vars{'HtmlHead'} .= '<title>'.$filename. ' &gt; Delete Uploaded Files@'.$vars{'SiteName'}.'</title>';
 	$vars{'HtmlBody'} .= &tmpl2html('html/delupload.html',\%vars);
+	&showhtml;
 }
 
 sub delfile {
@@ -310,6 +362,7 @@ sub delfile {
 	&setpagename($vars{'PageName'});
 	&page;
 	}
+	&showhtml;
 }
 
 sub addfile {
@@ -328,16 +381,23 @@ sub addfile {
 		$files .= "[$filename/$original($tmp)]";
 		$sql->do("update pages set lastmodified_date='$page{'modified_date'}', confer='$files' where title='$vars{'PageName'}';");
 	}
+	&showhtml;
 }
 
-$vars{'SidebarCategoryList'} = &listcategory("select tags from pages;"
-	,"<dd><a href=\"./$vars{'ScriptName'}?cmd=category&amp;query=%s\">%s</a></dd>");
-$vars{'SidebarPagesList'} = &listpages("select title from pages order by lastmodified_date desc, title limit $vars{'SidebarPagesListLimit'};"
-	,"<dd><a href=\"./$vars{'ScriptName'}?page=%s\">%s</a></dd>");
-my $html = &tmpl2html('html/body.html',\%vars);
-print "$httpstatus\n$contype\n\n";
-print $html;
-
+sub showhtml {
+	$vars{'SidebarCategoryList'} = &listcategory("select tags from pages;"
+		,"<dd><a href=\"./$vars{'ScriptName'}?cmd=category&amp;query=%s\">%s</a></dd>");
+	$vars{'SidebarPagesList'} = &listpages("select title from pages order by lastmodified_date desc, title limit $vars{'SidebarPagesListLimit'};"
+		,"<dd><a href=\"./$vars{'ScriptName'}?page=%s\">%s</a></dd>");
+	my $html;
+	if (defined $_[0]) {
+		$html = &tmpl2html($_[0],\%vars);
+	} else {
+		$html = &tmpl2html('html/frmwrk.html',\%vars);
+	}
+	print "$httpstatus\n$contype\n\n";
+	print $html;
+}
 
 # ページ編集・作成用共通サブルーチン
 sub fetch2edit {
@@ -355,7 +415,7 @@ sub fetch2edit {
 	$args{'body'} = &exorcism($form{'body'});
 	$args{'bodyhash'} = &exorcism($form{'bodyhash'});
 
-	$args{'title'} =~ s/ +$//;
+	$args{'title'} =~ s/ +$// if defined $args{'title'};
 
 	my $tagstr = $args{'title'};
 	if (defined $tagstr) {
@@ -422,4 +482,9 @@ sub relative_time {
 
 }
 
-
+sub urlenc {
+my $string = $_[0];
+$string =~ s/([^\w .-~])/'%'.unpack('H2', $1)/eg;
+$string =~ tr/ /+/;
+return $string
+}
