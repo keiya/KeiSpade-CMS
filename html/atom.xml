@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed
+ xml:lang="<TMPL_VAR NAME=ContentLanguage>"
+ xmlns="http://www.w3.org/2005/Atom">
+<title><TMPL_VAR NAME=SiteName></title>
+<author><name>KeiSpade CMS</name></author>
+<generator uri="http://keispade.keiyac.org/">KeiSpade CMS</generator>
+<updated><TMPL_VAR NAME=AtomUpdated></updated>
+<TMPL_VAR NAME=AtomEntries>
+</feed>

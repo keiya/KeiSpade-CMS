@@ -1,0 +1,52 @@
+<!DOCTYPE html><html lang=<TMPL_VAR NAME=ContentLanguage>>
+<head>
+	<TMPL_VAR NAME=HtmlHead>
+	<script src="./addons/upl/upload.js"></script>
+	<link rel="stylesheet" type="text/css" href="./addons/com/ajaxcom.css">
+</head>
+<body>
+<header>
+	<h1><span><a href="./<TMPL_VAR NAME=ScriptName>"><TMPL_VAR NAME=SiteName></a></span> <TMPL_VAR NAME=SiteDescription></h1>
+	<nav>
+		<ul>
+			<li><a href="./<TMPL_VAR NAME=ScriptName>"><span>Top</span></a></li>
+			<li><a href="./<TMPL_VAR NAME=ScriptName>?page=<TMPL_VAR NAME=NoSpacePageName>&amp;cmd=edit" rel="nofollow"><span>Edit</span></a></li>
+			<li><a href="./<TMPL_VAR NAME=ScriptName>?cmd=new" rel="nofollow"><span>New</span></a></li>
+			<li><a href="./<TMPL_VAR NAME=ScriptName>?page=<TMPL_VAR NAME=NoSpacePageName>&amp;cmd=del" rel="nofollow"><span>Delete</span></a></li>
+			<li><a href="./<TMPL_VAR NAME=ScriptName>?page=<TMPL_VAR NAME=NoSpacePageName>&amp;cmd=upload" rel="nofollow"><span>Upload</span></a></li>
+			<li><a href="./<TMPL_VAR NAME=ScriptName>?cmd=search"><span>List of Pages</span></a></li>
+		</ul>
+	</nav>
+</header>
+<div id="container">
+		
+<div id="main_container">
+<section>
+<TMPL_VAR NAME="HtmlBody">
+</section>
+
+</div>
+
+<aside>
+<dl id="page_menu">
+	<dt>Search</dt>
+	<dd>
+		<form action="./<TMPL_VAR NAME=ScriptName>" method="get" name="searchform" accept-charset="utf-8">
+			<input type="text" name="query" placeholder="..." size="15">
+			<input type="hidden" name="cmd" value="search">
+			<button value="Search" name="querysend" type="submit">Go</button>
+		</form>
+	</dd>
+	<dt><a href="./<TMPL_VAR NAME=ScriptName>?cmd=category" class="sidebar">Category</a></dt><TMPL_VAR NAME=SidebarCategoryList>
+	<dt><a href="./<TMPL_VAR NAME=ScriptName>?cmd=search" class="sidebar">Pages</a></dt><TMPL_VAR NAME=SidebarPagesList>
+</dl>
+</aside>
+</div>
+
+<footer>
+<hr />
+<TMPL_VAR NAME=MetaInfo>
+<address>KeiSpade CMS <TMPL_VAR NAME=Version> by <a href="http://keispade.keiyac.org/">KeiSpade Development Team</a></address>
+</footer>
+</body>
+</html>

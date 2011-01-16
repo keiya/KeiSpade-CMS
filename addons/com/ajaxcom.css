@@ -1,0 +1,90 @@
+/*** ajaxcom.css - Ajax comment component (stylesheet) ***/
+
+.ajaxcom {
+	font-style: normal;
+	font-weight: normal;
+	margin: 1em 0 1em 2em;
+	padding: 0;
+}
+
+/*** form ***/
+
+.ajaxcom p {
+	white-space: nowrap;
+	margin: 0 0 0.5em 0;
+	padding: 0;
+}
+.ajaxcom form {
+	margin: 0;
+}
+
+/*** form name ***/
+
+.ajaxcom p .ajaxcom_name input {
+	margin: 0 0.5em 0 0;
+	width: 15%;
+}
+
+/*** form comment ***/
+
+.ajaxcom p .ajaxcom_content input {
+	margin: 0 0.5em 0 0;
+	width: 50%;
+}
+
+/*** form submit button ***/
+
+.ajaxcom p .ajaxcom_submit input {
+	margin: 0 0.5em 0 0;
+}
+
+/*** comments ***/
+
+.ajaxcom ul {
+	margin: 0;
+	padding: 0;
+}
+.ajaxcom ul li {
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+/*** comments name ***/
+
+.ajaxcom li .ajaxcom_name {
+	margin: 0 0.3em 0 0;
+	font-weight: bold;
+}
+
+/*** comments comment ***/
+
+.ajaxcom li .ajaxcom_content {
+	color: #000000;
+	margin: 0 0.3em 0 0;
+}
+.ajaxcom li .ajaxcom_content a {
+	color: #000000;
+	text-decoration: none;
+}
+.ajaxcom li .ajaxcom_content a:hover {
+	color: #000000;
+	text-decoration: underline;
+}
+
+/*** comments date ***/
+
+.ajaxcom li .ajaxcom_issued {
+	margin: 0 0.3em 0 0;
+	color: #999999;
+	font-size: 80%;
+}
+
+/*** error messages ***/
+
+.ajaxcom li .ajaxcom_notice {
+	margin: 0 0.5em 0 0;
+	color: #6666CC;
+	font-style: italic;
+	font-weight: bold;
+}
