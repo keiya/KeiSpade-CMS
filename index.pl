@@ -482,5 +482,6 @@ sub urlenc {
 my $string = $_[0];
 $string =~ s/([^\w ])/'%'.unpack('H2', $1)/eg;
 $string =~ tr/ /+/;
+$string = uc($string);
 return $string
 }
