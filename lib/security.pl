@@ -16,6 +16,13 @@ sub html {
 	return $tmp;
 }
 
+sub ahtml {
+	my $tmp = $_[0];
+	$tmp =~ s/&/&amp;/g;
+	$tmp =~ s/</&lt;/g;
+	return $tmp;
+}
+
 sub textalize {
 	my $tmp = $_[0];
 	#$tmp =~ s/[^\w\d_\-\(\) ぁ-ヶ亜-黑]+//g;

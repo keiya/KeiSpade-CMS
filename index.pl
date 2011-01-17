@@ -156,7 +156,7 @@ sub atom {
 		$body   = $hash_ref->{$hash_ref->{$keys}->{'title'}}->{'body'};
 		$body = 'No text' if $body eq '';
 		require 'Text/HatenaEx.pm';
-		$pbody = &html(Text::HatenaEx->parse(&html(&noscript($body))));
+		$pbody = &ahtml(Text::HatenaEx->parse(&html(&noscript($body))));
 		my @tag = split(/\|/,$tags);
 		my $ptag = '';
 		foreach my $tmp (@tag) {
