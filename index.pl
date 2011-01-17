@@ -129,7 +129,7 @@ sub page {
 		$vars{'MetaInfo'} = "Last-modified: $modified, Created: $created, Tags: $hash_ofpage->{'tags'}, AutoTags: $hash_ofpage->{'autotags'}<br />$hash_ofpage->{'copyright'}<br />";
 	} else {
 		$vars{'HtmlHead'} .= '<title>Not Found'.'@'.$vars{'SiteName'}.'</title>';
-		$vars{'HtmlBody'} .= "KeiSpade does not have a page with this exact name. <a href=\"$vars{'ScriptName'}?$vars{'PageName'}&cmd=new\">Write the $vars{'PageName'}</a>.";
+		$vars{'HtmlBody'} .= "KeiSpade does not have a page with this exact name. <a href=\"$vars{'ScriptName'}?page=$vars{'PageName'}&cmd=new\">Write the $vars{'PageName'}</a>.";
 		$httpstatus = 'Status: 404 Not Found';
 	}
 	&showhtml('html/body.html');
@@ -162,18 +162,15 @@ sub atom {
 		foreach my $tmp (@tag) {
 			$ptag .= "<category term=\"$tmp\" />";
 		}
-#		$tmp = spridatearg('%02d-%02d-%02d',$update);
-#		$update = $tmp.'T'.spritimearg('%02d:%02d:%02d',$update).&localtz;
-#		$tmp = spridatearg('%02d-%02d-%02d',$publish);
-#		$publish = $tmp.'T'.spritimearg('%02d:%02d:%02d',$publish).&localtz;
 		$update  = &spridtarg($update);
 		$publish = &spridtarg($publish);
-		$vars{'AtomEntries'} .= "<entry><title>$title</title><id>$id</id><author><name>$author</name></author><link rel=\"alternate\" href=\"$link\" />".
-		                         "<updated>$update</updated><published>$publish</published>$ptag".
-                                 "<content type=\"html\">$pbody</content></entry>\n";
+		$vars{'AtomEntries'} .= "<entry><title>$title</title><id>$id</id><author><name>$author</name></author>".
+		                        "<link rel=\"alternate\" href=\"$link\" />".
+		                        "<updated>$update</updated><published>$publish</published>$ptag".
+		                        "<content type=\"html\">$pbody</content></entry>\n";
 	}
-print "$httpstatus\n$contype\n\n";
-print &tmpl2html('html/atom.xml',\%vars);
+	print "$httpstatus\n$contype\n\n";
+	print &tmpl2html('html/atom.xml',\%vars);
 }
 sub edit {
 # print edit page form
@@ -202,8 +199,8 @@ sub post {
 		my $hashparent = &sha::pureperl($res[7]);
 		if (($page{'bodyhash'} eq $hashparent) or ($page{'bodyhash'} =~ /Conflict/)) {
 			$page{'title'} = 'undefined'.rand(16384) if $page{'title'} eq '';
-			$sql->do("update pages set title='$page{'title'}', lastmodified_date='$page{'modified_date'}', tags='$page{'tags'}',
-				autotags='$page{'autotags'}', copyright='$page{'copyright'}', body='$page{'body'}' where title='".$vars{'PageName'}."';");
+			$sql->do("update pages set title='$page{'title'}', lastmodified_date='$page{'modified_date'}', tags='$page{'tags'}',".
+				     "autotags='$page{'autotags'}', copyright='$page{'copyright'}', body='$page{'body'}' where title='".$vars{'PageName'}."';");
 			if ($pagename eq $page{'title'}) {
 				&setpagename($page{'title'});
 				&page;
@@ -223,7 +220,6 @@ sub post {
 			delete $vars{'Body'};
 		}
 	}
-	&showhtml;
 } 
 sub preview {
 # submit edited text
