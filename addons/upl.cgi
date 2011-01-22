@@ -47,6 +47,7 @@ sub delfile {
 		$main::sql->do("update pages set lastmodified_date='$modifieddate', confer='$files[0]' where title='$tmp';");
 	}
 	KSpade::Misc::setpagename($main::vars{'PageName'});
+	$main::vars{'HtmlHead'} .= '<title>'.$main::vars{'PageName'}.' &gt; File was Deleted@'.$main::vars{'SiteName'}.'</title>';
 	$main::vars{'HtmlBody'} .= KSpade::Show::template('html/deletedupl.html',\%main::vars);
 	}
 	KSpade::Show::html('html/frmwrk.html',\%main::vars);
