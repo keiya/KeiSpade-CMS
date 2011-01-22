@@ -1,4 +1,4 @@
-package SQL;
+package KSpade::SQL;
 
 use strict;
 use warnings;

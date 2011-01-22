@@ -1,8 +1,6 @@
-
-
 #
 # KeiSpade CMS (configuration file load script) Perl SubScript
-# Version 1.0.0
+# Version 1.0.1
 # スペースをデリミタとしたキーバリュー型の設定ファイルをロードし、ハッシュに格納します。
 #
 # usage 
@@ -12,8 +10,7 @@
 # 
 # KSCCONF
 
-
-package kscconf;
+package KSpade::Conf;
 
 sub load {
 	my %HASH;
@@ -30,5 +27,5 @@ sub load {
 	return %HASH;
 }
 
-return 1;
+1;
 

@@ -1,4 +1,6 @@
-#package security;
+package KSpade::Security;
+use strict;
+use warnings;
 
 sub exorcism {
 	my $tmp = $_[0];
@@ -39,6 +41,12 @@ sub noscript {
 sub htmlexor {
 	my $tmp = $_[0];
 	return &textalize(&exorcism($tmp));
+}
+
+sub file {
+	my $tmp = $_[0];
+	$tmp =~ s/\W\D//g;
+	return $tmp;
 }
 
 1;

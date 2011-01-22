@@ -1,0 +1,11 @@
+package KSpade;
+use strict;
+use warnings;
+use KSpade::Conf;
+use KSpade::Misc;
+use KSpade::Security;
+use KSpade::SQL;
+use KSpade::Show;
+use KSpade::DateTime;
+use KSpade::CGIDec;
+1;

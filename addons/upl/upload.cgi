@@ -3,8 +3,8 @@ use strict;
 use CGI;
 use File::Copy;
 use File::Temp qw/ tempfile /;
-use lib './lib';
-require 'kscconf.pl';
+use lib '../../lib';
+use KSpade::Conf;
 
 my ($buffer,$filesize);
 my $query = CGI->new;
@@ -13,16 +13,17 @@ my $file = $query->param('file');
 my $back = $query->param('backpage');
 my %vars;
 $vars{'ScriptName'} = 'index.pl';
-%vars = (%vars,&kscconf::load('./dat/kspade.conf'));
+$vars{'Addons::upl::FileDir'} = '../../files/';
+%vars = (%vars,KSpade::Conf::load('./dat/kspade.conf'));
 my $scriptname = $vars{'ScriptName'};
 
 #my $tmp = $ENV{'REMOTE_ADDR'}.time;
 #my $file_name = ($file =~ /([^\\\/:]+)$/) ? $1 : 'uploaded.bin';
 #sha2()
 
-if (!-d './files') {
-	warn "[KeiSpade-CMS] Directory './files/' not found. Please mkdir.";
-	mkdir './files';
+if (!-d $vars{'Addons::upl::FileDir'}) {
+	mkdir $vars{'Addons::upl::FileDir'} or 
+	warn "[KeiSpade-CMS] Directory '". $vars{'Addons::upl::FileDir'} ." not found. Please mkdir.";
 }
 
 my($tmp_fh, $tmpfile) = tempfile(UNLINK => 1);
@@ -45,7 +46,7 @@ $file =~ s/[\[\]\/]+//g;
 
 my $filename = &sha($tmpfile);
 
-my $writeto = './files/'.$filename.'.'.$ext;
+my $writeto = $vars{'Addons::upl::FileDir'}.$filename.'.'.$ext;
 if (!move( $tmpfile, $writeto)) {
 	warn "[KeiSpade-CMS] Cannot write to $writeto. Please check permission.";
 }
@@ -63,7 +64,7 @@ var fname="$file";
 var fsize="$filesize";
 window.onload=function(){
 		window.parent.GetFile(fname,fsize);
-		location.href="./$scriptname?cmd=addfile&page=$back&filename=$filename.$ext&orig=$file";
+		location.href="../../$scriptname?adon=upl&acmd=addfile&page=$back&filename=$filename.$ext&orig=$file";
 }
 --></script>
 </head>

@@ -1,9 +1,6 @@
 <!DOCTYPE html><html lang=<TMPL_VAR NAME=ContentLanguage>>
 <head>
 	<TMPL_VAR NAME=HtmlHead>
-	<script src="./addons/com/ajaxcom.js"></script>
-	<link rel="stylesheet" type="text/css" href="./addons/com/ajaxcom.css">
-	<link rel="alternate" type="application/atom+xml" href="./<TMPL_VAR NAME=ScriptName>?cmd=atom" title="<TMPL_VAR NAME=SiteName> Atom Feed" />
 </head>
 <body>
 <header>
@@ -14,7 +11,7 @@
 			<li><a href="./<TMPL_VAR NAME=ScriptName>?page=<TMPL_VAR NAME=NoSpacePageName>&amp;cmd=edit" rel="nofollow"><span>Edit</span></a></li>
 			<li><a href="./<TMPL_VAR NAME=ScriptName>?cmd=new" rel="nofollow"><span>New</span></a></li>
 			<li><a href="./<TMPL_VAR NAME=ScriptName>?page=<TMPL_VAR NAME=NoSpacePageName>&amp;cmd=del" rel="nofollow"><span>Delete</span></a></li>
-			<li><a href="./<TMPL_VAR NAME=ScriptName>?page=<TMPL_VAR NAME=NoSpacePageName>&amp;adon=upl&amp;acmd=upload" rel="nofollow"><span>Upload</span></a></li>
+			<li><a href="./<TMPL_VAR NAME=ScriptName>?page=<TMPL_VAR NAME=NoSpacePageName>&amp;cmd=upload" rel="nofollow"><span>Upload</span></a></li>
 			<li><a href="./<TMPL_VAR NAME=ScriptName>?cmd=search"><span>List of Pages</span></a></li>
 		</ul>
 	</nav>
@@ -23,14 +20,21 @@
 		
 <div id="main_container">
 <section>
-<TMPL_VAR NAME="HtmlBody">
+<section><h2>Editing <TMPL_VAR NAME=PageName></h2>
+<form action="./<TMPL_VAR NAME=ScriptName>?cmd=post&amp;page=<TMPL_VAR NAME=PageName>" method="post" name="editform" accept-charset="utf-8">
+<input type="hidden" value="<TMPL_VAR NAME=BodyHash>" name="bodyhash">
+Title:<br />
+<input type="text" value="<TMPL_VAR NAME=PageName>" name="title"><br />
+Body:<br />
+<textarea name="body" rows="30" cols="80">
+<TMPL_VAR NAME=DBody>
+</textarea><br />
+<button value="Post" name="bodysend" type="submit">Post</button>
+</form>
 </section>
 
-<hr />
-<section>
-<div id="ajaxcom_here"></div>
-<script>(new AjaxCom("ajaxcom_here")).load();</script>
 </section>
+<hr />
 </div>
 
 <aside>

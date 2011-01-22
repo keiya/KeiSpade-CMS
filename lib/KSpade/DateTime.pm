@@ -1,11 +1,8 @@
+package KSpade::DateTime;
 
-
-#
-# Yoyaku.in (misc script) Utility Perl Script
-# Version 1.0.0 alpha
-# some useful subroutine
-
-#package date;
+use strict;
+use warnings;
+use Time::Local;
 
 # 現在の日付時刻を取得し，引数の書式に整形した上で返却
 sub spridate {
@@ -38,6 +35,18 @@ sub localtz {
 	return sprintf( "%+03d:%02d", $off/60, $off%60 );
 }
 
+sub relative {
+	my $elapsed = time() - $_[0];
+
+	if ($elapsed <= 86400) {
+		return 'Today '.spritimearg('%02d:%02d:%02d',$_[0])
+	} elsif ($elapsed > 86400 and $elapsed <= 172800) {
+		return 'Yesterday '.spritimearg('%02d:%02d:%02d',$_[0])
+	} else {
+		return spridatearg('%04d/%02d/%02d',$_[0])
+		.' '.spritimearg('%02d:%02d:%02d',$_[0]);
+	}
+}
 
 1;
 
