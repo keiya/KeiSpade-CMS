@@ -79,6 +79,7 @@ if (defined $query{'adon'}) {
 	no strict 'refs';
 	&{$addon_pkg_name.'::new'};
 	&{$addon_pkg_name.'::'.$query{'acmd'}};
+	&{$addon_pkg_name.'::DESTROY'};
 } elsif (defined $query{'cmd'}) {
 	no strict 'refs';
 	&{$query{'cmd'}};
@@ -101,9 +102,8 @@ sub page {
 
 		require 'Text/HatenaEx.pm';
 		$main::vars{'HtmlBody'} .= "<h2>$hash_ofpage->{'title'}</h2>";
-		my $parsed = '';
-		$parsed .= Text::HatenaEx->parse(KSpade::Security::noscript($hash_ofpage->{'body'}));
-		$main::vars{'HtmlBody'} .= $parsed;
+		$main::vars{'HtmlBody'} .=
+		    Text::HatenaEx->parse(KSpade::Security::noscript($hash_ofpage->{'body'}));
 
 		my $confer;
 		if (defined $hash_ofpage->{'confer'}) {

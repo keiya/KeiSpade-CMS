@@ -4,8 +4,10 @@ use warnings;
 
 sub exorcism {
 	my $tmp = $_[0];
-	$tmp =~ s/'/''/g;
-	$tmp =~ s/\\/&#92;/g;
+	if (defined $tmp) {
+		$tmp =~ s/'/''/g;
+		$tmp =~ s/\\/&#92;/g;
+	}
 	#$tmp =~ s/</&lt;/g;
 	#$tmp =~ s/>/&gt;/g;
 	return $tmp;
@@ -28,7 +30,9 @@ sub ahtml {
 sub textalize {
 	my $tmp = $_[0];
 	#$tmp =~ s/[^\w\d_\-\(\) ぁ-ヶ亜-黑]+//g;
-	$tmp =~ s/[\n\t~`!@#\$%^&\*=\+\{\}\\;:'"<>\?\/]+//g;
+	if (defined $tmp) {
+		$tmp =~ s/[\n\t~`!@#\$%^&\*=\+\{\}\\;:'"<>\?\/]+//g;
+	}
 	return $tmp;
 }
 

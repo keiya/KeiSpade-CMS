@@ -12,6 +12,9 @@
 
 package KSpade::Conf;
 
+use strict;
+use warnings;
+
 sub load {
 	my %HASH;
 	if (-r $_[0]) {

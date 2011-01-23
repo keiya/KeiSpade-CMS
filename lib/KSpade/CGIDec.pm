@@ -1,5 +1,8 @@
 package KSpade::CGIDec;
 
+use strict;
+use warnings;
+
 sub getline {
 	my $recdata = shift;
 	my %QUERY;
