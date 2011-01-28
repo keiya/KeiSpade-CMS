@@ -45,6 +45,8 @@
     color:#555555;
     background-color:#f1f1f1;
     border-left:5px solid #b9b9b9;
+    font-weight:normal;
+    text-shadow: 1px 1px 1px silver;
 }
 
 /* h4 */
