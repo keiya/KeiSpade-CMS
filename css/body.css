@@ -98,7 +98,9 @@
 #main_container table th {
     background-color:#86ABBF;
     text-align:center;
-    color:#1A323F;
+    /*color:#1A323F;*/
+    color:#FAFAFA;
+    font-weight:normal;
 }
 #main_container table td {
     text-align:justify;
@@ -139,4 +141,22 @@
     height:1px;
     border:0px solid #fff;
     margin:0.3em auto;
+}
+
+#main_container blockquote {
+	margin: 1em;
+	border:outset 1px #aaaaaa;
+	padding: 10px;
+	background-color: #fffff7;
+} 
+#main_container pre {
+	margin: 1em;
+	border: dotted 1px #aaaaaa;
+	padding: 10px;
+	background-color: #f7ffff;
+}
+#prevbtn {
+	background-color: #f7ffff;
+	font-weight: bold;
+	border-style:outset;
 }

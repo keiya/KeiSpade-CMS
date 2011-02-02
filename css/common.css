@@ -20,10 +20,7 @@ div#main_container .page_top a{
     color: #555;
     line-height: 1;
 }
- div#main_container .page_top a:hover{
+div#main_container .page_top a:hover{
     color: #690;
 }
 
-blockquote {
-	background-color:#EEEEFF;
-}

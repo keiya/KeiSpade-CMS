@@ -1,6 +1,12 @@
 <!DOCTYPE html><html lang=<TMPL_VAR NAME=ContentLanguage>>
 <head>
 	<TMPL_VAR NAME=HtmlHead>
+	<script type="text/javascript"><!--
+			function preview() {
+					document.editform.action = "./<TMPL_VAR NAME=ScriptName>?cmd=preview";
+				return;
+			}
+	--></script>
 </head>
 <body>
 <header>
@@ -21,7 +27,7 @@
 <div id="main_container">
 <section>
 <section><h2>Editing <TMPL_VAR NAME=PageName></h2>
-<form action="./<TMPL_VAR NAME=ScriptName>?cmd=post&amp;page=<TMPL_VAR NAME=PageName>" method="post" name="editform" accept-charset="utf-8">
+<form action="./<TMPL_VAR NAME=ScriptName>?cmd=post&amp;page=<TMPL_VAR NAME=PageName>" method="post" name="editform" accept-charset="utf-8" id="edit">
 <input type="hidden" value="<TMPL_VAR NAME=BodyHash>" name="bodyhash">
 Title:<br />
 <input type="text" value="<TMPL_VAR NAME=PageName>" name="title"><br />
@@ -30,6 +36,7 @@ Body:<br />
 <TMPL_VAR NAME=DBody>
 </textarea><br />
 <button value="Post" name="bodysend" type="submit">Post</button>
+<button value="Preview" name="prev" type="button" onclick="preview()">Post</button>
 </form>
 </section>
 

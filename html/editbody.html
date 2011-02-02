@@ -1,5 +1,49 @@
 <section><h2>Editing <TMPL_VAR NAME=PageName></h2>
-<form action="./<TMPL_VAR NAME=ScriptName>?cmd=post&amp;page=<TMPL_VAR NAME=PageName>" method="post" name="editform" accept-charset="utf-8">
+<script type="text/javascript"><!--
+var mode = 0;
+function previewToggle() {
+	if (mode == 0) {
+		mode = 1;
+		var fm=document.getElementById("edit");
+		fm.style.display = "none";
+		var res=document.getElementById("result");
+		res.style.display = "block";
+		document.getElementById("prevbtn").innerHTML = "Back to edit";
+		var body = document.editform.body.value;
+		$("result").innerHTML = "Loading...";
+		var httpObj = createXMLHttpRequest();
+		if (httpObj) {
+			httpObj.open("POST","./<TMPL_VAR NAME=ScriptName>?cmd=preview",true);
+			httpObj.send("body="+encodeURIComponent(body));
+			httpObj.onreadystatechange = function() {
+				//readyState値は4で受信完了
+				if (httpObj.readyState==4) {
+					//コールバック
+					on_loaded(httpObj)
+				}
+			}
+
+			//コールバック関数 ( 受信時に実行されます )
+			function on_loaded(obj) {
+				//レスポンスを取得
+				var res  = obj.responseText //[6]
+				$("result").innerHTML = res;
+			}
+		}
+	}
+	else if (mode == 1) {
+		mode = 0;
+		var fm=document.getElementById("edit");
+		fm.style.display = "block";
+		var res=document.getElementById("result");
+		res.style.display = "none";
+		document.getElementById("prevbtn").innerHTML = "Preview again";
+	}
+	return;
+}
+// --></script>
+<button value="Preview" name="prev" id="prevbtn" type="button" onclick="previewToggle()">Preview</button>
+<form action="./<TMPL_VAR NAME=ScriptName>?cmd=post&amp;page=<TMPL_VAR NAME=PageName>" method="post" name="editform" id="edit" accept-charset="utf-8">
 <input type="hidden" value="<TMPL_VAR NAME=BodyHash>" name="bodyhash">
 Title:<br />
 <input type="text" value="<TMPL_VAR NAME=PageName>" name="title"><br />
@@ -9,5 +53,6 @@ Body:<br />
 </textarea><br />
 <button value="Post" name="bodysend" type="submit">Post</button>
 </form>
+<div id="result"></div>
 </section>
 

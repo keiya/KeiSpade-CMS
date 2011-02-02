@@ -33,12 +33,12 @@ $abspath =~ s/$myname.+$//;
 
 # constants, default values
 our %vars = ( 'SiteName'=>'KeiSpade','SiteDescription'=>'The Multimedia Wiki','ScriptName'=>$myname,
-             'ScriptAbsolutePath'=>$abspath, 'SidebarPagesListLimit'=>'10','ContentLanguage'=>'ja' );
+              'ScriptAbsolutePath'=>$abspath, 'SidebarPagesListLimit'=>'10','ContentLanguage'=>'ja',
+              'DefaultAuthor'=>'anonymous' );
 %vars = (%vars, KSpade::Conf::load('./dat/kspade.conf'));
 $vars{'Version'}  = '0.4.0';
 
 # http header + html meta header
-#my $httpstatus = "Status: 200 OK";
 $vars{'HttpStatus'} = 'Status: 200 OK';
 $vars{'HttpContype'}= "Content-Type: text/html; charset=UTF-8";
 $vars{'HtmlHead'} = '<meta charset=utf-8 /><link href="./css/kspade.css" rel="stylesheet" type="text/css" media="screen,print">';
@@ -56,8 +56,8 @@ my $database = './dat/kspade.db';
 my $data_source = "dbi:SQLite:dbname=$database";
 our $sql = KSpade::SQL->new($data_source);
 
+# database initialize (create the table)
 if ($sql->tableexists == 0) {
-	# database initialize (create the table)
 	$sql->create_table;
 	my $modified_date = time();
 	my $created_date = $modified_date;
@@ -127,6 +127,7 @@ sub page {
 	}
 	KSpade::Show::html('html/body.html',\%main::vars);
 }
+
 sub atom {
 	my $pupdated = ($sql->fetch("select lastmodified_date from pages order by lastmodified_date desc limit 1"))[0];
 	$pupdated= KSpade::DateTime::spridtarg($pupdated);
@@ -145,7 +146,7 @@ sub atom {
 		$publish= $hash_ref->{$hash_ref->{$keys}->{'title'}}->{'created_date'};
 		$tags   = $hash_ref->{$hash_ref->{$keys}->{'title'}}->{'tags'};
 		$author   = $hash_ref->{$hash_ref->{$keys}->{'title'}}->{'author'};
-		$author = 'anonymous' if not defined $author;
+		$author = $main::vars{'DefaultAuthor'} if not defined $author;
 		$body   = $hash_ref->{$hash_ref->{$keys}->{'title'}}->{'body'};
 		$body = 'No text' if $body eq '';
 		require 'Text/HatenaEx.pm';
@@ -164,8 +165,9 @@ sub atom {
 	}
 	KSpade::Show::xml('html/atom.xml',\%main::vars);
 }
-sub edit {
+
 # print edit page form
+sub edit {
 	my @res = ($sql->fetch("select body from pages where title='$main::vars{'PageName'}';"));
 	#$res[0] =~ s/<br \/>/\n/g;
 	$main::vars{'DBody'} = $res[0];
@@ -178,8 +180,9 @@ sub edit {
 	delete $main::vars{'DBody'};
 	KSpade::Show::html('html/frmwrk.html',\%main::vars);
 } 
-sub post {
+
 # submit edited text
+sub post {
 	my $pagename = $main::vars{'PageName'};
 
 
@@ -215,8 +218,9 @@ sub post {
 		}
 	}
 } 
-sub preview {
+
 # submit edited text
+sub preview {
 	my $pagename = $main::vars{'PageName'};
 
 	my %page;
@@ -227,23 +231,25 @@ sub preview {
 		&page;
 	}
 
-	$main::vars{'HtmlHead'} .= '<title>'.$page{'title'}.'@'.$main::vars{'SiteName'}.'</title>';
+	#$main::vars{'HtmlHead'} .= '<title>'.$page{'title'}.'@'.$main::vars{'SiteName'}.'</title>';
 
 	require 'Text/HatenaEx.pm';
-	$main::vars{'HtmlBody'} .= "<h2>$page{'title'}</h2>";
 	my $parsed .= Text::HatenaEx->parse(KSpade::Security::noscript($page{'body'}));
 	$main::vars{'HtmlBody'} .= $parsed;
-	KSpade::Show::html('html/frmwrk.html',\%main::vars);
+	#KSpade::Show::html('html/frmwrk.html',\%main::vars);
+	KSpade::Show::html('html/preview.html',\%main::vars);
 } 
-sub new {
+
 # print new page form
+sub new {
 	$main::vars{'HtmlHead'} .= '<meta http-equiv="Pragma" content="no-cache">';
 	$main::vars{'HtmlHead'} .= '<title> New@'.$main::vars{'SiteName'}.'</title>';
 	$main::vars{'HtmlBody'} .= KSpade::Show::template('html/newbody.html',\%vars);
 	KSpade::Show::html('html/frmwrk.html',\%main::vars);
 }
-sub newpost {
+
 # submit new page
+sub newpost {
 	if ($ENV{'REQUEST_METHOD'} eq 'POST') {
 		my %page;
 		KSpade::Show::formelements(\%page);
@@ -260,14 +266,16 @@ sub newpost {
 	}
 	KSpade::Show::html('html/frmwrk.html',\%main::vars);
 }
-sub del {
+
 # print delete confirm
+sub del {
 	$main::vars{'HtmlHead'} .= '<title>'.$main::vars{'PageName'}.' &gt; Delete@'.$main::vars{'SiteName'}.'</title>';
 	$main::vars{'HtmlBody'} .= KSpade::Show::template('html/delete.html',\%vars);
 	KSpade::Show::html('html/frmwrk.html',\%main::vars);
 }
-sub delpage {
+
 # delete page
+sub delpage {
 	if ($ENV{'REQUEST_METHOD'} eq 'POST') {
 		$sql->do("delete from pages where title='".$main::vars{'PageName'}."'");
 	}
@@ -275,6 +283,8 @@ sub delpage {
 	$main::vars{'HtmlBody'} .= KSpade::Show::template('html/deleted.html',\%vars);
 	KSpade::Show::html('html/frmwrk.html',\%main::vars);
 }
+
+# search subroutine
 sub search {
 	my $query = KSpade::Security::htmlexor($query{'query'});
 	$query =~ s/\s/AND/g if defined $query;
@@ -287,8 +297,9 @@ sub search {
 		$main::vars{'HtmlBody'} .= KSpade::Show::template('html/search.html',\%vars);
 		delete $main::vars{'PagesList'};
 
-	} else {
-		# print all pages
+	}
+	# print all pages
+	else {
 		$main::vars{'PagesList'} = KSpade::Show::pageslist("select title from pages;"
 			,"<a href=\"./$main::vars{'ScriptName'}?page=%s\">%s</a><br />");
 		$main::vars{'HtmlHead'} .= '<title>PagesList@'.$main::vars{'SiteName'}.'</title>';
@@ -298,8 +309,9 @@ sub search {
 	delete $main::vars{'Query'};
 	KSpade::Show::html('html/frmwrk.html',\%main::vars);
 } 
+
+# print categories
 sub category {
-	# print categories
 	my $query = KSpade::Security::htmlexor($query{'query'});
 	$query =~ s/\s/AND/g;
 	$main::vars{'Query'} = $query{'query'};

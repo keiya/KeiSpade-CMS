@@ -45,7 +45,8 @@ dl#page_menu {
     text-decoration: none;
 }
 #page_menu dd a:hover {
-    text-decoration: underline;
+    text-decoration: none;
+	text-shadow: 0px 0px 1px white;
     /*color: #690;*/
     color: #56A9D9;
 }
