@@ -84,7 +84,11 @@ sub categorylist {
 }
 
 sub template {
-	my $template = HTML::Template->new(filename => $_[0],die_on_bad_params => 0,cache => 1);
+	my $template = HTML::Template->new(filename => $_[0],
+	                                   die_on_bad_params => 0,
+	                                   cache => 1,
+	                                   no_includes => 1,
+	                                  );
 	$template->param(%{$_[1]});
 	return $template->output;
 }

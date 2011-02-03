@@ -8,4 +8,5 @@ use KSpade::SQL;
 use KSpade::Show;
 use KSpade::DateTime;
 use KSpade::CGIDec;
+use Text::HatenaEx;
 1;

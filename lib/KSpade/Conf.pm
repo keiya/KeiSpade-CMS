@@ -21,7 +21,7 @@ sub load {
 		open(CONF,$_[0]) || die("$0: Unable to load config file ($_[0]): $!\n");
 		while (<CONF>) {
 			chomp;
-			next if /^#/ || /^$/;
+			next if /^#/;
 			my ($key,$value) = split(/\s/,$_,2);
 			$HASH{$key} = $value;
 		}

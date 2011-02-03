@@ -9,6 +9,8 @@ use File::Basename qw(basename);
 use lib './lib';
 use KSpade;
 
+my $time_start = (times)[0];
+
 # script file name
 my $myname = basename($0, '');
 
@@ -36,7 +38,7 @@ our %vars = ( 'SiteName'=>'KeiSpade','SiteDescription'=>'The Multimedia Wiki','S
               'ScriptAbsolutePath'=>$abspath, 'SidebarPagesListLimit'=>'10','ContentLanguage'=>'ja',
               'DefaultAuthor'=>'anonymous' );
 %vars = (%vars, KSpade::Conf::load('./dat/kspade.conf'));
-$vars{'Version'}  = '0.4.0';
+$vars{'Version'}  = '0.4.1';
 
 # http header + html meta header
 $vars{'HttpStatus'} = 'Status: 200 OK';
@@ -100,7 +102,6 @@ sub page {
 
 		$main::vars{'HtmlHead'} .= '<title>'.$hash_ofpage->{'title'}.'@'.$main::vars{'SiteName'}.'</title>';
 
-		require 'Text/HatenaEx.pm';
 		$main::vars{'HtmlBody'} .= "<h2>$hash_ofpage->{'title'}</h2>";
 		$main::vars{'HtmlBody'} .=
 		    Text::HatenaEx->parse(KSpade::Security::noscript($hash_ofpage->{'body'}));
@@ -125,6 +126,8 @@ sub page {
 		$main::vars{'HtmlBody'} .= "KeiSpade does not have a page with this exact name. <a href=\"$main::vars{'ScriptName'}?page=$main::vars{'PageName'}&cmd=new\">Write the $main::vars{'PageName'}</a>.";
 		$main::vars{'HttpStatus'} = 'Status: 404 Not Found';
 	}
+	my $time_stop = (times)[0];
+	$main::vars{'HtmlConvertTime'}= $time_stop - $time_start;
 	KSpade::Show::html('html/body.html',\%main::vars);
 }
 
@@ -149,7 +152,6 @@ sub atom {
 		$author = $main::vars{'DefaultAuthor'} if not defined $author;
 		$body   = $hash_ref->{$hash_ref->{$keys}->{'title'}}->{'body'};
 		$body = 'No text' if $body eq '';
-		require 'Text/HatenaEx.pm';
 		$pbody = KSpade::Security::ahtml(Text::HatenaEx->parse(KSpade::Security::html(KSpade::Security::noscript($body))));
 		my @tag = split(/\|/,$tags);
 		my $ptag = '';
@@ -185,8 +187,6 @@ sub edit {
 sub post {
 	my $pagename = $main::vars{'PageName'};
 
-
-
 	if ($ENV{'REQUEST_METHOD'} eq 'POST') {
 		my %page;
 		KSpade::Show::formelements(\%page);
@@ -198,10 +198,10 @@ sub post {
 			$page{'title'} = 'undefined'.rand(16384) if $page{'title'} eq '';
 			$sql->do("update pages set title='$page{'title'}', lastmodified_date='$page{'modified_date'}', tags='$page{'tags'}',".
 				     "autotags='$page{'autotags'}', copyright='$page{'copyright'}', body='$page{'body'}' where title='".$main::vars{'PageName'}."';");
-			if ($pagename eq $page{'title'}) {
+			 #if ($pagename eq $page{'title'}) {
 				KSpade::Misc::setpagename($page{'title'});
 				&page;
-			}
+				#}
 			$main::vars{'HttpStatus'} = 'Status: 303 See Other';
 			$main::vars{'HttpStatus'} .= "\nLocation: $main::vars{'ScriptAbsolutePath'}$main::vars{'ScriptName'}?page=$main::vars{'PageName'}";
 		} else {
@@ -231,9 +231,6 @@ sub preview {
 		&page;
 	}
 
-	#$main::vars{'HtmlHead'} .= '<title>'.$page{'title'}.'@'.$main::vars{'SiteName'}.'</title>';
-
-	require 'Text/HatenaEx.pm';
 	my $parsed .= Text::HatenaEx->parse(KSpade::Security::noscript($page{'body'}));
 	$main::vars{'HtmlBody'} .= $parsed;
 	#KSpade::Show::html('html/frmwrk.html',\%main::vars);
