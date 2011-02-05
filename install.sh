@@ -11,4 +11,4 @@ printf "\nchanging ./files permission to 777\n"
 chmod -R 777 ./files
 chmod 644 ./files/.htaccess
 
-printf "\nPlease install sqlite3 if not installed"
+printf "\nPlease install sqlite3 if not installed\n"
