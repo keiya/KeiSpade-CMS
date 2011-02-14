@@ -59,7 +59,7 @@ sub unbracket {
 sub http {
     my $mvar = shift;
     my $url = $mvar->[0];
-    return sprintf('<a href="%s" rel="nofollow">%s</a>', $url, $url);
+    return sprintf('<a href="%s" rel="nofollow">%s</a>', url_jumper($url), $url);
 }
 
 sub wikilink {
@@ -91,13 +91,19 @@ sub http_title {
     my $mvar = shift;
     my $url = $mvar->[1];
     my $title = $mvar->[2];
-    return sprintf('<a href="%s" rel="nofollow">%s</a>', $url, $title);
+    return sprintf('<a href="%s" rel="nofollow">%s</a>', url_jumper($url), $title);
 }
 
 sub mailto {
     my $mvar = shift;
     my $addr = $mvar->[1];
     return sprintf('<a href="mailto:%s">mailto:%s</a>', $addr, $addr);
+}
+
+sub url_jumper {
+    my $url = shift;
+    #$url = 'http://fumidai.net/' . $url;
+    return $url;
 }
 
 1;
