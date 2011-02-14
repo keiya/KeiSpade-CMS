@@ -200,10 +200,11 @@ sub post {
 				     "autotags='$page{'autotags'}', copyright='$page{'copyright'}', body='$page{'body'}' where title='".$main::vars{'PageName'}."';");
 			 #if ($pagename eq $page{'title'}) {
 				KSpade::Misc::setpagename($page{'title'});
-				&page;
+				#&page;
 				#}
 			$main::vars{'HttpStatus'} = 'Status: 303 See Other';
 			$main::vars{'HttpStatus'} .= "\nLocation: $main::vars{'ScriptAbsolutePath'}$main::vars{'ScriptName'}?page=$main::vars{'PageName'}";
+			KSpade::Show::html('html/frmwrk.html',\%main::vars);
 		} else {
 			require Text::Diff;
 			my $diff = Text::Diff::diff(\$res[7],\$page{'body'});
