@@ -72,6 +72,55 @@ sub tableexists {
 	return $res[0];
 }
 
+sub recently_modified_pages {
+	my $self = shift;
+	my $n = shift;
+	return ($self->fetch("select lastmodified_date from pages order by lastmodified_date desc limit $n"))[0];
+}
+sub recently_modified_pages_as_hash {
+	my $self = shift;
+	my $n = shift;
+	return $self->fetch_ashash("select * from pages order by lastmodified_date desc limit $n;")
+}
+
+sub page_body {
+	my $self = shift;
+	my $title = shift;
+	return ($self->fetch("select body from pages where title='$title';"));
+}
+
+sub page {
+	my $self = shift;
+	my $title = shift;
+	return ($self->fetch("select * from pages where title='".$title."';"));
+}
+
+sub write_page {
+	my $self = shift;
+	my ($title, $date, $tags, $autotags, $copyright, $body, $page_name) = @_;
+	return $self->do("update pages set title='$title', lastmodified_date='$date', tags='$tags',"."autotags='$autotags', copyright='$copyright', body='$body' where title='".$page_name."';");
+}
+
+sub page_exist {
+	my $self = shift;
+	my $title = shift;
+	return ($self->fetch("select count(*) from pages where title='$title';"))[0] != 0;
+}
+
+sub delete_page {
+	my $self = shift;
+	my $name = shift;
+	$self->do("delete from pages where title='$name';");
+}
+
+sub new_page {
+	my $self = shift;
+	my $page = shift;
+
+	$self->do("insert into pages (title,lastmodified_date,created_date,tags,autotags,copyright,body)"
+		."values('$page->{'title'}','$page->{'created_date'}','$page->{'created_date'}','$page->{'tags'}','$page->{'autotags'}','$page->{'copyright'}','$page->{'body'}');");
+}
+
 sub DESTROY {
 	my $self = shift;
 	my $dbh = $self->{dbh};

@@ -61,18 +61,12 @@ our $sql = KSpade::SQL->new($data_source);
 # database initialize (create the table)
 if ($sql->tableexists == 0) {
 	$sql->create_table;
-	my $modified_date = time();
-	my $created_date = $modified_date;
-	my $body = KSpade::Show::template('html/tutorial.txt',\%vars);
-	$sql->do("insert into pages (title,lastmodified_date,created_date,tags,autotags,copyright,body)
-		values ('TopPage','$modified_date','$created_date','Help','Help','Copyleft','$body');");
+	init_toppage();
+
 	$vars{'HtmlHead'} .= '<link href="./css/light.css" rel="stylesheet" type="text/css">';
 	$vars{'HtmlHead'} .= '<title>Miracle! Table was created!</title>';
 	$vars{'HtmlBody'} .= '<p>Table was created. Please reload.</p>';
 }
-
-
-
 
 if (defined $query{'adon'}) {
 	my $addon_name = KSpade::Security::file($query{'adon'});
@@ -132,10 +126,10 @@ sub page {
 }
 
 sub atom {
-	my $pupdated = ($sql->fetch("select lastmodified_date from pages order by lastmodified_date desc limit 1"))[0];
+	my $pupdated = $sql->recently_modified_pages(1);
 	$pupdated= KSpade::DateTime::spridtarg($pupdated);
 	chomp $pupdated;
-	my $hash_ref = ($sql->fetch_ashash("select * from pages order by lastmodified_date desc limit 5;"));
+	my $hash_ref = ($sql->recently_modified_pages_as_hash(5));
 	$main::vars{'AtomUpdated'} = $pupdated;
 	my ($title, $etitle, $id, $link, $update, $publish, $tags, $author, $body, $pbody, $tmp);
 	my $entry = '';
@@ -170,7 +164,7 @@ sub atom {
 
 # print edit page form
 sub edit {
-	my @res = ($sql->fetch("select body from pages where title='$main::vars{'PageName'}';"));
+	my @res = ($sql->page_body($main::vars{'PageName'}));
 	#$res[0] =~ s/<br \/>/\n/g;
 	$main::vars{'DBody'} = $res[0];
 	require 'sha.pl';
@@ -192,12 +186,11 @@ sub post {
 		KSpade::Show::formelements(\%page);
 		chomp %page;
 		require 'sha.pl';
-		my @res = ($sql->fetch("select * from pages where title='".$main::vars{'PageName'}."';"));
+		my @res = ($sql->page($main::vars{'PageName'}));
 		my $hashparent = &sha::pureperl($res[7]);
 		if (($page{'bodyhash'} eq $hashparent) or ($page{'bodyhash'} =~ /Conflict/)) {
 			$page{'title'} = 'undefined'.rand(16384) if $page{'title'} eq '';
-			$sql->do("update pages set title='$page{'title'}', lastmodified_date='$page{'modified_date'}', tags='$page{'tags'}',".
-				     "autotags='$page{'autotags'}', copyright='$page{'copyright'}', body='$page{'body'}' where title='".$main::vars{'PageName'}."';");
+			$sql->write_page( $page{'title'}, $page{'modified_date'}, $page{'tags'}, $page{'autotags'}, $page{'copyright'}, $page{'body'}, $main::vars{'PageName'});
 			 #if ($pagename eq $page{'title'}) {
 				KSpade::Misc::setpagename($page{'title'});
 				#&page;
@@ -252,12 +245,14 @@ sub newpost {
 		my %page;
 		KSpade::Show::formelements(\%page);
 		chomp(%page);
-		my @res = ($sql->fetch("select count(*) from pages where title='".$page{'title'}."';"));
-		$page{'title'} = $page{'title'}.rand(16384) unless $res[0] == 0;
-		$page{'title'} = 'undefined'.rand(16384) if $page{'title'} eq '';
+		if($sql->page_exist($page{'title'})) {
+			$page{'title'} = $page{'title'}.rand(16384);
+		} elsif($page{'title'} eq '') {
+			$page{'title'} = 'undefined'.rand(16384);
+		}
 		$main::vars{'PageName'} = $page{'title'};
-		$sql->do("insert into pages (title,lastmodified_date,created_date,tags,autotags,copyright,body)
-			values ('$page{'title'}','$page{'created_date'}','$page{'created_date'}','$page{'tags'}','$page{'autotags'}','$page{'copyright'}','$page{'body'}');");
+		$sql->new_page( \%page);
+
 		KSpade::Misc::setpagename($main::vars{'PageName'});
 		$main::vars{'HttpStatus'} = 'Status: 303 See Other';
 		$main::vars{'HttpStatus'} .= "\nLocation: ${abspath}$main::vars{'ScriptName'}?page=$main::vars{'PageName'}";
@@ -275,7 +270,7 @@ sub del {
 # delete page
 sub delpage {
 	if ($ENV{'REQUEST_METHOD'} eq 'POST') {
-		$sql->do("delete from pages where title='".$main::vars{'PageName'}."'");
+		$sql->delete_page($main::vars{'PageName'});
 	}
 	$main::vars{'HtmlHead'} .= '<title>'.$main::vars{'PageName'}.' &gt; Deleted@'.$main::vars{'SiteName'}.'</title>';
 	$main::vars{'HtmlBody'} .= KSpade::Show::template('html/deleted.html',\%vars);
@@ -331,4 +326,15 @@ sub category {
 	delete $main::vars{'Query'};
 	KSpade::Show::html('html/frmwrk.html',\%main::vars);
 } 
+
+# initialize top page
+sub init_toppage {
+	my $modified_date = time();
+	my $created_date = $modified_date;
+	my $body = KSpade::Show::template('html/tutorial.txt',\%vars);
+
+	$sql->new_page({'title' => 'TopPage', 'lastmodified_date' => $modified_date,
+			'created_date' => $created_date, 'tags' => 'Help', 'autotags' => 'Help',
+			'copyright' => 'Copyleft', 'body' => $body});
+}
 
