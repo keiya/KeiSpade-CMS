@@ -3,6 +3,7 @@ package KSpade::SQL;
 use strict;
 use warnings;
 use DBI;
+use Digest::Perl::MD5 'md5_hex';
 
 sub new {
 	my ($class,$datasource) = @_;
@@ -119,6 +120,35 @@ sub new_page {
 
 	$self->do("insert into pages (title,lastmodified_date,created_date,tags,autotags,copyright,body)"
 		."values('$page->{'title'}','$page->{'created_date'}','$page->{'created_date'}','$page->{'tags'}','$page->{'autotags'}','$page->{'copyright'}','$page->{'body'}');");
+
+	my $dir = 'dat/page';
+	my $fname = getfilename($page->{'title'});
+	if(open(FILE, ">$dir/$fname")) {
+		print FILE $page->{'body'};
+		close FILE;
+
+		gitcommit($dir, $fname);
+	} else {
+		warn $!;
+	}
+}
+
+sub gitcommit {
+	my $dir = shift;
+	my $fname = shift;
+	my $comment = shift;
+
+	if(-e "$dir/$fname") {
+		$comment = $fname unless $comment;
+		`cd $dir;git add $fname;git commit $fname -m '$comment';cd ../..`;
+	} else {
+		warn "file does not exists $fname";
+	}
+}
+
+sub getfilename {
+	my $title = shift;
+	return md5_hex($title);
 }
 
 sub DESTROY {
