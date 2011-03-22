@@ -48,15 +48,19 @@ $vars{'HtmlHead'} .= "<link rel=\"contents\" href=\"./$vars{'ScriptName'}?cmd=se
 $vars{'HtmlHead'} .= "<link rel=\"start\" href=\"./$vars{'ScriptName'}?page=TopPage\">";
 $vars{'HtmlHead'} .= "<link rel=\"index\" href=\"./$vars{'ScriptName'}?cmd=category\">";
 
+die 'hoge'
+
 # process cgi args
 our %query = KSpade::CGIDec::getline($ENV{'QUERY_STRING'});
 
 KSpade::Misc::setpagename($query{'page'});
 
+die 'hogehoge'
 # connect to DB
 my $database = './dat/kspade.db';
 my $data_source = "dbi:SQLite:dbname=$database";
 our $sql = KSpade::SQL->new($data_source);
+
 
 # database initialize (create the table)
 if ($sql->tableexists == 0) {
@@ -190,11 +194,8 @@ sub post {
 		my $hashparent = &sha::pureperl($res[7]);
 		if (($page{'bodyhash'} eq $hashparent) or ($page{'bodyhash'} =~ /Conflict/)) {
 			$page{'title'} = 'undefined'.rand(16384) if $page{'title'} eq '';
-			$sql->write_page( $page{'title'}, $page{'modified_date'}, $page{'tags'}, $page{'autotags'}, $page{'copyright'}, $page{'body'}, $main::vars{'PageName'});
-			 #if ($pagename eq $page{'title'}) {
-				KSpade::Misc::setpagename($page{'title'});
-				#&page;
-				#}
+			$sql->write_page( \%page, $main::vars{'PageName'});
+			KSpade::Misc::setpagename($page{'title'});
 			$main::vars{'HttpStatus'} = 'Status: 303 See Other';
 			$main::vars{'HttpStatus'} .= "\nLocation: $main::vars{'ScriptAbsolutePath'}$main::vars{'ScriptName'}?page=$main::vars{'PageName'}";
 			KSpade::Show::html('html/frmwrk.html',\%main::vars);
