@@ -99,7 +99,8 @@ sub page {
 sub write_page {
 	my $self = shift;
 	my ($title, $date, $tags, $autotags, $copyright, $body, $page_name) = @_;
-	return $self->do("update pages set title='$title', lastmodified_date='$date', tags='$tags',"."autotags='$autotags', copyright='$copyright', body='$body' where title='".$page_name."';");
+	$self->do("update pages set title='$title', lastmodified_date='$date', tags='$tags',"."autotags='$autotags', copyright='$copyright', body='$body' where title='".$page_name."';");
+	write_pagefile({'title' => $title, 'body' => $body});
 }
 
 sub page_exist {
@@ -120,14 +121,18 @@ sub new_page {
 
 	$self->do("insert into pages (title,lastmodified_date,created_date,tags,autotags,copyright,body)"
 		."values('$page->{'title'}','$page->{'created_date'}','$page->{'created_date'}','$page->{'tags'}','$page->{'autotags'}','$page->{'copyright'}','$page->{'body'}');");
+	write_pagefile($page);
+}
 
+sub write_pagefile {
+	my $page = shift;
 	my $dir = 'dat/page';
 	my $fname = getfilename($page->{'title'});
 	if(open(FILE, ">$dir/$fname")) {
 		print FILE $page->{'body'};
 		close FILE;
 
-		gitcommit($dir, $fname);
+		gitcommit($dir, $fname, $page->{'title'});
 	} else {
 		warn $!;
 	}
