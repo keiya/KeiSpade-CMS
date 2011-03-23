@@ -81,19 +81,28 @@ sub recently_modified_pages {
 sub recently_modified_pages_as_hash {
 	my $self = shift;
 	my $n = shift;
-	return $self->fetch_ashash("select * from pages order by lastmodified_date desc limit $n;")
+	return ($self->fetch_ashash("select * from pages order by lastmodified_date desc limit $n;"))[0];
 }
 
 sub page_body {
 	my $self = shift;
 	my $title = shift;
-	return ($self->fetch("select body from pages where title='$title';"));
+
+	my $dir = "dat/page";
+	my $fname = getfilename($title);
+	if(-e "$dir/$fname") {
+		my $as_scalar = `cat $dir/$fname`;
+		return $as_scalar;
+	}
+	warn "File does not exist $fname";
+	return "File does not exist $fname";
 }
 
-sub page {
+sub page_ashash {
 	my $self = shift;
 	my $title = shift;
-	return ($self->fetch("select * from pages where title='".$title."';"));
+	# TODO: page body
+	return $self->fetch_ashash("select * from pages where title='$title';")->{$title};
 }
 
 sub write_page {
@@ -112,6 +121,7 @@ sub page_exist {
 sub delete_page {
 	my $self = shift;
 	my $name = shift;
+	# TODO: page file
 	$self->do("delete from pages where title='$name';");
 }
 

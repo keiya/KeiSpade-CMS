@@ -78,7 +78,7 @@ if (defined $query{'adon'}) {
 	&{$addon_pkg_name.'::DESTROY'};
 } elsif (defined $query{'cmd'}) {
 	no strict 'refs';
-	&{$query{'cmd'}};
+	&{$query{'cmd'}}; # if cmd=post, call 'post'
 } elsif ((not defined $query{'cmd'}) and (defined $main::vars{'PageName'})) {
 	&page;
 }
@@ -186,24 +186,21 @@ sub post {
 		KSpade::Show::formelements(\%page);
 		chomp %page;
 		require 'sha.pl';
-		my @res = ($sql->page($main::vars{'PageName'}));
-		my $hashparent = &sha::pureperl($res[7]);
+		my $res = $sql->page_ashash($main::vars{'PageName'});
+		my $hashparent = &sha::pureperl($res->{'body'});
 		if (($page{'bodyhash'} eq $hashparent) or ($page{'bodyhash'} =~ /Conflict/)) {
 			$page{'title'} = 'undefined'.rand(16384) if $page{'title'} eq '';
 			$sql->write_page( $page{'title'}, $page{'modified_date'}, $page{'tags'}, $page{'autotags'}, $page{'copyright'}, $page{'body'}, $main::vars{'PageName'});
-			 #if ($pagename eq $page{'title'}) {
-				KSpade::Misc::setpagename($page{'title'});
-				#&page;
-				#}
+			KSpade::Misc::setpagename($page{'title'});
 			$main::vars{'HttpStatus'} = 'Status: 303 See Other';
 			$main::vars{'HttpStatus'} .= "\nLocation: $main::vars{'ScriptAbsolutePath'}$main::vars{'ScriptName'}?page=$main::vars{'PageName'}";
 			KSpade::Show::html('html/frmwrk.html',\%main::vars);
 		} else {
 			require Text::Diff;
-			my $diff = Text::Diff::diff(\$res[7],\$page{'body'});
+			my $diff = Text::Diff::diff(\$res->{'title'},\$page{'body'});
 			$diff =~ s/\n/<br \/>/g;
 			$main::vars{'Diff'} = $diff;
-			$main::vars{'Body'} = $res[7];
+			$main::vars{'Body'} = $res->{'title'};
 			$main::vars{'DBody'} = $page{'body'};
 			$main::vars{'HtmlHead'} .= '<title>'.$main::vars{'PageName'}.' &gt; Error@'.$main::vars{'SiteName'}.'</title>';
 			$main::vars{'HtmlBody'} .= KSpade::Show::template('html/conflict.html',\%vars);
