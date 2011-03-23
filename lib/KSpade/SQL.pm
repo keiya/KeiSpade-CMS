@@ -101,28 +101,35 @@ sub page_body {
 sub page_ashash {
 	my $self = shift;
 	my $title = shift;
-	# TODO: page body
-	return $self->fetch_ashash("select * from pages where title='$title';")->{$title};
+	my $res = $self->fetch_ashash("select * from pages where title='$title';")->{$title};
+	$res->{'body'} = $self->page_body($title);
+	return $res;
 }
 
 sub write_page {
 	my $self = shift;
 	my ($title, $date, $tags, $autotags, $copyright, $body, $page_name) = @_;
-	$self->do("update pages set title='$title', lastmodified_date='$date', tags='$tags',"."autotags='$autotags', copyright='$copyright', body='$body' where title='".$page_name."';");
+	$self->do("update pages set title='$title', lastmodified_date='$date', tags='$tags',"."autotags='$autotags', copyright='$copyright', body='ぷよぷよフィーバー' where title='".$page_name."';");
 	write_pagefile({'title' => $title, 'body' => $body});
 }
 
 sub page_exist {
 	my $self = shift;
 	my $title = shift;
-	return ($self->fetch("select count(*) from pages where title='$title';"))[0] != 0;
+	my $dir = 'dat/page';
+	my $fname = getfilename($title);
+	return -e "$dir/$fname";
 }
 
 sub delete_page {
 	my $self = shift;
-	my $name = shift;
-	# TODO: page file
-	$self->do("delete from pages where title='$name';");
+	my $title = shift;
+	my $dir = 'dat/page';
+	my $fname = getfilename($title);
+	unlink "$dir/$fname";
+	$self->do("delete from pages where title='$title';");
+	
+	gitcommit($dir, $fname, "delete page $title");
 }
 
 sub new_page {
@@ -130,7 +137,7 @@ sub new_page {
 	my $page = shift;
 
 	$self->do("insert into pages (title,lastmodified_date,created_date,tags,autotags,copyright,body)"
-		."values('$page->{'title'}','$page->{'created_date'}','$page->{'created_date'}','$page->{'tags'}','$page->{'autotags'}','$page->{'copyright'}','$page->{'body'}');");
+		."values('$page->{'title'}','$page->{'created_date'}','$page->{'created_date'}','$page->{'tags'}','$page->{'autotags'}','$page->{'copyright'}','ぷよぷよフィーバー');");
 	write_pagefile($page);
 }
 
@@ -153,12 +160,8 @@ sub gitcommit {
 	my $fname = shift;
 	my $comment = shift;
 
-	if(-e "$dir/$fname") {
-		$comment = $fname unless $comment;
-		`cd $dir;git add $fname;git commit $fname -m '$comment';cd ../..`;
-	} else {
-		warn "file does not exists $fname";
-	}
+	$comment = $fname unless $comment;
+	`cd $dir;git add $fname;git commit $fname -m '$comment';cd ../..`;
 }
 
 sub getfilename {
