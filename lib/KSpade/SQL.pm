@@ -4,6 +4,8 @@ use strict;
 use warnings;
 use DBI;
 use Digest::Perl::MD5 'md5_hex';
+use XML::Simple;
+use Data::Dumper;
 
 sub new {
 	my ($class,$datasource) = @_;
@@ -127,14 +129,42 @@ sub delete_page {
 	my $dir = 'dat/page';
 	my $fname = getfilename($title);
 	unlink "$dir/$fname";
+	unlink "dir/".getxmlfilename($fname);
 	$self->do("delete from pages where title='$title';");
 	
-	gitcommit($dir, $fname, "delete page $title");
+	gitcommit($dir, [$fname, getxmlfilename($title)], "delete page $title");
+}
+
+sub get_pageid_from_title {
+	my $title = shift;
+	# TODO: これだと、タイトルが変わるとpageidも変わってしまう。
+	#       タイトルを変えたときにファイル名も変更するか、タイトルに依存しないIDをつけるかしないといけない
+	#	もしMD5が重複したらどうすんのさ
+	return md5_hex($title);
+}
+
+sub update_xml {
+	my $page = shift;
+	my $dir = 'dat/page';
+	my $pageid = get_pageid_from_title($page->{'title'});
+
+	XML::Simple->new()->XMLout({
+			'title' => [$page->{'title'}],
+			'created_date' => [$page->{'created_date'}],
+			'tags' => [$page->{'tags'}],
+			'autotags' => [$page->{'autotags'}],
+			'copyright' => [$page->{'copyright'}],
+			'pagefilename' => ["$pageid.txt"],
+			'pageid' => [$pageid],
+		},
+		OutputFile => "$dir/$pageid.xml", XMLDecl => "<?xml version='1.0'?>",
+	);
 }
 
 sub new_page {
 	my $self = shift;
 	my $page = shift;
+
 
 	$self->do("insert into pages (title,lastmodified_date,created_date,tags,autotags,copyright,body)"
 		."values('$page->{'title'}','$page->{'created_date'}','$page->{'created_date'}','$page->{'tags'}','$page->{'autotags'}','$page->{'copyright'}','ぷよぷよフィーバー');");
@@ -148,8 +178,9 @@ sub write_pagefile {
 	if(open(FILE, ">$dir/$fname")) {
 		print FILE $page->{'body'};
 		close FILE;
+		update_xml($page);
 
-		gitcommit($dir, $fname, $page->{'title'});
+		gitcommit($dir, [$fname, getxmlfilename($page->{'title'})], $page->{'title'});
 	} else {
 		warn $!;
 	}
@@ -157,16 +188,28 @@ sub write_pagefile {
 
 sub gitcommit {
 	my $dir = shift;
-	my $fname = shift;
+	my $files = shift;
 	my $comment = shift;
 
-	$comment = $fname unless $comment;
-	`cd $dir;git add $fname;git commit $fname -m '$comment';cd ../..`;
+	foreach (@$files) {
+		`cd $dir;git add $_`;
+	}
+
+	my $flist = join(' ', @$files);
+	$comment = $flist unless defined($comment);
+	`cd $dir;git commit $flist -m '$comment';cd ../..`;
+}
+
+sub getxmlfilename {
+	my $title = shift;
+	my $ret = getfilename($title);
+	$ret =~ s/txt$/xml/;
+	return $ret;
 }
 
 sub getfilename {
 	my $title = shift;
-	return md5_hex($title);
+	return get_pageid_from_title($title).".txt";
 }
 
 sub DESTROY {
