@@ -10,6 +10,7 @@ use strict;
 use warnings;
 use lib '../lib';
 use KSpade;
+use KSpade::SQL;
 
 sub new {
 	$main::vars{'Addons::upl::UploaderName'} = 'addons/upl/upload.cgi';
@@ -37,18 +38,19 @@ sub delupload {
 
 sub delfile {
 	if ($ENV{'REQUEST_METHOD'} eq 'POST') {
-	my $filename = KSpade::Security::htmlexor($main::query{'filename'});
-	my @pages = $main::sql->fetch("select title from pages where confer like '%$filename%';",0);
-	foreach my $tmp (@pages) {
-		my @files = $main::sql->fetch("select confer from pages where title='$tmp';");
-		$files[0] =~ s/\[$filename\/.+?\]//g;
-		unlink('./dat/page/files/'.$filename);
-		my $modifieddate = time();
-		$main::sql->do("update pages set lastmodified_date='$modifieddate', confer='$files[0]' where title='$tmp';");
-	}
-	KSpade::Misc::setpagename($main::vars{'PageName'});
-	$main::vars{'HtmlHead'} .= '<title>'.$main::vars{'PageName'}.' &gt; File was Deleted@'.$main::vars{'SiteName'}.'</title>';
-	$main::vars{'HtmlBody'} .= KSpade::Show::template('html/deletedupl.html',\%main::vars);
+		my $filename = KSpade::Security::htmlexor($main::query{'filename'});
+		my @pages = $main::sql->fetch("select title from pages where confer like '%$filename%';",0);
+		foreach my $tmp (@pages) {
+			my @files = $main::sql->fetch("select confer from pages where title='$tmp';");
+			$files[0] =~ s/\[$filename\/.+?\]//g;
+			unlink('./dat/page/files/'.$filename);
+			my $modifieddate = time();
+			$main::sql->do("update pages set lastmodified_date='$modifieddate', confer='$files[0]' where title='$tmp';");
+		}
+		KSpade::SQL::del_uploaded_file($filename, \@pages);
+		KSpade::Misc::setpagename($main::vars{'PageName'});
+		$main::vars{'HtmlHead'} .= '<title>'.$main::vars{'PageName'}.' &gt; File was Deleted@'.$main::vars{'SiteName'}.'</title>';
+		$main::vars{'HtmlBody'} .= KSpade::Show::template('html/deletedupl.html',\%main::vars);
 	}
 	KSpade::Show::html('html/frmwrk.html',\%main::vars);
 }
@@ -70,10 +72,15 @@ sub addfile {
 		my $tmp  = KSpade::DateTime::spridate('%04d %2d %2d %2d:%02d:%02d');
 		$files .= "[$filename/$original($tmp)]";
 		$main::sql->do("update pages set lastmodified_date='$page{'modified_date'}', confer='$files' where title='$main::vars{'PageName'}';");
+		KSpade::SQL::add_uploaded_file($filename, $main::vars{'PageName'});
 	}
-	
-print "Content-Type: text/html; charset=UTF-8\n\n";
+
+	print "Content-Type: text/html; charset=UTF-8\n\n";
 	#KSpade::Show::html('../html/frmwrk.html',\%main::vars);
+}
+
+sub DESTROY {
+	my $self = shift;
 }
 
 1;

@@ -187,7 +187,6 @@ sub post {
 		chomp %page;
 		require 'sha.pl';
 		my $res = $sql->page_ashash($main::vars{'PageName'});
-		warn Dumper($res);
 		my $hashparent = &sha::pureperl($res->{'body'});
 		if (($page{'bodyhash'} eq $hashparent) or ($page{'bodyhash'} =~ /Conflict/)) {
 			$page{'title'} = 'undefined'.rand(16384) if $page{'title'} eq '';

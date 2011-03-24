@@ -100,6 +100,24 @@ sub page_body {
 	return "File does not exist $fname";
 }
 
+sub add_uploaded_file {
+	my $fname = shift;
+	my $pagetitle = shift;
+
+	#TODO: update XML
+
+	gitcommit('dat/page/files', [$fname], "upload file $fname in $pagetitle");
+}
+
+sub del_uploaded_file {
+	my $fname = shift;
+	my $pagetitle = shift;
+
+	#TODO: update XML
+
+	gitcommit('dat/page/files', [$fname], "delete file $fname in @$pagetitle");
+}
+
 sub page_ashash {
 	my $self = shift;
 	my $title = shift;
@@ -129,7 +147,8 @@ sub delete_page {
 	my $dir = 'dat/page';
 	my $fname = getfilename($title);
 	unlink "$dir/$fname";
-	unlink "dir/".getxmlfilename($fname);
+	unlink "$dir/".getxmlfilename($title);
+	warn "$dir/".getxmlfilename($title);
 	$self->do("delete from pages where title='$title';");
 	
 	gitcommit($dir, [$fname, getxmlfilename($title)], "delete page $title");
@@ -148,23 +167,33 @@ sub update_xml {
 	my $dir = 'dat/page';
 	my $pageid = get_pageid_from_title($page->{'title'});
 
-	XML::Simple->new()->XMLout({
-			'title' => [$page->{'title'}],
-			'created_date' => [$page->{'created_date'}],
-			'tags' => [$page->{'tags'}],
-			'autotags' => [$page->{'autotags'}],
-			'copyright' => [$page->{'copyright'}],
-			'pagefilename' => ["$pageid.txt"],
-			'pageid' => [$pageid],
-		},
-		OutputFile => "$dir/$pageid.xml", XMLDecl => "<?xml version='1.0'?>",
-	);
+	my $xmlfile = "$dir/$pageid.xml";
+	my $data;
+	if (-e $xmlfile) {
+		$data = XML::Simple->new()->XMLin($xmlfile, KeepRoot => 1, ForceArray => 1);
+		if (defined($data->{'page'}[0])) {
+			my %hoge = (%{$data->{'page'}[0]}, %{$page});
+			$data->{'page'}[0] = \%hoge;
+		}
+	}
+	unless (defined($data->{'page'}[0])) {
+		$data = { 'page' => [{}] };
+		foreach (keys %$page) {
+			$data->{'page'}[0]->{$_} = [$page->{$_}];
+		}
+	}
+	if (defined($data->{'page'}[0]->{'body'})) {
+		delete $data->{'page'}[0]->{'body'};
+	}
+
+	XML::Simple->new()->XMLout( $data,
+		OutputFile => $xmlfile, XMLDecl => "<?xml version='1.0'?>",
+		RootName => 'page', KeepRoot => 1);
 }
 
 sub new_page {
 	my $self = shift;
 	my $page = shift;
-
 
 	$self->do("insert into pages (title,lastmodified_date,created_date,tags,autotags,copyright,body)"
 		."values('$page->{'title'}','$page->{'created_date'}','$page->{'created_date'}','$page->{'tags'}','$page->{'autotags'}','$page->{'copyright'}','ぷよぷよフィーバー');");
@@ -175,7 +204,7 @@ sub write_pagefile {
 	my $page = shift;
 	my $dir = 'dat/page';
 	my $fname = getfilename($page->{'title'});
-	if(open(FILE, ">$dir/$fname")) {
+	if (open(FILE, ">$dir/$fname")) {
 		print FILE $page->{'body'};
 		close FILE;
 		update_xml($page);
