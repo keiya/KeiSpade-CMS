@@ -42,7 +42,7 @@ sub delfile {
 	foreach my $tmp (@pages) {
 		my @files = $main::sql->fetch("select confer from pages where title='$tmp';");
 		$files[0] =~ s/\[$filename\/.+?\]//g;
-		unlink('./files/'.$filename);
+		unlink('./dat/page/files/'.$filename);
 		my $modifieddate = time();
 		$main::sql->do("update pages set lastmodified_date='$modifieddate', confer='$files[0]' where title='$tmp';");
 	}

@@ -13,7 +13,7 @@ my $file = $query->param('file');
 my $back = $query->param('backpage');
 my %vars;
 $vars{'ScriptName'} = 'index.pl';
-$vars{'Addons::upl::FileDir'} = '../../files/';
+$vars{'Addons::upl::FileDir'} = '../../dat/page/files/';
 %vars = (%vars,KSpade::Conf::load('./dat/kspade.conf'));
 my $scriptname = $vars{'ScriptName'};
 

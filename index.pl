@@ -104,7 +104,7 @@ sub page {
 			my @filedatas= split(/\]\[/, $hash_ofpage->{'confer'});
 			foreach my $filedata (@filedatas) {
 				my @elements = split(/\//, $filedata);
-				$confer .= "<a href=\"files/$elements[0]\">$elements[1]</a> [<a href=\"./$main::vars{'ScriptName'}?&page=$main::vars{'PageName'}&amp;filename=$elements[0]&amp;adon=upl&amp;acmd=delupload\" rel=\"nofollow\">X</a>] ";
+				$confer .= "<a href=\"dat/page/files/$elements[0]\">$elements[1]</a> [<a href=\"./$main::vars{'ScriptName'}?&page=$main::vars{'PageName'}&amp;filename=$elements[0]&amp;adon=upl&amp;acmd=delupload\" rel=\"nofollow\">X</a>] ";
 				$confer =~ s/[\[\]]+//g;
 			}
 	
