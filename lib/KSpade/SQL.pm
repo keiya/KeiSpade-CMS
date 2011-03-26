@@ -11,7 +11,8 @@ use constant DIR => 'dat/page';
 
 sub new {
 	my ($class,$datasource) = @_;
-	my $dbh = DBI->connect($datasource);
+	my $dbh;
+	$dbh = DBI->connect($datasource) if defined($datasource);
 	my $self = {dbh=>$dbh};
 	return bless $self, $class;
 }
@@ -158,7 +159,6 @@ sub get_pageid_from_title {
 
 # $pageに、ページに関する情報を補完する(pageidとか)
 sub hokan {
-	my $self = shift;
 	my $page = shift;
 
 	if (!defined($page->{pageid})) {
@@ -187,7 +187,7 @@ sub write_pagefile {
 	my $dir = 'dat/page';
 	my $fname = getfilename($page->{'title'});
 	my $fNewPage = ! -e "$dir/$fname";
-	$self->hokan($page);
+	hokan($page);
 	if (open(FILE, ">$dir/$fname")) {
 		print FILE $page->{'body'};
 		close FILE;

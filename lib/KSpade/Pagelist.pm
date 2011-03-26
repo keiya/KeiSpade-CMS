@@ -36,9 +36,10 @@ sub new {
 sub search {
 	my $self = shift;
 	my $func = shift;
+	my $arg  = shift;
 	my @ret;
 	foreach (@{$self->{xml}->{pagelist}[0]->{page}}) {
-		if (&$func($_)) {
+		if (&$func($_, $arg)) {
 			push @ret, $_;
 		}
 	}
@@ -58,7 +59,7 @@ sub getpage_by_title {
 
 sub is_ignore_key {
 	my $key = shift;
-	my @ignore_key = ('body', 'bodyhash', 'confer');
+	my @ignore_key = ('body', 'bodyhash');
 	foreach (@ignore_key) {
 		return 1 if $key eq $_;
 	}
