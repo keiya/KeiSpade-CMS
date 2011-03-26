@@ -55,20 +55,26 @@ sub formelements {
 	$form->{'copyright'} = '';
 	$form->{'body'} = KSpade::Security::exorcism($form{'body'});
 	$form->{'bodyhash'} = KSpade::Security::exorcism($form{'bodyhash'});
-
 	$form->{'title'} =~ s/ +$// if defined $form->{'title'};
+	$form->{'tags'} = join('|', @{get_taglist($form->{title})});
+}
 
-	my $tagstr = $form->{'title'};
-	if (defined $tagstr) {
-		$tagstr =~ s/^\[(.+)\](.+)/$1/g;
-		if (defined $2) {
-			my @tagstrs= split(/\]\[/, $tagstr);
-			foreach my $tag (@tagstrs) {
-				$tag =~ s/[\[\]]+//g;
-				$form->{'tags'} .= $tag.'|';
-			}
-		}
+# return the list that contains tags in $str
+sub get_taglist {
+	my $str = $_[0];
+	my @list;
+	while ($str =~ /\[([^\]]+)\](.+)/) {
+		push @list, $1;
+		$str = $2;
 	}
+	return \@list;
+}
+
+# return the name of page (with no tag)
+sub get_title {
+	my $str = $_[0];
+	$str =~ /[^\]\[]+/;
+	return $&;
 }
 
 #TODO (closure(to select), closure(to sort), format) みたいなインターフェースがベスト
