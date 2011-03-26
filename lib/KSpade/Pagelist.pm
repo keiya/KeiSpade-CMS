@@ -42,30 +42,63 @@ sub search {
 			push @ret, $_;
 		}
 	}
-	return @ret;
+	return \@ret;
 }
 
 sub getpage_by_pageid {
 	my ($self, $pageid) = @_;
-	return ($self->search(sub { $_->{pageid}[0] eq $pageid }))[0];
+	return ($self->search(sub { $_->{pageid} eq $pageid }))->[0];
 }
 
 sub getpage_by_title {
 	my $self = shift;
 	my $title = shift;
-	return ($self->search(sub { $_->{title}[0] eq $title }))[0];
+	return ($self->search(sub { $_->{title} eq $title }))->[0];
+}
+
+sub is_ignore_key {
+	my $key = shift;
+	my @ignore_key = ('body', 'bodyhash', 'confer');
+	foreach (@ignore_key) {
+		return 1 if $key eq $_;
+	}
+	return 0;
 }
 
 sub addpage {
 	my ($self, $page) = @_;
-	push @{$self->{xml}->{pagelist}[0]->{page}}, $page;
+	my %hash = %$page;
+	foreach (keys %hash) {
+		delete $hash{$_} if is_ignore_key($_);
+	}
+	push @{$self->{xml}->{pagelist}[0]->{page}}, \%hash;
+}
+
+sub updatepage {
+	my ($self, $page) = @_;
+	my $ref = $self->getpage_by_pageid($page->{pageid});
+	foreach (keys %$page) {
+		next if is_ignore_key($_);
+		$ref->{$_} = $page->{$_};
+	}
+}
+
+sub delpage {
+	my ($self, $pageid) = @_;
+	my $size = @{$self->{xml}->{pagelist}[0]->{page}};
+	for (my $i = 0; $i < $size; $i++) {
+		if ($self->{xml}->{pagelist}[0]->{page}[$i]->{pageid} eq $pageid) {
+			splice @{$self->{xml}->{pagelist}[0]->{page}}, $i, 1;
+			last;
+		}
+	}
 }
 
 # save as xml
 sub savexml {
 	my $self = shift;
 
-	$self->{xml} = XML::Simple->new()->XMLout( $self->{xml},
+	XML::Simple->new()->XMLout( $self->{xml},
 		OutputFile => $self->{fname}, XMLDecl => "<?xml version='1.0'?>",
 		RootName => 'page', KeepRoot => 1);
 }
@@ -77,7 +110,7 @@ sub readxml {
 	if (-e $self->{fname}) {
 		$self->{xml} = XML::Simple->new()->XMLin( $self->{fname}, KeepRoot => 1, ForceArray => 1);
 	} else {
-		warn "file done not exist $self->{fname}";
+		$self->{xml} = { pagelist => [{}] };
 	}
 }
 

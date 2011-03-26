@@ -2,10 +2,12 @@ package KSpade::SQL;
 
 use strict;
 use warnings;
+use KSpade::Pagelist;
 use DBI;
 use Digest::Perl::MD5 'md5_hex';
-use XML::Simple;
 use Data::Dumper;
+use constant PAGELIST => 'pagelist.xml';
+use constant DIR => 'dat/page';
 
 sub new {
 	my ($class,$datasource) = @_;
@@ -100,22 +102,9 @@ sub page_body {
 	return "File does not exist $fname";
 }
 
-sub add_uploaded_file {
-	my $fname = shift;
-	my $pagetitle = shift;
-
-	#TODO: update XML
-
-	gitcommit('dat/page/files', [$fname], "upload file $fname in $pagetitle");
-}
-
-sub del_uploaded_file {
-	my $fname = shift;
-	my $pagetitle = shift;
-
-	#TODO: update XML
-
-	gitcommit('dat/page/files', [$fname], "delete file $fname in @$pagetitle");
+sub get_pagelist {
+	my $self = shift;
+	return  KSpade::Pagelist->new('dat/page/'.PAGELIST);
 }
 
 sub page_ashash {
@@ -128,9 +117,12 @@ sub page_ashash {
 
 sub write_page {
 	my $self = shift;
-	my ($title, $date, $tags, $autotags, $copyright, $body, $page_name) = @_;
-	$self->do("update pages set title='$title', lastmodified_date='$date', tags='$tags',"."autotags='$autotags', copyright='$copyright', body='ぷよぷよフィーバー' where title='".$page_name."';");
-	write_pagefile({'title' => $title, 'body' => $body});
+	my $page = shift;
+	my $page_name = shift;
+	my $sql = "update pages set title='$page->{title}', lastmodified_date='$page->{modified_date}', tags='$page->{tags}',".
+		"autotags='$page->{autotags}', copyright='$page->{copyright}', body='ぷよぷよフィーバー' where title='$page_name';";
+	$self->do($sql);
+	$self->write_pagefile($page);
 }
 
 sub page_exist {
@@ -147,11 +139,13 @@ sub delete_page {
 	my $dir = 'dat/page';
 	my $fname = getfilename($title);
 	unlink "$dir/$fname";
-	unlink "$dir/".getxmlfilename($title);
-	warn "$dir/".getxmlfilename($title);
 	$self->do("delete from pages where title='$title';");
+
+	my $plist = KSpade::Pagelist->new('dat/page/'.PAGELIST);
+	$plist->delpage(get_pageid_from_title($title));
+	$plist->savexml;
 	
-	gitcommit($dir, [$fname, getxmlfilename($title)], "delete page $title");
+	commit($dir, [$fname, PAGELIST], "delete page $title");
 }
 
 sub get_pageid_from_title {
@@ -159,36 +153,24 @@ sub get_pageid_from_title {
 	# TODO: これだと、タイトルが変わるとpageidも変わってしまう。
 	#       タイトルを変えたときにファイル名も変更するか、タイトルに依存しないIDをつけるかしないといけない
 	#	もしMD5が重複したらどうすんのさ
+	#	pagelistを使う
 	return md5_hex($title);
 }
 
-sub update_xml {
+# $pageに、ページに関する情報を補完する(pageidとか)
+sub hokan {
+	my $self = shift;
 	my $page = shift;
-	my $dir = 'dat/page';
-	my $pageid = get_pageid_from_title($page->{'title'});
 
-	my $xmlfile = "$dir/$pageid.xml";
-	my $data;
-	if (-e $xmlfile) {
-		$data = XML::Simple->new()->XMLin($xmlfile, KeepRoot => 1, ForceArray => 1);
-		if (defined($data->{'page'}[0])) {
-			my %hoge = (%{$data->{'page'}[0]}, %{$page});
-			$data->{'page'}[0] = \%hoge;
-		}
+	if (!defined($page->{pageid})) {
+		$page->{pageid} = get_pageid_from_title($page->{title});
 	}
-	unless (defined($data->{'page'}[0])) {
-		$data = { 'page' => [{}] };
-		foreach (keys %$page) {
-			$data->{'page'}[0]->{$_} = [$page->{$_}];
-		}
+	if (!defined($page->{pagefilename})) {
+		$page->{pagefilename} = getfilename($page->{title});
 	}
-	if (defined($data->{'page'}[0]->{'body'})) {
-		delete $data->{'page'}[0]->{'body'};
+	if (!defined($page->{file})) {
+		$page->{file} = [];
 	}
-
-	XML::Simple->new()->XMLout( $data,
-		OutputFile => $xmlfile, XMLDecl => "<?xml version='1.0'?>",
-		RootName => 'page', KeepRoot => 1);
 }
 
 sub new_page {
@@ -197,25 +179,35 @@ sub new_page {
 
 	$self->do("insert into pages (title,lastmodified_date,created_date,tags,autotags,copyright,body)"
 		."values('$page->{'title'}','$page->{'created_date'}','$page->{'created_date'}','$page->{'tags'}','$page->{'autotags'}','$page->{'copyright'}','ぷよぷよフィーバー');");
-	write_pagefile($page);
+	$self->write_pagefile($page);
 }
 
 sub write_pagefile {
+	my $self = shift;
 	my $page = shift;
 	my $dir = 'dat/page';
 	my $fname = getfilename($page->{'title'});
+	my $fNewPage = ! -e "$dir/$fname";
+	$self->hokan($page);
 	if (open(FILE, ">$dir/$fname")) {
 		print FILE $page->{'body'};
 		close FILE;
-		update_xml($page);
+		
+		my $plist = KSpade::Pagelist->new( 'dat/page/'.PAGELIST);
+		if ($fNewPage) {
+			$plist->addpage($page);
+		} else {
+			$plist->updatepage($page);
+		}
+		$plist->savexml;
 
-		gitcommit($dir, [$fname, getxmlfilename($page->{'title'})], $page->{'title'});
+		commit($dir, [$fname, PAGELIST], $page->{'title'});
 	} else {
 		warn $!;
 	}
 }
 
-sub gitcommit {
+sub commit {
 	my $dir = shift;
 	my $files = shift;
 	my $comment = shift;
@@ -227,13 +219,6 @@ sub gitcommit {
 	my $flist = join(' ', @$files);
 	$comment = $flist unless defined($comment);
 	`cd $dir;git commit $flist -m '$comment';cd ../..`;
-}
-
-sub getxmlfilename {
-	my $title = shift;
-	my $ret = getfilename($title);
-	$ret =~ s/txt$/xml/;
-	return $ret;
 }
 
 sub getfilename {

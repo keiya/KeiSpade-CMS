@@ -190,7 +190,7 @@ sub post {
 		my $hashparent = &sha::pureperl($res->{'body'});
 		if (($page{'bodyhash'} eq $hashparent) or ($page{'bodyhash'} =~ /Conflict/)) {
 			$page{'title'} = 'undefined'.rand(16384) if $page{'title'} eq '';
-			$sql->write_page( $page{'title'}, $page{'modified_date'}, $page{'tags'}, $page{'autotags'}, $page{'copyright'}, $page{'body'}, $main::vars{'PageName'});
+			$sql->write_page( \%page, $main::vars{'PageName'});
 			KSpade::Misc::setpagename($page{'title'});
 			$main::vars{'HttpStatus'} = 'Status: 303 See Other';
 			$main::vars{'HttpStatus'} .= "\nLocation: $main::vars{'ScriptAbsolutePath'}$main::vars{'ScriptName'}?page=$main::vars{'PageName'}";
