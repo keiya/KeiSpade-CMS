@@ -55,7 +55,7 @@ our %query = KSpade::CGIDec::getline($ENV{'QUERY_STRING'});
 KSpade::Misc::setpagename($query{'page'});
 
 # connect to DB
-my $database = './dat/kspade.db';
+my $database = '';
 my $data_source = "dbi:SQLite:dbname=$database";
 our $sql = KSpade::SQL->new($data_source);
 
@@ -169,7 +169,6 @@ sub edit {
 	KSpade::Show::html('html/frmwrk.html',\%main::vars);
 } 
 
-use Data::Dumper;
 # submit edited text
 sub post {
 	my $pagename = $main::vars{'PageName'};
@@ -274,8 +273,14 @@ sub search {
 	$main::vars{'Query'} = $query{'query'};
 	if (defined $query{'query'}) {
 		# normal search
-		$main::vars{'PagesList'} = KSpade::Show::pageslist("select title from pages where body like '%$query%';"
-			,"<a href=\"./$main::vars{'ScriptName'}?page=%s\">%s</a><br />");
+		my $list = [];
+		foreach ($sql->get_pagelist->all_pages) {
+			push @$list, [$_->{title}, $_->{title}] if /$query/ =~ $sql->page_body;
+		}
+		KSpade::Show::pageslist( 
+			$list,
+			"<a href=\"./$main::vars{'ScriptName'}?page=%s\">%s</a><br />");
+
 		$main::vars{'HtmlHead'} .= '<title>Search &gt; Body@'.$main::vars{'SiteName'}.'</title>';
 		$main::vars{'HtmlBody'} .= KSpade::Show::template('html/search.html',\%vars);
 		delete $main::vars{'PagesList'};
@@ -283,8 +288,13 @@ sub search {
 	}
 	# print all pages
 	else {
-		$main::vars{'PagesList'} = KSpade::Show::pageslist("select title from pages;"
-			,"<a href=\"./$main::vars{'ScriptName'}?page=%s\">%s</a><br />");
+		my @list;
+		foreach (@{$sql->get_pagelist->all_pages}) {
+			push @list, [$_->{title}, $_->{title}];
+		}
+		$main::vars{'PagesList'} = KSpade::Show::pageslist(
+			\@list,
+			"<a href=\"./$main::vars{'ScriptName'}?page=%s\">%s</a><br />");
 		$main::vars{'HtmlHead'} .= '<title>PagesList@'.$main::vars{'SiteName'}.'</title>';
 		$main::vars{'HtmlBody'} .= KSpade::Show::template('html/list.html',\%vars);
 		delete $main::vars{'PagesList'};
@@ -301,13 +311,19 @@ sub category {
 	if ($main::vars{'Query'} eq '') {
 		$main::vars{'CategoryTitle'} = "Index of Categories";
 		$main::vars{'CategoryList'} = '<ul>';
-		$main::vars{'CategoryList'} .= KSpade::Show::categorylist("select tags from pages;"
-		,"<li><a href=\"./$main::vars{'ScriptName'}?cmd=category&amp;query=%s\">%s</a></li>");
+
+		$main::vars{'CategoryList'} .= KSpade::Show::categorylist(
+			$sql->get_category_list(),
+			"<li><a href=\"./$main::vars{'ScriptName'}?cmd=category&amp;query=%s\">%s</a></li>");
 		$main::vars{'CategoryList'} .= '</ul>';
 	} else {
+		my @list;
+		foreach (@{$sql->get_pagelist->all_pages}) {
+			push @list, $_->{title} if /$query/ =~ $_->{tags};
+		}
 		$main::vars{'CategoryTitle'} = "Pages related to '$main::vars{'Query'}'";
-		$main::vars{'CategoryList'} = KSpade::Show::categorylist("select title from pages where tags like '%$query%';"
-			,"<a href=\"./$main::vars{'ScriptName'}?page=%s\">%s</a><br />");
+		$main::vars{'CategoryList'} = KSpade::Show::categorylist(\@list,
+			"<a href=\"./$main::vars{'ScriptName'}?page=%s\">%s</a><br />");
 	}
 	$main::vars{'HtmlHead'} .= '<title>Search &gt; Category@'.$main::vars{'SiteName'}.'</title>';
 	$main::vars{'HtmlBody'} .= KSpade::Show::template('html/category.html',\%vars);

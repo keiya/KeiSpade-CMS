@@ -1,15 +1,32 @@
+package KSpade::SQL;
+sub get_category_list {
+	my ($self) = @_;
+	my $ret = [];
+
+	foreach (@{$self->get_pagelist->all_pages}) {
+		push @$ret, $_->{tags};
+	}
+	return $ret;
+}
+
 package KSpade::Show;
 
 use strict;
 use warnings;
+use Data::Dumper;
 use KSpade::Security;
 use HTML::Template;
 
 sub html {
-	$main::vars{'SidebarCategoryList'} = categorylist("select tags from pages;"
-		,"<dd><a href=\"./$main::vars{'ScriptName'}?cmd=category&amp;query=%s\">%s</a></dd>");
-	$main::vars{'SidebarPagesList'} = pageslist("select title from pages order by lastmodified_date desc, title limit $main::vars{'SidebarPagesListLimit'};"
-		,"<dd><a href=\"./$main::vars{'ScriptName'}?page=%s\">%s</a></dd>");
+	$main::vars{'SidebarCategoryList'} = categorylist(
+		KSpade::SQL->new->get_category_list(),
+		"<dd><a href=\"./$main::vars{'ScriptName'}?cmd=category&amp;query=%s\">%s</a></dd>");
+	my @list;
+	foreach (KSpade::SQL->new->recently_modified_pages_as_hash($main::vars{'SidebarPagesListLimit'})) {
+		push @list, [$_->{title}, $_->{title}];
+	}
+	$main::vars{'SidebarPagesList'} = pageslist(
+		\@list, "<dd><a href=\"./$main::vars{'ScriptName'}?page=%s\">%s</a></dd>");
 	my $html;
 	$html = template($_[0], $_[1]);
 	print "${main::vars{'HttpStatus'}}\n${main::vars{'HttpContype'}}\n\n";
@@ -54,24 +71,25 @@ sub formelements {
 	}
 }
 
+#TODO (closure(to select), closure(to sort), format) みたいなインターフェースがベスト
 sub pageslist {
-	my @res = ($main::sql->fetch($_[0],0));
-	my $pageslist;
-	my $format = $_[1];
-	foreach my $tmp (@res) {
-		my $formatmp = $format;
-		$formatmp =~ s/%s/$tmp/g;
-		$pageslist .= $formatmp;
+	my ($arr, $format) = @_;
+	my $pageslist = '';
+	foreach (@$arr) {
+		if (defined $_ && ref($_) eq 'ARRAY') {
+			my $tmp = sprintf $format, @$_;
+			$pageslist .= $tmp;
+		}
 	}
 	return $pageslist;
 }
 
+#TODO (closure(to select), closure(to sort), format) みたいなインターフェースがベスト
 sub categorylist {
-	my @res = ($main::sql->fetch($_[0],0));
+	my ($arr, $format) = @_;
 	my $categorylist;
-	my $format = $_[1];
 	my %category;
-	foreach my $tmp (@res) {
+	foreach my $tmp (@$arr) {
 		my @tags = split(/\|/, $tmp);
 		foreach my $tag (@tags) {
 			my $formatmp = $format;

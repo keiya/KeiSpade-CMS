@@ -6,6 +6,7 @@ use KSpade::Pagelist;
 use DBI;
 use Digest::Perl::MD5 'md5_hex';
 use Data::Dumper;
+use Carp qw(cluck);
 use constant PAGELIST => 'pagelist.xml';
 use constant DIR => 'dat/page';
 
@@ -17,65 +18,11 @@ sub new {
 	return bless $self, $class;
 }
 
-sub fetch_ashash {
-	my ($self, $statement, $key) = @_;
-	$key = 1 unless defined $key;
-	my $dbh = $self->{dbh};
-	my $arr_ref = $dbh->selectall_hashref($statement,$key);
-	return $arr_ref;
-}
-
-sub fetch {
-	my ($self, $statement) = @_;
-	my $dbh = $self->{dbh};
-	my $sth = $dbh->prepare($statement);
-	my $rv = $sth->execute;
-	my @row;
-	my $i = 0;
-	while ( my $arr_ref = $sth->fetchrow_arrayref ){
-		if (defined $_[2]) {
-			push(@row, (@$arr_ref)[$_[2]]);
-		} else {
-			@row = @$arr_ref; 
-		}
-	} continue {
-			$i++;
-	}
-	$sth->finish;
-	return(@row);
-}
-
-sub do {
-	my ($self, $statement, $datasource) = @_;
-	my $dbh = $self->{dbh};
-	$dbh->do($statement);
-	return 1;
-}
-
 sub create_table {
-	my ($self, $recdata) = @_;
-	my $dbh = $self->{dbh};
-	#my $notable = 1;
-       	my $create_table = "create table pages (" .
-       	                       "title," .
-       	                       "lastmodified_date," .
-       	                       "created_date," .
-       	                       "tags," .
-       	                       "autotags," .
-       	                       "confer," .
-       	                       "copyright," .
-                               "body," .
-	                           "author" .
-       	                   ");";
-       	$dbh->do($create_table);
 }
 
 sub tableexists {
-	my ($self) = @_;
-	my $dbh = $self->{dbh};
-	# なかったらテーブルつくる
-	my @res = $self->fetch("select count(*) from sqlite_master where type='table' and name='pages';");
-	return $res[0];
+	return -e DIR.'/'.PAGELIST ? 1 : 0;
 }
 
 sub most_recently_modified_pages {
@@ -87,7 +34,9 @@ sub recently_modified_pages_as_hash {
 	my ($self, $n) = @_;
 	my $all_pages = $self->get_pagelist->all_pages;
 	my @arr = sort {$a->{lastmodified_date} cmp $b->{lastmodified_date}} @$all_pages;
-	return (splice @arr, 0, $n);
+	@arr =  (splice @arr, 0, $n) if defined $n;
+	return @arr;
+
 }
 
 sub page_body {
@@ -111,7 +60,7 @@ sub get_pagelist {
 sub page_ashash {
 	my $self = shift;
 	my $title = shift;
-	my $res = $self->fetch_ashash("select * from pages where title='$title';")->{$title};
+	my $res = $self->get_pagelist->getpage_by_title($title);
 	$res->{'body'} = $self->page_body($title);
 	return $res;
 }
@@ -122,7 +71,7 @@ sub write_page {
 	my $page_name = shift;
 	my $sql = "update pages set title='$page->{title}', lastmodified_date='$page->{modified_date}', tags='$page->{tags}',".
 		"autotags='$page->{autotags}', copyright='$page->{copyright}', body='ぷよぷよフィーバー' where title='$page_name';";
-	$self->do($sql);
+	#$self->do($sql);
 	$self->write_pagefile($page);
 }
 
@@ -140,7 +89,6 @@ sub delete_page {
 	my $dir = DIR;
 	my $fname = getfilename($title);
 	unlink "$dir/$fname";
-	$self->do("delete from pages where title='$title';");
 
 	my $plist = KSpade::Pagelist->new(DIR.'/'.PAGELIST);
 	$plist->delpage(get_pageid_from_title($title));
@@ -178,8 +126,8 @@ sub new_page {
 	my $page = shift;
 	$page->{lastmodified_date} = $page->{created_date};
 
-	$self->do("insert into pages (title,lastmodified_date,created_date,tags,autotags,copyright,body)"
-		."values('$page->{'title'}','$page->{'created_date'}','$page->{'created_date'}','$page->{'tags'}','$page->{'autotags'}','$page->{'copyright'}','ぷよぷよフィーバー');");
+	#$self->do("insert into pages (title,lastmodified_date,created_date,tags,autotags,copyright,body)"
+	#	."values('$page->{'title'}','$page->{'created_date'}','$page->{'created_date'}','$page->{'tags'}','$page->{'autotags'}','$page->{'copyright'}','ぷよぷよフィーバー');");
 	$self->write_pagefile($page);
 }
 
