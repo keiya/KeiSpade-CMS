@@ -103,7 +103,6 @@ sub page_body {
 }
 
 sub get_pagelist {
-	my $self = shift;
 	return  KSpade::Pagelist->new('dat/page/'.PAGELIST);
 }
 
