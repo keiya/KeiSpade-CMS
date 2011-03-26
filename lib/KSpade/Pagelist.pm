@@ -46,6 +46,11 @@ sub search {
 	return \@ret;
 }
 
+sub all_pages {
+	my $self = shift;
+	return $self->{xml}->{pagelist}[0]->{page};
+}
+
 sub getpage_by_pageid {
 	my ($self, $pageid) = @_;
 	return ($self->search(sub { $_->{pageid} eq $pageid }))->[0];

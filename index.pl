@@ -2,6 +2,7 @@
 
 use strict;
 use warnings;
+use Data::Dumper;
 
 # include modules
 use File::Basename qw(basename);
@@ -125,38 +126,30 @@ sub page {
 }
 
 sub atom {
-	my $pupdated = $sql->recently_modified_pages(1);
-	$pupdated= KSpade::DateTime::spridtarg($pupdated);
+	my $pupdated = $sql->most_recently_modified_pages->{lastmodified_date};
+	$pupdated = KSpade::DateTime::spridtarg($pupdated);
 	chomp $pupdated;
-	my $hash_ref = ($sql->recently_modified_pages_as_hash(5));
 	$main::vars{'AtomUpdated'} = $pupdated;
-	my ($title, $etitle, $id, $link, $update, $publish, $tags, $author, $body, $pbody, $tmp);
-	my $entry = '';
 	$main::vars{'AtomEntries'} .= "<id>${abspath}$main::vars{'ScriptName'}?cmd=atom</id>";
-	foreach my $keys (keys %$hash_ref) {
-		$title  = $hash_ref->{$hash_ref->{$keys}->{'title'}}->{'title'};
-		$etitle = KSpade::Misc::urlenc($title);
-		$id     = "${abspath}$main::vars{'ScriptName'}?page=$etitle";
-		$link   = "./$main::vars{'ScriptName'}?page=$etitle";
-		$update = $hash_ref->{$hash_ref->{$keys}->{'title'}}->{'lastmodified_date'};
-		$publish= $hash_ref->{$hash_ref->{$keys}->{'title'}}->{'created_date'};
-		$tags   = $hash_ref->{$hash_ref->{$keys}->{'title'}}->{'tags'};
-		$author   = $hash_ref->{$hash_ref->{$keys}->{'title'}}->{'author'};
-		$author = $main::vars{'DefaultAuthor'} if not defined $author;
-		$body   = $hash_ref->{$hash_ref->{$keys}->{'title'}}->{'body'};
-		$body = 'No text' if $body eq '';
-		$pbody = KSpade::Security::ahtml(Text::HatenaEx->parse(KSpade::Security::html(KSpade::Security::noscript($body))));
-		my @tag = split(/\|/,$tags);
+	foreach ($sql->recently_modified_pages_as_hash(5)) {
+		my $etitle = KSpade::Misc::urlenc($_->{title});
+		my $id     = "${abspath}$main::vars{'ScriptName'}?page=$etitle";
+		my $link   = "./$main::vars{'ScriptName'}?page=$etitle";
+		my $body   = $sql->page_body($_->{title});
+		$body = "No text" if $body eq '';
+		my $pbody = KSpade::Security::ahtml(Text::HatenaEx->parse(KSpade::Security::html(KSpade::Security::noscript($body))));
+		my @tag = split(/\|/,$_->{tags});
 		my $ptag = '';
 		foreach my $tmp (@tag) {
 			$ptag .= "<category term=\"$tmp\" />";
 		}
-		$update  = KSpade::DateTime::spridtarg($update);
-		$publish = KSpade::DateTime::spridtarg($publish);
-		$main::vars{'AtomEntries'} .= "<entry><title>$title</title><id>$id</id><author><name>$author</name></author>".
-		                        "<link rel=\"alternate\" href=\"$link\" />".
-		                        "<updated>$update</updated><published>$publish</published>$ptag".
-		                        "<content type=\"html\">$pbody</content></entry>\n";
+		my $update  = KSpade::DateTime::spridtarg($_->{lastmodified_date});
+		my $publish = KSpade::DateTime::spridtarg($_->{created_date});
+		$main::vars{'AtomEntries'} .= "<entry><title>$_->{title}</title><id>$id</id>".
+			"<author><name>$_->{author}</name></author>".
+			"<link rel=\"alternate\" href=\"$link\" />".
+			"<updated>$update</updated><published>$publish</published>$ptag".
+			"<content type=\"html\">$pbody</content></entry>\n";
 	}
 	KSpade::Show::xml('html/atom.xml',\%main::vars);
 }

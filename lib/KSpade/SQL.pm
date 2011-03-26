@@ -78,22 +78,23 @@ sub tableexists {
 	return $res[0];
 }
 
-sub recently_modified_pages {
+sub most_recently_modified_pages {
 	my $self = shift;
-	my $n = shift;
-	return ($self->fetch("select lastmodified_date from pages order by lastmodified_date desc limit $n"))[0];
+	return ($self->recently_modified_pages_as_hash(1))[0];
 }
+
 sub recently_modified_pages_as_hash {
-	my $self = shift;
-	my $n = shift;
-	return ($self->fetch_ashash("select * from pages order by lastmodified_date desc limit $n;"))[0];
+	my ($self, $n) = @_;
+	my $all_pages = $self->get_pagelist->all_pages;
+	my @arr = sort {$a->{lastmodified_date} cmp $b->{lastmodified_date}} @$all_pages;
+	return (splice @arr, 0, $n);
 }
 
 sub page_body {
 	my $self = shift;
 	my $title = shift;
 
-	my $dir = "dat/page";
+	my $dir = DIR;
 	my $fname = getfilename($title);
 	if(-e "$dir/$fname") {
 		my $as_scalar = `cat $dir/$fname`;
@@ -104,7 +105,7 @@ sub page_body {
 }
 
 sub get_pagelist {
-	return  KSpade::Pagelist->new('dat/page/'.PAGELIST);
+	return  KSpade::Pagelist->new(DIR.'/'.PAGELIST);
 }
 
 sub page_ashash {
@@ -128,7 +129,7 @@ sub write_page {
 sub page_exist {
 	my $self = shift;
 	my $title = shift;
-	my $dir = 'dat/page';
+	my $dir = DIR;
 	my $fname = getfilename($title);
 	return -e "$dir/$fname";
 }
@@ -136,12 +137,12 @@ sub page_exist {
 sub delete_page {
 	my $self = shift;
 	my $title = shift;
-	my $dir = 'dat/page';
+	my $dir = DIR;
 	my $fname = getfilename($title);
 	unlink "$dir/$fname";
 	$self->do("delete from pages where title='$title';");
 
-	my $plist = KSpade::Pagelist->new('dat/page/'.PAGELIST);
+	my $plist = KSpade::Pagelist->new(DIR.'/'.PAGELIST);
 	$plist->delpage(get_pageid_from_title($title));
 	$plist->savexml;
 	
@@ -175,6 +176,7 @@ sub hokan {
 sub new_page {
 	my $self = shift;
 	my $page = shift;
+	$page->{lastmodified_date} = $page->{created_date};
 
 	$self->do("insert into pages (title,lastmodified_date,created_date,tags,autotags,copyright,body)"
 		."values('$page->{'title'}','$page->{'created_date'}','$page->{'created_date'}','$page->{'tags'}','$page->{'autotags'}','$page->{'copyright'}','ぷよぷよフィーバー');");
@@ -184,7 +186,7 @@ sub new_page {
 sub write_pagefile {
 	my $self = shift;
 	my $page = shift;
-	my $dir = 'dat/page';
+	my $dir = DIR;
 	my $fname = getfilename($page->{'title'});
 	my $fNewPage = ! -e "$dir/$fname";
 	hokan($page);
@@ -192,7 +194,7 @@ sub write_pagefile {
 		print FILE $page->{'body'};
 		close FILE;
 		
-		my $plist = KSpade::Pagelist->new( 'dat/page/'.PAGELIST);
+		my $plist = KSpade::Pagelist->new(DIR.'/'.PAGELIST);
 		if ($fNewPage) {
 			$plist->addpage($page);
 		} else {
