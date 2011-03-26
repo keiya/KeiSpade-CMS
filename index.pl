@@ -54,20 +54,7 @@ our %query = KSpade::CGIDec::getline($ENV{'QUERY_STRING'});
 
 KSpade::Misc::setpagename($query{'page'});
 
-# connect to DB
-my $database = '';
-my $data_source = "dbi:SQLite:dbname=$database";
-our $sql = KSpade::SQL->new($data_source);
-
-# database initialize (create the table)
-if ($sql->tableexists == 0) {
-	$sql->create_table;
-	init_toppage();
-
-	$vars{'HtmlHead'} .= '<link href="./css/light.css" rel="stylesheet" type="text/css">';
-	$vars{'HtmlHead'} .= '<title>Miracle! Table was created!</title>';
-	$vars{'HtmlBody'} .= '<p>Table was created. Please reload.</p>';
-}
+our $db = KSpade::DB->new;
 
 if (defined $query{'adon'}) {
 	my $addon_name = KSpade::Security::file($query{'adon'});
@@ -86,7 +73,7 @@ if (defined $query{'adon'}) {
 
 # print page
 sub page { 
-	my $hash_ofpage = $main::sql->page_ashash($main::vars{'PageName'});
+	my $hash_ofpage = $main::db->page_ashash($main::vars{'PageName'});
 	if (defined $hash_ofpage->{'title'}) {
 		my $tags = $hash_ofpage->{'tags'};
 		chop $tags;
@@ -126,16 +113,16 @@ sub page {
 }
 
 sub atom {
-	my $pupdated = $sql->most_recently_modified_pages->{lastmodified_date};
+	my $pupdated = $db->most_recently_modified_pages->{lastmodified_date};
 	$pupdated = KSpade::DateTime::spridtarg($pupdated);
 	chomp $pupdated;
 	$main::vars{'AtomUpdated'} = $pupdated;
 	$main::vars{'AtomEntries'} .= "<id>${abspath}$main::vars{'ScriptName'}?cmd=atom</id>";
-	foreach ($sql->recently_modified_pages_as_hash(5)) {
+	foreach ($db->recently_modified_pages_as_hash(5)) {
 		my $etitle = KSpade::Misc::urlenc($_->{title});
 		my $id     = "${abspath}$main::vars{'ScriptName'}?page=$etitle";
 		my $link   = "./$main::vars{'ScriptName'}?page=$etitle";
-		my $body   = $sql->page_body($_->{title});
+		my $body   = $db->page_body($_->{title});
 		$body = "No text" if $body eq '';
 		my $pbody = KSpade::Security::ahtml(Text::HatenaEx->parse(KSpade::Security::html(KSpade::Security::noscript($body))));
 		my @tag = split(/\|/,$_->{tags});
@@ -156,7 +143,7 @@ sub atom {
 
 # print edit page form
 sub edit {
-	my @res = ($sql->page_body($main::vars{'PageName'}));
+	my @res = ($db->page_body($main::vars{'PageName'}));
 	#$res[0] =~ s/<br \/>/\n/g;
 	$main::vars{'DBody'} = $res[0];
 	require 'sha.pl';
@@ -178,11 +165,11 @@ sub post {
 		KSpade::Show::formelements(\%page);
 		chomp %page;
 		require 'sha.pl';
-		my $res = $sql->page_ashash($main::vars{'PageName'});
+		my $res = $db->page_ashash($main::vars{'PageName'});
 		my $hashparent = &sha::pureperl($res->{'body'});
 		if (($page{'bodyhash'} eq $hashparent) or ($page{'bodyhash'} =~ /Conflict/)) {
 			$page{'title'} = 'undefined'.rand(16384) if $page{'title'} eq '';
-			$sql->write_page( \%page, $main::vars{'PageName'});
+			$db->write_page( \%page, $main::vars{'PageName'});
 			KSpade::Misc::setpagename($page{'title'});
 			$main::vars{'HttpStatus'} = 'Status: 303 See Other';
 			$main::vars{'HttpStatus'} .= "\nLocation: $main::vars{'ScriptAbsolutePath'}$main::vars{'ScriptName'}?page=$main::vars{'PageName'}";
@@ -234,13 +221,13 @@ sub newpost {
 		my %page;
 		KSpade::Show::formelements(\%page);
 		chomp(%page);
-		if($sql->page_exist($page{'title'})) {
+		if($db->page_exist($page{'title'})) {
 			$page{'title'} = $page{'title'}.rand(16384);
 		} elsif($page{'title'} eq '') {
 			$page{'title'} = 'undefined'.rand(16384);
 		}
 		$main::vars{'PageName'} = $page{'title'};
-		$sql->new_page( \%page);
+		$db->new_page( \%page);
 
 		KSpade::Misc::setpagename($main::vars{'PageName'});
 		$main::vars{'HttpStatus'} = 'Status: 303 See Other';
@@ -259,7 +246,7 @@ sub del {
 # delete page
 sub delpage {
 	if ($ENV{'REQUEST_METHOD'} eq 'POST') {
-		$sql->delete_page($main::vars{'PageName'});
+		$db->delete_page($main::vars{'PageName'});
 	}
 	$main::vars{'HtmlHead'} .= '<title>'.$main::vars{'PageName'}.' &gt; Deleted@'.$main::vars{'SiteName'}.'</title>';
 	$main::vars{'HtmlBody'} .= KSpade::Show::template('html/deleted.html',\%vars);
@@ -274,8 +261,8 @@ sub search {
 	if (defined $query{'query'}) {
 		# normal search
 		my $list = [];
-		foreach ($sql->get_pagelist->all_pages) {
-			push @$list, [$_->{title}, $_->{title}] if /$query/ =~ $sql->page_body;
+		foreach ($db->get_pagelist->all_pages) {
+			push @$list, [$_->{title}, $_->{title}] if /$query/ =~ $db->page_body;
 		}
 		KSpade::Show::pageslist( 
 			$list,
@@ -289,7 +276,7 @@ sub search {
 	# print all pages
 	else {
 		my @list;
-		foreach (@{$sql->get_pagelist->all_pages}) {
+		foreach (@{$db->get_pagelist->all_pages}) {
 			push @list, [$_->{title}, $_->{title}];
 		}
 		$main::vars{'PagesList'} = KSpade::Show::pageslist(
@@ -313,12 +300,12 @@ sub category {
 		$main::vars{'CategoryList'} = '<ul>';
 
 		$main::vars{'CategoryList'} .= KSpade::Show::categorylist(
-			$sql->get_category_list(),
+			$db->get_category_list(),
 			"<li><a href=\"./$main::vars{'ScriptName'}?cmd=category&amp;query=%s\">%s</a></li>");
 		$main::vars{'CategoryList'} .= '</ul>';
 	} else {
 		my @list;
-		foreach (@{$sql->get_pagelist->all_pages}) {
+		foreach (@{$db->get_pagelist->all_pages}) {
 			push @list, $_->{title} if /$query/ =~ $_->{tags};
 		}
 		$main::vars{'CategoryTitle'} = "Pages related to '$main::vars{'Query'}'";
@@ -339,7 +326,7 @@ sub init_toppage {
 	my $created_date = $modified_date;
 	my $body = KSpade::Show::template('html/tutorial.txt',\%vars);
 
-	$sql->new_page({'title' => 'TopPage', 'lastmodified_date' => $modified_date,
+	$db->new_page({'title' => 'TopPage', 'lastmodified_date' => $modified_date,
 			'created_date' => $created_date, 'tags' => 'Help', 'autotags' => 'Help',
 			'copyright' => 'Copyleft', 'body' => $body});
 }

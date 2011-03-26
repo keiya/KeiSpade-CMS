@@ -1,8 +1,4 @@
 printf "Installing perl module\n"
-printf "installing DBI::DBD (perl)\n"
-perl -MCPAN -e 'install DBI::DBD'
-printf "installing DBD::SQLite (perl)\n"
-perl -MCPAN -e 'install DBD::SQLite'
 printf "installing Digest::Perl::MD5 (perl)\n"
 perl -MCPAN -e 'install Digest::Perl::MD5'
 printf "installing XML::Simple (perl)\n"
@@ -18,4 +14,3 @@ chmod 644 ./files/.htaccess
 printf "\ngit init dat/page\n"
 git init dat/page
 
-printf "\nPlease install sqlite3 if not installed\n"

@@ -1,4 +1,4 @@
-package KSpade::SQL;
+package KSpade::DB;
 
 use strict;
 use warnings;
@@ -11,18 +11,9 @@ use constant PAGELIST => 'pagelist.xml';
 use constant DIR => 'dat/page';
 
 sub new {
-	my ($class,$datasource) = @_;
-	my $dbh;
-	$dbh = DBI->connect($datasource) if defined($datasource);
-	my $self = {dbh=>$dbh};
+	my ($class) = @_;
+	my $self = {};
 	return bless $self, $class;
-}
-
-sub create_table {
-}
-
-sub tableexists {
-	return -e DIR.'/'.PAGELIST ? 1 : 0;
 }
 
 sub most_recently_modified_pages {
@@ -69,9 +60,7 @@ sub write_page {
 	my $self = shift;
 	my $page = shift;
 	my $page_name = shift;
-	my $sql = "update pages set title='$page->{title}', lastmodified_date='$page->{modified_date}', tags='$page->{tags}',".
-		"autotags='$page->{autotags}', copyright='$page->{copyright}', body='ぷよぷよフィーバー' where title='$page_name';";
-	#$self->do($sql);
+	# TODO: impliment renaming a page
 	$self->write_pagefile($page);
 }
 
@@ -177,8 +166,6 @@ sub getfilename {
 
 sub DESTROY {
 	my $self = shift;
-	my $dbh = $self->{dbh};
-	$dbh->disconnect if $dbh;
 }
 
 1;

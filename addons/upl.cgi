@@ -4,7 +4,7 @@
 # KeiSpade Developping Team
 # upl.pl 0.4.1
 
-package KSpade::SQL;
+package KSpade::DB;
 use strict;
 use warnings;
 use Data::Dumper;
@@ -49,7 +49,7 @@ use strict;
 use warnings;
 use lib '../lib';
 use KSpade;
-use KSpade::SQL;
+use KSpade::DB;
 
 sub new {
 	$main::vars{'Addons::upl::UploaderName'} = 'addons/upl/upload.cgi';
@@ -67,7 +67,7 @@ sub delupload {
 	my $filename = KSpade::Security::htmlexor($main::query{'filename'});
 	$main::vars{'DeleteFileName'} = $filename;
 	#$main::vars{'PagesList'} = &listpages("select title from pages where confer like '%$filename%';");
-	my @pages = $main::sql->fetch("select title from pages where confer like '%$filename%';");
+	my @pages = $main::db->fetch("select title from pages where confer like '%$filename%';");
 	$main::vars{'PagesList'} = KSpade::Show::pageslist("select title from pages where confer like '%$filename%';"
 		,"<a href=\"./$main::vars{'ScriptName'}?page=%s\">%s</a><br />");
 	$main::vars{'HtmlHead'} .= '<title>'.$filename. ' &gt; Delete Uploaded Files@'.$main::vars{'SiteName'}.'</title>';
@@ -78,14 +78,14 @@ sub delupload {
 sub delfile {
 	if ($ENV{'REQUEST_METHOD'} eq 'POST') {
 		my $filename = KSpade::Security::htmlexor($main::query{'filename'});
-		my @pages = $main::sql->fetch("select title from pages where confer like '%$filename%';",0);
+		my @pages = $main::db->fetch("select title from pages where confer like '%$filename%';",0);
 		foreach my $tmp (@pages) {
-			my @files = $main::sql->fetch("select confer from pages where title='$tmp';");
+			my @files = $main::db->fetch("select confer from pages where title='$tmp';");
 			$files[0] =~ s/\[$filename\/.+?\]//g;
 			my $modifieddate = time();
-			$main::sql->do("update pages set lastmodified_date='$modifieddate', confer='$files[0]' where title='$tmp';");
+			$main::db->do("update pages set lastmodified_date='$modifieddate', confer='$files[0]' where title='$tmp';");
 		}
-		KSpade::SQL->new->del_attached_file($main::vars{PageName}, $filename);
+		KSpade::DB->new->del_attached_file($main::vars{PageName}, $filename);
 		KSpade::Misc::setpagename($main::vars{'PageName'});
 		$main::vars{'HtmlHead'} .= '<title>'.$main::vars{'PageName'}.' &gt; File was Deleted@'.$main::vars{'SiteName'}.'</title>';
 		$main::vars{'HtmlBody'} .= KSpade::Show::template('html/deletedupl.html',\%main::vars);
@@ -102,15 +102,15 @@ sub addfile {
 	$main::vars{'HtmlHead'} .= '<title>'.$main::vars{'PageName'}. ' &gt; UploadProcess@'.$main::vars{'SiteName'}.'</title>';
 	my $filename = KSpade::Security::htmlexor($main::query{'filename'});
 	my $original = KSpade::Security::htmlexor($main::query{'orig'});
-	my @res = ($main::sql->fetch("select confer from pages where title='$main::vars{'PageName'}';"));
+	my @res = ($main::db->fetch("select confer from pages where title='$main::vars{'PageName'}';"));
 	my $files = $res[0];
 	if ($files =~ /$filename/) {
 
 	} else {
 		my $tmp  = KSpade::DateTime::spridate('%04d %2d %2d %2d:%02d:%02d');
 		$files .= "[$filename/$original($tmp)]";
-		$main::sql->do("update pages set lastmodified_date='$page{'modified_date'}', confer='$files' where title='$main::vars{'PageName'}';");
-		KSpade::SQL->new->add_attached_file($main::vars{'PageName'}, $filename);
+		$main::db->do("update pages set lastmodified_date='$page{'modified_date'}', confer='$files' where title='$main::vars{'PageName'}';");
+		KSpade::DB->new->add_attached_file($main::vars{'PageName'}, $filename);
 	}
 
 	print "Content-Type: text/html; charset=UTF-8\n\n";

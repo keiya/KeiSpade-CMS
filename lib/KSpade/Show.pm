@@ -1,4 +1,4 @@
-package KSpade::SQL;
+package KSpade::DB;
 sub get_category_list {
 	my ($self) = @_;
 	my $ret = [];
@@ -19,10 +19,10 @@ use HTML::Template;
 
 sub html {
 	$main::vars{'SidebarCategoryList'} = categorylist(
-		KSpade::SQL->new->get_category_list(),
+		KSpade::DB->new->get_category_list(),
 		"<dd><a href=\"./$main::vars{'ScriptName'}?cmd=category&amp;query=%s\">%s</a></dd>");
 	my @list;
-	foreach (KSpade::SQL->new->recently_modified_pages_as_hash($main::vars{'SidebarPagesListLimit'})) {
+	foreach (KSpade::DB->new->recently_modified_pages_as_hash($main::vars{'SidebarPagesListLimit'})) {
 		push @list, [$_->{title}, $_->{title}];
 	}
 	$main::vars{'SidebarPagesList'} = pageslist(
