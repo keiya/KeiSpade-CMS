@@ -46,6 +46,16 @@ sub search {
 	return \@ret;
 }
 
+sub select_ {
+	my ($self, $func, $sortfunc) = @_;
+	my @ret;
+	foreach (@{$self->{xml}->{pagelist}[0]->{page}}) {
+		my $res = &$func($_);
+		push @ret, $res if (defined $res);
+	}
+	return \@ret;
+}
+
 sub all_pages {
 	my $self = shift;
 	return $self->{xml}->{pagelist}[0]->{page};

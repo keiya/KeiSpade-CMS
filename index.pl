@@ -87,19 +87,14 @@ sub page {
 		$main::vars{'HtmlBody'} .=
 		    Text::HatenaEx->parse(KSpade::Security::noscript($hash_ofpage->{'body'}));
 
-		my $confer;
-		if (defined $hash_ofpage->{'confer'}) {
-			my @filedatas= split(/\]\[/, $hash_ofpage->{'confer'});
-			foreach my $filedata (@filedatas) {
-				my @elements = split(/\//, $filedata);
-				$confer .= "<a href=\"dat/page/files/$elements[0]\">$elements[1]</a> [<a href=\"./$main::vars{'ScriptName'}?&page=$main::vars{'PageName'}&amp;filename=$elements[0]&amp;adon=upl&amp;acmd=delupload\" rel=\"nofollow\">X</a>] ";
+		if (defined $hash_ofpage->{file}) {
+			my $confer = '';
+			foreach (@{$hash_ofpage->{file}}) {
+				$confer .= "<a href=\"dat/page/files/$_->{filename}\">$_->{originalname}</a> [<a href=\"./$main::vars{'ScriptName'}?&page=$main::vars{'PageName'}&amp;filename=$_->{filename}&amp;adon=upl&amp;acmd=delupload\" rel=\"nofollow\">X</a>] ";
 				$confer =~ s/[\[\]]+//g;
 			}
-	
-
-			my $filenum = @filedatas;
-			$main::vars{'HtmlBody'} .= '</section><section><h2>Attached File</h2>'.$confer.'</section>' if $filenum == 1;
-			$main::vars{'HtmlBody'} .= '</section><section><h2>Attached Files</h2>'.$confer.'</section>' if $filenum > 1;
+			my $s = (@{$hash_ofpage->{file}} > 1) ? 's' : '';
+			$main::vars{'HtmlBody'} .= '</section><section><h2>Attached File'.$s.'</h2>'.$confer.'</section>';
 		}
 		$main::vars{'MetaInfo'} = "Last-modified: $modified, Created: $created, Tags: $hash_ofpage->{'tags'}, AutoTags: $hash_ofpage->{'autotags'}<br />$hash_ofpage->{'copyright'}<br />";
 	} else {
