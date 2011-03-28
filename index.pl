@@ -56,6 +56,10 @@ KSpade::Misc::setpagename($query{'page'});
 
 our $db = KSpade::DB->new;
 
+if (! $db->page_exist('TopPage')) {
+	init_toppage();
+}
+
 if (defined $query{'adon'}) {
 	my $addon_name = KSpade::Security::file($query{'adon'});
 	require './addons/'.$addon_name.'.cgi';
