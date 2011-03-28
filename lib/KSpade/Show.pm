@@ -1,10 +1,20 @@
 package KSpade::DB;
+
+# ex) get_category_list( sub { return $_[0]; } );
 sub get_category_list {
-	my ($self) = @_;
+	my ($self, $handler) = @_;
 	my $ret = [];
+	my %cat;
 
 	foreach (@{$self->get_pagelist->all_pages}) {
-		push @$ret, $_->{tags};
+		my @tag = split(/\|/,$_->{tags});
+
+		foreach (@tag) {
+			$cat{$_} = 1;
+		}
+	}
+	foreach (keys %cat) {
+		push @$ret, &$handler($_);
 	}
 	return $ret;
 }
@@ -19,7 +29,7 @@ use HTML::Template;
 
 sub html {
 	$main::vars{'SidebarCategoryList'} = categorylist(
-		KSpade::DB->new->get_category_list(),
+		KSpade::DB->new->get_category_list( sub { [$_[0], $_[0]]}),
 		"<dd><a href=\"./$main::vars{'ScriptName'}?cmd=category&amp;query=%s\">%s</a></dd>");
 	my @list;
 	foreach (KSpade::DB->new->recently_modified_pages_as_hash($main::vars{'SidebarPagesListLimit'})) {
@@ -47,7 +57,7 @@ sub formelements {
 	my %form = KSpade::CGIDec::getline($postdata);
 
 	$form->{'title'} = KSpade::Security::textalize(KSpade::Security::exorcism($form{'title'}));
-	$form->{'modified_date'} = time();
+	$form->{'lastmodified_date'} = time();
 	$form->{'created_date'} = time();
 	$form->{'tags'} = '';
 	$form->{'autotags'} = '';
@@ -93,16 +103,14 @@ sub pageslist {
 #TODO (closure(to select), closure(to sort), format) みたいなインターフェースがベスト
 sub categorylist {
 	my ($arr, $format) = @_;
-	my $categorylist;
+	my $categorylist = '';
 	my %category;
-	foreach my $tmp (@$arr) {
-		my @tags = split(/\|/, $tmp);
-		foreach my $tag (@tags) {
-			my $formatmp = $format;
-			$formatmp =~ s/%s/$tag/g;
-			$categorylist .= $formatmp if not exists $category{$tag};
-			$category{$tag} = 1;
-		}
+	foreach (@$arr) {
+		#my $formatmp = $format;
+		#$formatmp =~ s/%s/$_/g;
+		#$categorylist .= $formatmp if not exists $category{$_};
+		$categorylist .= sprintf $format, @$_;
+		$category{$_} = 1;
 	}
 	return $categorylist;
 }

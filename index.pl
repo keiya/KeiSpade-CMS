@@ -170,6 +170,7 @@ sub post {
 			$main::vars{'HttpStatus'} .= "\nLocation: $main::vars{'ScriptAbsolutePath'}$main::vars{'ScriptName'}?page=$main::vars{'PageName'}";
 			KSpade::Show::html('html/frmwrk.html',\%main::vars);
 		} else {
+			# conflicted
 			require Text::Diff;
 			my $diff = Text::Diff::diff(\$res->{'title'},\$page{'body'});
 			$diff =~ s/\n/<br \/>/g;
@@ -256,7 +257,8 @@ sub search {
 	if (defined $query{'query'}) {
 		# normal search
 		my $list = [];
-		foreach ($db->get_pagelist->all_pages) {
+		my @pagelist = sort {$a->{lastmodified_date} cmp $b->{lastmodified_date}} @{$db->get_pagelist->all_pages};
+		foreach (@pagelist) {
 			push @$list, [$_->{title}, $_->{title}] if /$query/ =~ $db->page_body;
 		}
 		KSpade::Show::pageslist( 
@@ -291,17 +293,19 @@ sub category {
 	$query =~ s/\s/AND/g;
 	$main::vars{'Query'} = $query{'query'};
 	if ($main::vars{'Query'} eq '') {
+		# Index of categories
 		$main::vars{'CategoryTitle'} = "Index of Categories";
 		$main::vars{'CategoryList'} = '<ul>';
 
 		$main::vars{'CategoryList'} .= KSpade::Show::categorylist(
-			$db->get_category_list(),
+			$db->get_category_list(sub {[$_[0], $_[0]]}),
 			"<li><a href=\"./$main::vars{'ScriptName'}?cmd=category&amp;query=%s\">%s</a></li>");
 		$main::vars{'CategoryList'} .= '</ul>';
 	} else {
+		# TODO: selectを使う
 		my @list;
 		foreach (@{$db->get_pagelist->all_pages}) {
-			push @list, $_->{title} if /$query/ =~ $_->{tags};
+			push @list, [$_->{title}, $_->{title}] if ($_->{tags} =~ /$query/);
 		}
 		$main::vars{'CategoryTitle'} = "Pages related to '$main::vars{'Query'}'";
 		$main::vars{'CategoryList'} = KSpade::Show::categorylist(\@list,

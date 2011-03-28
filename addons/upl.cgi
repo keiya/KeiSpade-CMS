@@ -95,7 +95,6 @@ sub delupload {
 }
 
 sub get_original_name {
-	warn Dumper(@_);
 	my ($page, $fname) = @_;
 	return undef unless &has_file($page);
 	foreach (@{$page->{file}}) {

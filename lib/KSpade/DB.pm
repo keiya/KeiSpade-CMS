@@ -24,10 +24,9 @@ sub most_recently_modified_pages {
 sub recently_modified_pages_as_hash {
 	my ($self, $n) = @_;
 	my $all_pages = $self->get_pagelist->all_pages;
-	my @arr = sort {$a->{lastmodified_date} cmp $b->{lastmodified_date}} @$all_pages;
+	my @arr = sort {$b->{lastmodified_date} cmp $a->{lastmodified_date}} @$all_pages;
 	@arr =  (splice @arr, 0, $n) if defined $n;
 	return @arr;
-
 }
 
 sub page_body {
@@ -114,9 +113,6 @@ sub new_page {
 	my $self = shift;
 	my $page = shift;
 	$page->{lastmodified_date} = $page->{created_date};
-
-	#$self->do("insert into pages (title,lastmodified_date,created_date,tags,autotags,copyright,body)"
-	#	."values('$page->{'title'}','$page->{'created_date'}','$page->{'created_date'}','$page->{'tags'}','$page->{'autotags'}','$page->{'copyright'}','ぷよぷよフィーバー');");
 	$self->write_pagefile($page);
 }
 
