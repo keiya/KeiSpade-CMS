@@ -13,4 +13,5 @@ chmod 644 ./files/.htaccess
 
 printf "\ngit init dat/page\n"
 git init dat/page
+mkdir dat/page/files
 
