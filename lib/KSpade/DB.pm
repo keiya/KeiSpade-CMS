@@ -57,10 +57,8 @@ sub page_ashash {
 
 sub write_page {
 	my $self = shift;
-	my $page = shift;
-	my $page_name = shift;
-	# TODO: impliment renaming a page
-	$self->write_pagefile($page);
+	my ($page, $oldtitle) = @_;
+	$self->write_pagefile($page, $oldtitle);
 }
 
 sub page_exist {
@@ -87,14 +85,17 @@ sub delete_page {
 
 sub get_pageid_from_title {
 	my $title = shift;
-	# TODO: これだと、タイトルが変わるとpageidも変わってしまう。
-	#       タイトルを変えたときにファイル名も変更するか、タイトルに依存しないIDをつけるかしないといけない
-	#	もしMD5が重複したらどうすんのさ
-	#	pagelistを使う
-	return md5_hex($title);
+	my $page = KSpade::DB->new->get_pagelist->getpage_by_title($title);
+	if ($page) {
+		return $page->{pageid};
+	} else {
+		# TODO: もしMD5が重複したらどうすんのさ
+		return md5_hex($title);
+	}
 }
 
 # $pageに、ページに関する情報を補完する(pageidとか)
+# TODO: 名前変える
 sub hokan {
 	my $page = shift;
 
@@ -119,6 +120,20 @@ sub new_page {
 sub write_pagefile {
 	my $self = shift;
 	my $page = shift;
+	my $oldtitle = shift;
+
+	my $fRename = 0;
+	if (defined $oldtitle && $page->{title} ne $oldtitle) {
+		# rename
+		# 一旦タイトルだけ変更してから、本文を変更しているので非効率的
+		my $plist = $self->get_pagelist;
+		if (my $xml = $plist->getpage_by_title($oldtitle)) {
+			$fRename = 1;
+			$xml->{title} = $page->{title};
+			$plist->savexml;
+		}
+	}
+
 	my $dir = DIR;
 	my $fname = getfilename($page->{'title'});
 	my $fNewPage = ! -e "$dir/$fname";
@@ -135,7 +150,11 @@ sub write_pagefile {
 		}
 		$plist->savexml;
 
-		commit($dir, [$fname, PAGELIST], $page->{'title'});
+		my $comment = $page->{title};
+		if ($fRename) {
+			$comment = $comment . " (rename $oldtitle)";
+		}
+		commit($dir, [$fname, PAGELIST], $comment);
 	} else {
 		warn $!;
 	}
