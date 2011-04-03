@@ -5,7 +5,7 @@ use constant LOCKDIR => 'lock';
 sub new {
 	my $class = shift;
 	while (!mkdir(LOCKDIR, 0755)) {
-		print "retry\n";
+		warn "retry\n";
 		sleep 1;
 	}
 	return bless {}, $class
