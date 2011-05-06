@@ -38,7 +38,7 @@ our %vars = ( 'SiteName'=>'KeiSpade','SiteDescription'=>'The Multimedia Wiki','S
               'ScriptAbsolutePath'=>$abspath, 'SidebarPagesListLimit'=>'10','ContentLanguage'=>'ja',
               'DefaultAuthor'=>'anonymous' );
 %vars = (%vars, KSpade::Conf::load('./dat/kspade.conf'));
-$vars{'Version'}  = '0.4.1';
+$vars{'Version'}  = '0.4.2';
 
 # http header + html meta header
 $vars{'HttpStatus'} = 'Status: 200 OK';
