@@ -198,13 +198,9 @@ sub post {
 			$page{'title'} = 'undefined'.rand(16384) if $page{'title'} eq '';
 			$sql->do("update pages set title='$page{'title'}', lastmodified_date='$page{'modified_date'}', tags='$page{'tags'}',".
 				     "autotags='$page{'autotags'}', copyright='$page{'copyright'}', body='$page{'body'}' where title='".$main::vars{'PageName'}."';");
-			 #if ($pagename eq $page{'title'}) {
-				KSpade::Misc::setpagename($page{'title'});
-				#&page;
-				#}
 			$main::vars{'HttpStatus'} = 'Status: 303 See Other';
-			$main::vars{'HttpStatus'} .= "\nLocation: $main::vars{'ScriptAbsolutePath'}$main::vars{'ScriptName'}?page=$main::vars{'PageName'}";
-			KSpade::Show::html('html/frmwrk.html',\%main::vars);
+			$main::vars{'HttpStatus'} .= "\nLocation: $main::vars{'ScriptAbsolutePath'}$main::vars{'ScriptName'}?page=$page{'title'}";
+			print $main::vars{'HttpStatus'} . "\n\n";
 		} else {
 			require Text::Diff;
 			my $diff = Text::Diff::diff(\$res[7],\$page{'body'});
