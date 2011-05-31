@@ -31,6 +31,10 @@ h1 a:visited {
 	color:#999;
 }
 
+h1 a:hover {
+	color:#999;
+}
+
 /* メインメニュー */
 header nav ul {
     list-style-type: none;

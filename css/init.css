@@ -9,9 +9,58 @@ img,a,
 table,
 ul,ol,li,dl,dt,dd,
 h1,h2,h3,h4,h5,
-form {
+form,button,input {
     margin: 0px;
     padding: 0px;
+}
+
+button {
+	background-color: #d6d6d6;
+	color: #555;
+	text-shadow: 1px 1px 1px silver;
+	border-style:outset;
+	border-color: #eee;
+    line-height: 1.0;
+    font-size:1.1em;
+    vertical-align: middle;
+    min-width: 40px;
+    padding: 2px 10px;
+	background-image: -webkit-gradient(
+	    linear,
+	    left top,
+	    left bottom,
+	    color-stop(0, #F0F0F0),
+	    color-stop(1, #d6d6d6)
+	);
+	background: -moz-linear-gradient(
+	    center top,
+	    #F0F0F0 0%,
+	    #d6d6d6 100%
+	);
+
+}
+button:hover {
+	background-color: #ccc;
+	background-image: -webkit-gradient(
+	    linear,
+	    left top,
+	    left bottom,
+	    color-stop(0, #E8E8E8),
+	    color-stop(1, #CCCCCC)
+	);
+	background-image: -moz-linear-gradient(
+	    center top,
+	    #E8E8E8 0%,
+	    #CCCCCC 100%
+	);
+	cursor:pointer;
+
+}
+input {
+	line-height: 1.2;
+    font-size:1.1em;
+    vertical-align: middle;
+    margin: 5px;
 }
 
 /* 画像 */

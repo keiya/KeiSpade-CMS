@@ -3,7 +3,7 @@
 ------------------------------*/
 /* フッター */
 footer {
-    border-bottom:solid 4px #aaa;
+    border-bottom:solid 4px #388FBD;
     width:75em;
     font-family: Arial, Helvetica, sans-serif;
 }
@@ -11,9 +11,8 @@ address {
     text-align:right;
     padding:20px 8px 4px 0;
     margin:2px 0 0 0;
-    border:solid 1px #000;
-    color:#888888;
-    background-color:#2D3940;
+    color:#aaa;
+    background-color:#888;
     font-style:normal;
 }
 /* フッターナビ */

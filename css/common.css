@@ -3,7 +3,7 @@
 /* common
 ------------------------------*/
   /* html5 common */
-  section{padding:0 15px;min-height:7em;}
+  section{padding:0 15px;min-height:100px;}
 
   /* 共通ページジャンプ */
 div#main_container .page_top{
@@ -20,7 +20,7 @@ div#main_container .page_top a{
     color: #555;
     line-height: 1;
 }
-div#main_container .page_top a:hover{
+div#main_container .page_top a:hover {
     color: #690;
 }
 

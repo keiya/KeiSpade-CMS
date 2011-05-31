@@ -34,9 +34,16 @@ my $abspath = $absuri;
 $abspath =~ s/$myname.+$//;
 
 # constants, default values
-our %vars = ( 'SiteName'=>'KeiSpade','SiteDescription'=>'The Multimedia Wiki','ScriptName'=>$myname,
-              'ScriptAbsolutePath'=>$abspath, 'SidebarPagesListLimit'=>'10','ContentLanguage'=>'ja',
-              'DefaultAuthor'=>'anonymous' );
+our %vars = (
+    'SiteName'              => 'KeiSpade',
+    'SiteDescription'       => 'The Multimedia Wiki',
+    'ScriptName'            => $myname,
+    'ScriptAbsolutePath'    => $abspath,
+    'SidebarPagesListLimit' => '10',
+    'ContentLanguage'       => 'ja',
+    'DefaultAuthor'         => 'anonymous',
+    'NumberOfAtomEntries'   => 5
+);
 %vars = (%vars, KSpade::Conf::load('./dat/kspade.conf'));
 $vars{'Version'}  = '0.4.2';
 
@@ -132,10 +139,11 @@ sub page {
 }
 
 sub atom {
+	$vars{'NumberOfAtomEntries'} = 5 if ($vars{'NumberOfAtomEntries'} =~ m/\D/ );
 	my $pupdated = ($sql->fetch("select lastmodified_date from pages order by lastmodified_date desc limit 1"))[0];
 	$pupdated= KSpade::DateTime::spridtarg($pupdated);
 	chomp $pupdated;
-	my $hash_ref = ($sql->fetch_ashash("select * from pages order by lastmodified_date desc limit 5;"));
+	my $hash_ref = ($sql->fetch_ashash("select * from pages order by lastmodified_date desc limit " . $vars{'NumberOfAtomEntries'} . ";"));
 	$main::vars{'AtomUpdated'} = $pupdated;
 	my ($title, $etitle, $id, $link, $update, $publish, $tags, $author, $body, $pbody, $tmp);
 	my $entry = '';
@@ -165,6 +173,7 @@ sub atom {
 		                        "<updated>$update</updated><published>$publish</published>$ptag".
 		                        "<content type=\"html\">$pbody</content></entry>\n";
 	}
+	$vars{'HttpContype'}= "Content-Type: application/xml; charset=UTF-8";
 	KSpade::Show::xml('html/atom.xml',\%main::vars);
 }
 
