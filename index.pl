@@ -160,7 +160,7 @@ sub atom {
 		$author = $main::vars{'DefaultAuthor'} if not defined $author;
 		$body   = $hash_ref->{$hash_ref->{$keys}->{'title'}}->{'body'};
 		$body = 'No text' if $body eq '';
-		$pbody = KSpade::Security::ahtml(Text::HatenaEx->parse(KSpade::Security::html(KSpade::Security::noscript($body))));
+		$pbody = KSpade::Security::ahtml(Text::HatenaEx->parse(KSpade::Security::noscript($body)));
 		my @tag = split(/\|/,$tags);
 		my $ptag = '';
 		foreach my $tmp (@tag) {

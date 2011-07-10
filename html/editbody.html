@@ -14,7 +14,7 @@ function previewToggle() {
 		var httpObj = createXMLHttpRequest();
 		if (httpObj) {
 			httpObj.open("POST","./<TMPL_VAR NAME=ScriptName>?cmd=preview",true);
-			httpObj.send("body="+encodeURIComponent(body));
+			httpObj.send("body="+escape(body));
 			httpObj.onreadystatechange = function() {
 				//readyState値は4で受信完了
 				if (httpObj.readyState==4) {
