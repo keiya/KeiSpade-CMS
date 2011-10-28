@@ -9,7 +9,7 @@ sub getline {
 	$recdata =~ tr/+/ /;
 
 	my @recdatas = split(/&/, $recdata, 10);
-	
+
 	foreach my $pair (@recdatas) {
 	    my ($qname, $qvalue) = split(/=/, $pair);
 
@@ -18,7 +18,7 @@ sub getline {
 		$qvalue =~ s/>/&lt;/g unless $qname eq 'body';
 	    $QUERY{$qname} = $qvalue;
 	}
-	
+
 	return %QUERY;
 }
 

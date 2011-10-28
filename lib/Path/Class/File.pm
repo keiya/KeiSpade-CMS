@@ -15,14 +15,14 @@ sub new {
   my @dirs = @_;
 
   my ($volume, $dirs, $base) = $self->_spec->splitpath($file);
-  
+
   if (length $dirs) {
     push @dirs, $self->_spec->catpath($volume, $dirs, '');
   }
-  
+
   $self->{dir}  = @dirs ? $self->dir_class->new(@dirs) : undef;
   $self->{file} = $base;
-  
+
   return $self;
 }
 
@@ -103,24 +103,24 @@ Path::Class::File - Objects representing files
 =head1 SYNOPSIS
 
   use Path::Class qw(file);  # Export a short constructor
-  
+
   my $file = file('foo', 'bar.txt');  # Path::Class::File object
   my $file = Path::Class::File->new('foo', 'bar.txt'); # Same thing
-  
+
   # Stringifies to 'foo/bar.txt' on Unix, 'foo\bar.txt' on Windows, etc.
   print "file: $file\n";
-  
+
   if ($file->is_absolute) { ... }
   if ($file->is_relative) { ... }
-  
+
   my $v = $file->volume; # Could be 'C:' on Windows, empty string
                          # on Unix, 'Macintosh HD:' on Mac OS
-  
+
   $file->cleanup; # Perform logical cleanup of pathname
   $file->resolve; # Perform physical cleanup of pathname
-  
+
   my $dir = $file->dir;  # A Path::Class::Dir object
-  
+
   my $abs = $file->absolute; # Transform to absolute path
   my $rel = $file->relative; # Transform to relative path
 
@@ -313,7 +313,7 @@ The default C<iomode> is C<r>.
 
 This method will remove the file in a way that works well on all
 platforms, and returns a boolean value indicating whether or not the
-file was successfully removed.  
+file was successfully removed.
 
 C<remove()> is better than simply calling Perl's C<unlink()> function,
 because on some platforms (notably VMS) you actually may need to call

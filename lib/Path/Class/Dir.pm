@@ -25,12 +25,12 @@ sub new {
   return if @_==1 && !defined($_[0]);
 
   my $s = $self->_spec;
-  
+
   my $first = (@_ == 0     ? $s->curdir :
 	       $_[0] eq '' ? (shift, $s->rootdir) :
 	       shift()
 	      );
-  
+
   ($self->{volume}, my $dirs) = $s->splitpath( $s->canonpath($first) , 1);
   $self->{dirs} = [$s->splitdir($s->catdir($dirs, @_))];
 
@@ -48,7 +48,7 @@ sub as_foreign {
     local $self->{file_spec_class} = $self->_spec_class($type);
     $self->SUPER::new;
   };
-  
+
   # Clone internal structure
   $foreign->{volume} = $self->{volume};
   my ($u, $fu) = ($self->_spec->updir, $foreign->_spec->updir);
@@ -75,12 +75,12 @@ sub dir_list {
   my $self = shift;
   my $d = $self->{dirs};
   return @$d unless @_;
-  
+
   my $offset = shift;
   if ($offset < 0) { $offset = $#$d + $offset + 1 }
-  
+
   return wantarray ? @$d[$offset .. $#$d] : $d->[$offset] unless @_;
-  
+
   my $length = shift;
   if ($length < 0) { $length = $#$d + $length + 1 - $offset }
   return @$d[$offset .. $length + $offset - 1];
@@ -136,14 +136,14 @@ sub remove {
 sub recurse {
   my $self = shift;
   my %opts = (preorder => 1, depthfirst => 0, @_);
-  
+
   my $callback = $opts{callback}
     or Carp::croak( "Must provide a 'callback' parameter to recurse()" );
-  
+
   my @queue = ($self);
-  
+
   my $visit_entry;
-  my $visit_dir = 
+  my $visit_dir =
     $opts{depthfirst} && $opts{preorder}
     ? sub {
       my $dir = shift;
@@ -161,13 +161,13 @@ sub recurse {
       $visit_entry->($_) foreach $dir->children;
       $callback->($dir);
     };
-  
+
   $visit_entry = sub {
     my $entry = shift;
     if ($entry->is_dir) { $visit_dir->($entry) } # Will call $callback
     else { $callback->($entry) }
   };
-  
+
   while (@queue) {
     $visit_entry->( shift @queue );
   }
@@ -175,9 +175,9 @@ sub recurse {
 
 sub children {
   my ($self, %opts) = @_;
-  
+
   my $dh = $self->open or Carp::croak( "Can't open directory $self: $!" );
-  
+
   my @out;
   while (defined(my $entry = $dh->read)) {
     next if !$opts{all} && $self->_is_local_dot_dir($entry);
@@ -200,13 +200,13 @@ sub next {
   unless ($self->{dh}) {
     $self->{dh} = $self->open or Carp::croak( "Can't open directory $self: $!" );
   }
-  
+
   my $next = $self->{dh}->read;
   unless (defined $next) {
     delete $self->{dh};
     return undef;
   }
-  
+
   # Figure out whether it's a file or directory
   my $file = $self->file($next);
   $file = $self->subdir($next) if -d $file;
@@ -216,10 +216,10 @@ sub next {
 sub subsumes {
   my ($self, $other) = @_;
   die "No second entity given to subsumes()" unless $other;
-  
+
   $other = $self->new($other) unless UNIVERSAL::isa($other, __PACKAGE__);
   $other = $other->dir unless $other->is_dir;
-  
+
   if ($self->is_absolute) {
     $other = $other->absolute;
   } elsif ($other->is_absolute) {
@@ -236,7 +236,7 @@ sub subsumes {
   # The root dir subsumes everything (but ignore the volume because
   # we've already checked that)
   return 1 if "@{$self->{dirs}}" eq "@{$self->new('')->{dirs}}";
-  
+
   my $i = 0;
   while ($i <= $#{ $self->{dirs} }) {
     return 0 if $i > $#{ $other->{dirs} };
@@ -261,30 +261,30 @@ Path::Class::Dir - Objects representing directories
 =head1 SYNOPSIS
 
   use Path::Class qw(dir);  # Export a short constructor
-  
+
   my $dir = dir('foo', 'bar');       # Path::Class::Dir object
   my $dir = Path::Class::Dir->new('foo', 'bar');  # Same thing
-  
+
   # Stringifies to 'foo/bar' on Unix, 'foo\bar' on Windows, etc.
   print "dir: $dir\n";
-  
+
   if ($dir->is_absolute) { ... }
   if ($dir->is_relative) { ... }
-  
+
   my $v = $dir->volume; # Could be 'C:' on Windows, empty string
                         # on Unix, 'Macintosh HD:' on Mac OS
-  
+
   $dir->cleanup; # Perform logical cleanup of pathname
   $dir->resolve; # Perform physical cleanup of pathname
-  
+
   my $file = $dir->file('file.txt'); # A file in this directory
   my $subdir = $dir->subdir('george'); # A subdirectory
   my $parent = $dir->parent; # The parent directory, 'foo'
-  
+
   my $abs = $dir->absolute; # Transform to absolute path
   my $rel = $abs->relative; # Transform to relative path
   my $rel = $abs->relative('/foo'); # Relative to /foo
-  
+
   print $dir->as_foreign('Mac');   # :foo:bar:
   print $dir->as_foreign('Win32'); #  foo\bar
 
@@ -294,7 +294,7 @@ Path::Class::Dir - Objects representing directories
     $file = $dir->file($file);  # Turn into Path::Class::File object
     ...
   }
-  
+
   # Iterate with Path::Class methods:
   while (my $file = $dir->next) {
     # $file is a Path::Class::File or Path::Class::Dir object
@@ -433,13 +433,13 @@ directories:
     print "Absolute: $dir\n";
     $dir = $dir->parent;
   }
-  
+
   $dir = dir('foo/bar');
   for (1..6) {
     print "Relative: $dir\n";
     $dir = $dir->parent;
   }
-  
+
   ########### Output on Unix ################
   Absolute: /foo/bar
   Absolute: /foo

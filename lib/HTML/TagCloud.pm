@@ -25,8 +25,8 @@ sub css {
   my ($self) = @_;
   my $css = q(
 #htmltagcloud {
-  text-align:  center; 
-  line-height: 1; 
+  text-align:  center;
+  line-height: 1;
 }
 );
   foreach my $level (0 .. $self->{levels}) {
@@ -40,7 +40,7 @@ sub css {
 sub tags {
   my($self, $limit) = @_;
   my $counts = $self->{counts};
-  my $urls   = $self->{urls}; 
+  my $urls   = $self->{urls};
   my @tags = sort { $counts->{$b} <=> $counts->{$a} } keys %$counts;
   @tags = splice(@tags, 0, $limit) if defined $limit;
 
@@ -49,7 +49,7 @@ sub tags {
   my $min = log($counts->{$tags[-1]});
   my $max = log($counts->{$tags[0]});
   my $factor;
-  
+
   # special case all tags having the same count
   if ($max - $min == 0) {
     $min = $min - $self->{levels};
@@ -57,7 +57,7 @@ sub tags {
   } else {
     $factor = $self->{levels} / ($max - $min);
   }
-  
+
   if (scalar @tags < $self->{levels} ) {
     $factor *= (scalar @tags/$self->{levels});
   }
@@ -122,7 +122,7 @@ HTML::TagCloud - Generate An HTML Tag Cloud
   $cloud->add($tag2, $url2, $count2);
   $cloud->add($tag3, $url3, $count3);
   my $html = $cloud->html_and_css(50);
-  
+
 =head1 DESCRIPTION
 
 The L<HTML::TagCloud> module enables you to generate "tag clouds" in

@@ -21,7 +21,7 @@ sub upload {
 	$main::vars{'HtmlBody'} .= KSpade::Show::template('html/upload.html',\%main::vars);
 
 	KSpade::Show::html('html/frmwrk.html',\%main::vars);
-} 
+}
 sub delupload {
 # print delete confirm
 	my $filename = KSpade::Security::htmlexor($main::query{'filename'});
@@ -71,7 +71,7 @@ sub addfile {
 		$files .= "[$filename/$original($tmp)]";
 		$main::sql->do("update pages set lastmodified_date='$page{'modified_date'}', confer='$files' where title='$main::vars{'PageName'}';");
 	}
-	
+
 print "Content-Type: text/html; charset=UTF-8\n\n";
 	#KSpade::Show::html('../html/frmwrk.html',\%main::vars);
 }

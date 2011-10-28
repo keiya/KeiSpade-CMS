@@ -37,7 +37,7 @@ Algorithm::Diff - Compute `intelligent' differences between two files / lists
   @sdiffs = sdiff( \@seq1, \@seq2 );
 
   @sdiffs = sdiff( \@seq1, \@seq2, $key_generation_function );
-  
+
   traverse_sequences( \@seq1, \@seq2,
                      { MATCH => $callback,
                        DISCARD_A => $callback,
@@ -86,7 +86,7 @@ I<S> is
 
 From there it's only a small step to get diff-like output:
 
-        e   h i   k   q r x y 
+        e   h i   k   q r x y
         +   - +   +   - + + +
 
 This module solves the LCS problem.  It also includes a canned
@@ -114,7 +114,7 @@ is C<a x b y c z>:
 =head1 USAGE
 
 This module provides three exportable functions, which we'll deal with in
-ascending order of difficulty: C<LCS>, 
+ascending order of difficulty: C<LCS>,
 C<diff>, C<sdiff>, C<traverse_sequences>, and C<traverse_balanced>.
 
 =head2 C<LCS>
@@ -155,20 +155,20 @@ Here is an example:  The diff of the following two sequences:
 
 Result:
 
- [ 
-   [ [ '-', 0, 'a' ] ],       
+ [
+   [ [ '-', 0, 'a' ] ],
 
    [ [ '+', 2, 'd' ] ],
 
-   [ [ '-', 4, 'h' ] , 
+   [ [ '-', 4, 'h' ] ,
      [ '+', 4, 'f' ] ],
 
    [ [ '+', 6, 'k' ] ],
 
-   [ [ '-', 8, 'n' ], 
-     [ '-', 9, 'p' ], 
-     [ '+', 9, 'r' ], 
-     [ '+', 10, 's' ], 
+   [ [ '-', 8, 'n' ],
+     [ '-', 9, 'p' ],
+     [ '+', 9, 'r' ],
+     [ '+', 10, 's' ],
      [ '+', 11, 't' ],
    ]
  ]
@@ -178,7 +178,7 @@ position 0 of the first sequence should be deleted (C<->).  The second
 hunk says that the C<d> at position 2 of the second sequence should
 be inserted (C<+>).  The third hunk says that the C<h> at position 4
 of the first sequence should be removed and replaced with the C<f>
-from position 4 of the second sequence.  The other two hunks similarly. 
+from position 4 of the second sequence.  The other two hunks similarly.
 
 C<diff> may be passed an optional third parameter; this is a CODE
 reference to a key generation function.  See L</KEY GENERATION
@@ -193,7 +193,7 @@ routine.
   $sdiffs_ref = sdiff( \@seq1, \@seq2 );
 
 C<sdiff> computes all necessary components to show two sequences
-and their minimized differences side by side, just like the 
+and their minimized differences side by side, just like the
 Unix-utility I<sdiff> does:
 
     same             same
@@ -201,12 +201,12 @@ Unix-utility I<sdiff> does:
     old        <     -
     -          >     new
 
-It returns a list of array refs, each pointing to an array of 
+It returns a list of array refs, each pointing to an array of
 display instructions. In scalar context it returns a reference
 to such a list.
 
 Display instructions consist of three elements: A modifier indicator
-(C<+>: Element added, C<->: Element removed, C<u>: Element unmodified, 
+(C<+>: Element added, C<->: Element removed, C<u>: Element unmodified,
 C<c>: Element changed) and the value of the old and new elements, to
 be displayed side by side.
 
@@ -253,7 +253,7 @@ and C<$B[$j]> which are equal and which are part of the LCS, there will be
 some moment during the execution of C<traverse_sequences> when arrow A is
 pointing to C<$A[$i]> and arrow B is pointing to C<$B[$j]>.  When this happens,
 C<traverse_sequences> will call the C<MATCH> callback function and then it will
-advance both arrows. 
+advance both arrows.
 
 Otherwise, one of the arrows is pointing to an element of its sequence that is
 not part of the LCS.  C<traverse_sequences> will advance that arrow and will
@@ -299,7 +299,7 @@ as insertions and deletions only, it will jump back and forth between
 the two sequences and report I<changes> occurring as deletions on one
 side followed immediatly by an insertion on the other side.
 
-In addition to the 
+In addition to the
 C<DISCARD_A>,
 C<DISCARD_B>, and
 C<MATCH>
@@ -321,7 +321,7 @@ with different order of events.
 C<traverse_balanced> might be a bit slower than C<traverse_sequences>,
 noticable only while processing huge amounts of data.
 
-The C<sdiff> function of this module 
+The C<sdiff> function of this module
 is implemented as call to C<traverse_balanced>.
 
 =head1 KEY GENERATION FUNCTIONS
@@ -424,7 +424,7 @@ ftp://st.cs.uiuc.edu/pub/Smalltalk/MANCHESTER/manchester/4.0/diff.st
 C<sdiff> and C<traverse_balanced> were written by Mike Schilli
 <m@perlmeister.com>.
 
-The algorithm is that described in 
+The algorithm is that described in
 I<A Fast Algorithm for Computing Longest Common Subsequences>,
 CACM, vol.20, no.5, pp.350-353, May 1977, with a few
 minor improvements to improve the speed.

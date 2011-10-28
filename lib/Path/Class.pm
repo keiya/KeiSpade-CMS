@@ -26,20 +26,20 @@ Path::Class - Cross-platform path specification manipulation
 =head1 SYNOPSIS
 
   use Path::Class;
-  
+
   my $dir  = dir('foo', 'bar');       # Path::Class::Dir object
   my $file = file('bob', 'file.txt'); # Path::Class::File object
-  
+
   # Stringifies to 'foo/bar' on Unix, 'foo\bar' on Windows, etc.
   print "dir: $dir\n";
-  
+
   # Stringifies to 'bob/file.txt' on Unix, 'bob\file.txt' on Windows
   print "file: $file\n";
-  
+
   my $subdir  = $dir->subdir('baz');  # foo/bar/baz
   my $parent  = $subdir->parent;      # foo/bar
   my $parent2 = $parent->parent;      # foo
-  
+
   my $dir2 = $file->dir;              # bob
 
   # Work with foreign paths
@@ -47,12 +47,12 @@ Path::Class - Cross-platform path specification manipulation
   my $file = foreign_file('Mac', ':foo:file.txt');
   print $file->dir;                   # :foo:
   print $file->as_foreign('Win32');   # foo\file.txt
-  
+
   # Interact with the underlying filesystem:
-  
+
   # $dir_handle is an IO::Dir object
   my $dir_handle = $dir->open or die "Can't read $dir: $!";
-  
+
   # $file_handle is an IO::File object
   my $file_handle = $file->open($mode) or die "Can't read $file: $!";
 
@@ -89,7 +89,7 @@ can be written using C<Path::Class> as
 
  my $absolute = Path::Class::File->new( @dirs, $file )->is_absolute;
 
-or even as 
+or even as
 
  my $absolute = file( @dirs, $file )->is_absolute;
 

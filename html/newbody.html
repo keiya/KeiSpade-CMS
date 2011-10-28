@@ -4,7 +4,7 @@
 	var mode = 0;
 	function setPagename(frm) {
 			//if (frm.elements["title"].value == ""){
-			
+
 			//} else {
 				var pagename = document.editform.title.value;
 				frm.action="./<TMPL_VAR NAME=ScriptName>?cmd=newpost&page="+pagename;
@@ -32,7 +32,7 @@
 						on_loaded(httpObj)
 					}
 				}
-	
+
 				//コールバック関数 ( 受信時に実行されます )
 				function on_loaded(obj) {
 					//レスポンスを取得

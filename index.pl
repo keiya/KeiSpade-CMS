@@ -97,7 +97,7 @@ if (defined $query{'adon'}) {
 }
 
 # print page
-sub page { 
+sub page {
 	my $hash_ref = ($main::sql->fetch_ashash("select * from pages where title='".$main::vars{'PageName'}."';"));
 	my $hash_ofpage = $hash_ref->{$main::vars{'PageName'}};
 	if (defined $hash_ofpage->{'title'}) {
@@ -121,7 +121,7 @@ sub page {
 				$confer .= "<a href=\"files/$elements[0]\">$elements[1]</a> [<a href=\"./$main::vars{'ScriptName'}?&page=$main::vars{'PageName'}&amp;filename=$elements[0]&amp;adon=upl&amp;acmd=delupload\" rel=\"nofollow\">X</a>] ";
 				$confer =~ s/[\[\]]+//g;
 			}
-	
+
 
 			my $filenum = @filedatas;
 			$main::vars{'HtmlBody'} .= '</section><section><h2>Attached File</h2>'.$confer.'</section>' if $filenum == 1;
@@ -190,7 +190,7 @@ sub edit {
 	$main::vars{'HtmlBody'} .= KSpade::Show::template('html/editbody.html',\%vars);
 	delete $main::vars{'DBody'};
 	KSpade::Show::html('html/frmwrk.html',\%main::vars);
-} 
+}
 
 # submit edited text
 sub post {
@@ -223,7 +223,7 @@ sub post {
 			delete $main::vars{'Body'};
 		}
 	}
-} 
+}
 
 # submit edited text
 sub preview {
@@ -241,7 +241,7 @@ sub preview {
 	$main::vars{'HtmlBody'} .= $parsed;
 	#KSpade::Show::html('html/frmwrk.html',\%main::vars);
 	KSpade::Show::html('html/preview.html',\%main::vars);
-} 
+}
 
 # print new page form
 sub new {
@@ -311,7 +311,7 @@ sub search {
 	}
 	delete $main::vars{'Query'};
 	KSpade::Show::html('html/frmwrk.html',\%main::vars);
-} 
+}
 
 # print categories
 sub category {
@@ -335,5 +335,5 @@ sub category {
 	delete $main::vars{'CategoryList'};
 	delete $main::vars{'Query'};
 	KSpade::Show::html('html/frmwrk.html',\%main::vars);
-} 
+}
 
