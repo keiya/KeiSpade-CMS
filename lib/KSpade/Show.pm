@@ -30,6 +30,7 @@ sub formelements {
 	my %form = KSpade::CGIDec::getline($postdata);
 
 	$form->{'title'} = KSpade::Security::textalize(KSpade::Security::exorcism($form{'title'}));
+	$form->{'token'} = $form{'token'};
 	$form->{'modified_date'} = time();
 	$form->{'created_date'} = time();
 	$form->{'tags'} = '';

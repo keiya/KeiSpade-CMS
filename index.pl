@@ -7,7 +7,7 @@ use strict;
 use File::Basename qw(basename);
 
 use lib './lib';
-use KSpade;
+use KSpade;use Data::Dumper;
 
 my $time_start = (times)[0];
 
@@ -57,6 +57,7 @@ $vars{'HtmlHead'} .= "<link rel=\"index\" href=\"./$vars{'ScriptName'}?cmd=categ
 
 # process cgi args
 our %query = KSpade::CGIDec::getline($ENV{'QUERY_STRING'});
+our %cookies = KSpade::CGIDec::getcookies($ENV{'HTTP_COOKIE'});
 
 KSpade::Misc::setpagename($query{'page'});
 
@@ -114,8 +115,9 @@ sub page {
 		my $cachefile = 'cache/'.KSpade::Misc::shapureperl($main::vars{'PageName'});
 		if (exists $main::vars{'RenderCache'} && $main::vars{'RenderCache'} == 1 && -e $cachefile) {
 		    open (my $cf,'< '.$cachefile);
-		    read ($cf, $main::vars{'HtmlBody'}, (-s $cachefile));
+		    read ($cf, my $buffer, (-s $cachefile));
 		    close ($cf);
+			$main::vars{'HtmlBody'} .= $buffer;
 		}
 		else {
 		    $main::vars{'HtmlBody'} .=
@@ -195,23 +197,25 @@ sub edit {
 	#$main::vars{'Token'} = rand)
 	$main::vars{'HtmlHead'} .= '<meta http-equiv="Expires" content="0">';
 	$main::vars{'HtmlHead'} .= '<title>'.$main::vars{'PageName'}.' &gt; Edit@'.$main::vars{'SiteName'}.'</title>';
+	my $token = int(rand(9999999999));
+	$main::vars{'HttpStatus'} = 'Set-Cookie: token='.$token.'; httponly';
+	$main::vars{'Token'} = $token;
 	$main::vars{'HtmlBody'} .= KSpade::Show::template('html/editbody.html',\%vars);
-	delete $main::vars{'DBody'};
 	KSpade::Show::html('html/frmwrk.html',\%main::vars);
 } 
 
 # submit edited text
 sub post {
 	my $pagename = $main::vars{'PageName'};
+	my %page;
+	KSpade::Show::formelements(\%page);
 	if (exists $main::vars{'ReadOnly'} && $main::vars{'ReadOnly'} == 1) {
 	    $main::vars{'HttpStatus'} = 'Status: 400 Bad Request';
 	    $main::vars{'HtmlHead'} .= '<title>'.$main::vars{'PageName'}.' &gt; Error@'.$main::vars{'SiteName'}.'</title>';
 	    $main::vars{'HtmlBody'} = KSpade::Show::template('html/readonly.html',\%vars);
 	    KSpade::Show::html('html/frmwrk.html',\%main::vars);
 	}
-	elsif ($ENV{'REQUEST_METHOD'} eq 'POST') {
-		my %page;
-		KSpade::Show::formelements(\%page);
+	elsif ($ENV{'REQUEST_METHOD'} eq 'POST' && $page{'token'} == $main::cookies{'token'}) {
 		chomp %page;
 		my @res = ($sql->fetch("select * from pages where title='".$main::vars{'PageName'}."';"));
 		my $hashparent = KSpade::Misc::sha($res[7]);
@@ -239,10 +243,13 @@ sub post {
 			$main::vars{'DBody'} = $page{'body'};
 			$main::vars{'HtmlHead'} .= '<title>'.$main::vars{'PageName'}.' &gt; Error@'.$main::vars{'SiteName'}.'</title>';
 			$main::vars{'HtmlBody'} .= KSpade::Show::template('html/conflict.html',\%vars);
-			delete $main::vars{'Diff'};
-			delete $main::vars{'Body'};
 			KSpade::Show::html('html/frmwrk.html',\%main::vars);
 		}
+	}
+	else {
+	    $main::vars{'HttpStatus'} = 'Status: 400 Bad Request';
+		$main::vars{'HtmlBody'} = KSpade::Show::template('html/error.html',\%main::vars);
+		KSpade::Show::html('html/frmwrk.html',\%main::vars);
 	}
 } 
 
@@ -268,20 +275,24 @@ sub preview {
 sub new {
 	$main::vars{'HtmlHead'} .= '<meta http-equiv="Pragma" content="no-cache">';
 	$main::vars{'HtmlHead'} .= '<title> New@'.$main::vars{'SiteName'}.'</title>';
+	my $token = int(rand(9999999999));
+	$main::vars{'HttpStatus'} = 'Set-Cookie: token='.$token.'; httponly';
+	$main::vars{'Token'} = $token;
 	$main::vars{'HtmlBody'} .= KSpade::Show::template('html/newbody.html',\%vars);
 	KSpade::Show::html('html/frmwrk.html',\%main::vars);
 }
 
 # submit new page
 sub newpost {
+	my %page;
+	KSpade::Show::formelements(\%page);
 	if (exists $main::vars{'ReadOnly'} && $main::vars{'ReadOnly'} == 1) {
-		    $main::vars{'HttpStatus'} = 'Status: 400 Bad Request';
-		    $main::vars{'HtmlHead'} .= '<title>Error@'.$main::vars{'SiteName'}.'</title>';
-		    $main::vars{'HtmlBody'} = KSpade::Show::template('html/readonly.html',\%vars);
+		$main::vars{'HttpStatus'} = 'Status: 400 Bad Request';
+		$main::vars{'HtmlHead'} .= '<title>Error@'.$main::vars{'SiteName'}.'</title>';
+		$main::vars{'HtmlBody'} = KSpade::Show::template('html/readonly.html',\%vars);
+		print $main::vars{'HttpStatus'} . "\n\n";
 	}
-	elsif ($ENV{'REQUEST_METHOD'} eq 'POST') {
-		my %page;
-		KSpade::Show::formelements(\%page);
+	elsif ($ENV{'REQUEST_METHOD'} eq 'POST' && $page{'token'} == $main::cookies{'token'}) {
 		chomp(%page);
 		my @res = ($sql->fetch("select count(*) from pages where title='".$page{'title'}."';"));
 		$page{'title'} = $page{'title'}.rand(16384) unless $res[0] == 0;
@@ -300,8 +311,13 @@ sub newpost {
 		    print $cf $parsed;
 		    close ($cf);
 		}
+		print $main::vars{'HttpStatus'} . "\n\n";
 	}
-	KSpade::Show::html('html/frmwrk.html',\%main::vars);
+	else {
+	    $main::vars{'HttpStatus'} = 'Status: 400 Bad Request';
+		$main::vars{'HtmlBody'} = KSpade::Show::template('html/error.html',\%main::vars);
+		KSpade::Show::html('html/frmwrk.html',\%main::vars);
+	}
 }
 
 # print delete confirm
@@ -332,7 +348,6 @@ sub search {
 			,"<a href=\"./$main::vars{'ScriptName'}?page=%s\">%s</a><br />");
 		$main::vars{'HtmlHead'} .= '<title>Search &gt; Body@'.$main::vars{'SiteName'}.'</title>';
 		$main::vars{'HtmlBody'} .= KSpade::Show::template('html/search.html',\%vars);
-		delete $main::vars{'PagesList'};
 
 	}
 	# print all pages
@@ -341,9 +356,7 @@ sub search {
 			,"<a href=\"./$main::vars{'ScriptName'}?page=%s\">%s</a><br />");
 		$main::vars{'HtmlHead'} .= '<title>PagesList@'.$main::vars{'SiteName'}.'</title>';
 		$main::vars{'HtmlBody'} .= KSpade::Show::template('html/list.html',\%vars);
-		delete $main::vars{'PagesList'};
 	}
-	delete $main::vars{'Query'};
 	KSpade::Show::html('html/frmwrk.html',\%main::vars);
 } 
 
@@ -365,9 +378,6 @@ sub category {
 	}
 	$main::vars{'HtmlHead'} .= '<title>Search &gt; Category@'.$main::vars{'SiteName'}.'</title>';
 	$main::vars{'HtmlBody'} .= KSpade::Show::template('html/category.html',\%vars);
-	delete $main::vars{'CategoryTitle'};
-	delete $main::vars{'CategoryList'};
-	delete $main::vars{'Query'};
 	KSpade::Show::html('html/frmwrk.html',\%main::vars);
 } 
 

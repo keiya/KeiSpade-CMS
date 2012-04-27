@@ -22,4 +22,15 @@ sub getline {
 	return %QUERY;
 }
 
+sub getcookies {
+	my $cookies_str = shift;
+	my @cookies_nd = split(/;/, $ENV{'HTTP_COOKIE'});
+	my %cookies;
+	foreach (@cookies_nd) {
+		my ($key, $val) = split(/=/);
+		$cookies{$key} = $val;
+	}
+	return %cookies;
+}
+
 1;

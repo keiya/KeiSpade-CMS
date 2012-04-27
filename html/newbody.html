@@ -56,6 +56,7 @@
 </script>
 <button value="Preview" name="prev" id="prevbtn" type="button" onclick="previewToggle()">Preview</button>
 <form action="./<TMPL_VAR NAME=ScriptName>?cmd=newpost" method="post" name="editform" id="edit" accept-charset="utf-8">
+<input type="hidden" value="<TMPL_VAR NAME=Token>" name="token">
 Title:<br />
 <input type="text" name="title" placeholder="Newpage Name"><br />
 Body:<br />

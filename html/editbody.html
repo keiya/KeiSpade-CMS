@@ -44,6 +44,7 @@ function previewToggle() {
 // --></script>
 <button value="Preview" name="prev" id="prevbtn" type="button" onclick="previewToggle()">Preview</button>
 <form action="./<TMPL_VAR NAME=ScriptName>?cmd=post&amp;page=<TMPL_VAR NAME=PageName>" method="post" name="editform" id="edit" accept-charset="utf-8">
+<input type="hidden" value="<TMPL_VAR NAME=Token>" name="token">
 <input type="hidden" value="<TMPL_VAR NAME=BodyHash>" name="bodyhash">
 Title:<br />
 <input type="text" value="<TMPL_VAR NAME=PageName>" name="title"><br />
