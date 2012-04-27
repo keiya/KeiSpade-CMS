@@ -7,7 +7,7 @@ use strict;
 use File::Basename qw(basename);
 
 use lib './lib';
-use KSpade;use Data::Dumper;
+use KSpade;
 
 my $time_start = (times)[0];
 
