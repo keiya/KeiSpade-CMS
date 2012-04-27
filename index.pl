@@ -1,7 +1,7 @@
 #!/usr/bin/perl
 
 use strict;
-use warnings;
+#use warnings;
 
 # include modules
 use File::Basename qw(basename);
@@ -111,8 +111,8 @@ sub page {
 
 		$main::vars{'HtmlBody'} .= "<h2>$hash_ofpage->{'title'}</h2>";
 		
-		my $cachefile = 'cache/'.KSpade::Misc::sha($main::vars{'PageName'});
-		if ($main::vars{'RenderCache'} == 1 && -e $cachefile) {
+		my $cachefile = 'cache/'.KSpade::Misc::shapureperl($main::vars{'PageName'});
+		if (exists $main::vars{'RenderCache'} && $main::vars{'RenderCache'} == 1 && -e $cachefile) {
 		    open (my $cf,'< '.$cachefile);
 		    read ($cf, $main::vars{'HtmlBody'}, (-s $cachefile));
 		    close ($cf);
@@ -203,7 +203,7 @@ sub edit {
 # submit edited text
 sub post {
 	my $pagename = $main::vars{'PageName'};
-	if ($main::vars{'ReadOnly'} == 1) {
+	if (exists $main::vars{'ReadOnly'} && $main::vars{'ReadOnly'} == 1) {
 	    $main::vars{'HttpStatus'} = 'Status: 400 Bad Request';
 	    $main::vars{'HtmlHead'} .= '<title>'.$main::vars{'PageName'}.' &gt; Error@'.$main::vars{'SiteName'}.'</title>';
 	    $main::vars{'HtmlBody'} = KSpade::Show::template('html/readonly.html',\%vars);
@@ -213,7 +213,6 @@ sub post {
 		my %page;
 		KSpade::Show::formelements(\%page);
 		chomp %page;
-		require 'sha.pl';
 		my @res = ($sql->fetch("select * from pages where title='".$main::vars{'PageName'}."';"));
 		my $hashparent = KSpade::Misc::sha($res[7]);
 		if (($page{'bodyhash'} eq $hashparent) or ($page{'bodyhash'} =~ /Conflict/)) {
@@ -223,8 +222,8 @@ sub post {
 			$main::vars{'HttpStatus'} = 'Status: 303 See Other';
 			$main::vars{'HttpStatus'} .= "\nLocation: $main::vars{'ScriptAbsolutePath'}$main::vars{'ScriptName'}?page=$page{'title'}";
 			print $main::vars{'HttpStatus'} . "\n\n";
-			if ($main::vars{'RenderCache'} == 1) {
-			    my $cachefile = 'cache/'.KSpade::Misc::sha($page{'title'});
+			if (exists $main::vars{'RenderCache'} && $main::vars{'RenderCache'} == 1) {
+			    my $cachefile = 'cache/'.KSpade::Misc::shapureperl($page{'title'});
 			    my $parsed =
 			        Text::HatenaEx->parse(KSpade::Security::noscript($page{'body'}));
 			    open (my $cf,'> '.$cachefile);
@@ -242,6 +241,7 @@ sub post {
 			$main::vars{'HtmlBody'} .= KSpade::Show::template('html/conflict.html',\%vars);
 			delete $main::vars{'Diff'};
 			delete $main::vars{'Body'};
+			KSpade::Show::html('html/frmwrk.html',\%main::vars);
 		}
 	}
 } 
@@ -274,7 +274,7 @@ sub new {
 
 # submit new page
 sub newpost {
-	if ($main::vars{'ReadOnly'} == 1) {
+	if (exists $main::vars{'ReadOnly'} && $main::vars{'ReadOnly'} == 1) {
 		    $main::vars{'HttpStatus'} = 'Status: 400 Bad Request';
 		    $main::vars{'HtmlHead'} .= '<title>Error@'.$main::vars{'SiteName'}.'</title>';
 		    $main::vars{'HtmlBody'} = KSpade::Show::template('html/readonly.html',\%vars);
@@ -292,8 +292,8 @@ sub newpost {
 		KSpade::Misc::setpagename($main::vars{'PageName'});
 		$main::vars{'HttpStatus'} = 'Status: 303 See Other';
 		$main::vars{'HttpStatus'} .= "\nLocation: ${abspath}$main::vars{'ScriptName'}?page=$main::vars{'PageName'}";
-		if ($main::vars{'RenderCache'} == 1) {
-		    my $cachefile = 'cache/'.KSpade::Misc::sha($page{'title'});
+		if (exists $main::vars{'RenderCache'} && $main::vars{'RenderCache'} == 1) {
+		    my $cachefile = 'cache/'.KSpade::Misc::shapureperl($page{'title'});
 		    my $parsed =
 		        Text::HatenaEx->parse(KSpade::Security::noscript($page{'body'}));
 		    open (my $cf,'> '.$cachefile);

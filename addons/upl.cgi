@@ -7,7 +7,7 @@
 package KSpade::Addon::upl;
 
 use strict;
-use warnings;
+#use warnings;
 use lib '../lib';
 use KSpade;
 
@@ -75,5 +75,7 @@ sub addfile {
 print "Content-Type: text/html; charset=UTF-8\n\n";
 	#KSpade::Show::html('../html/frmwrk.html',\%main::vars);
 }
+
+sub DESTROY {}
 
 1;

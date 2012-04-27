@@ -26,7 +26,7 @@ sub setpagename {
 	   $file =~ s/|//g;
 	   $file =~ s/`//g;
 	   my $sha;
-	   if (open(SHA1SUM, "sha256sum $file |")) {
+	   if (-e "sha256sum" && open(SHA1SUM, "sha256sum $file |")) {
 	       my $tmp;
 	       while (<SHA1SUM>) {
 	           $tmp .= $_;

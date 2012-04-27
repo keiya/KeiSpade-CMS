@@ -1,7 +1,7 @@
 package KSpade::Show;
 
 use strict;
-use warnings;
+#use warnings;
 use KSpade::Security;
 use HTML::Template;
 
