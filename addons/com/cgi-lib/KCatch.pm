@@ -24,7 +24,7 @@ CGI::KCatch - Catch warn and die to avoid "Internal Server Error"
 
     use CGI::KCatch qw( [OPTIONS] );
 
-KCatch.pm would automatically detect whether running under CGI or not, 
+KCatch.pm would automatically detect whether running under CGI or not,
 when no options given. Available options are following:
 
     use CGI::KCatch qw( mode=plain );        # New style
@@ -215,7 +215,7 @@ sub conv_disp {
         $src ||= "";                            # No-use of uninitialized value
         $file =~ s#^.*[/\\]##;                  # En-short the filename
         chomp $mess;
-        my $eline = sprintf( "[%s:%s:%s] %s\n", 
+        my $eline = sprintf( "[%s:%s:%s] %s\n",
                     $file, ($line||"?"), $type, $mess );
         push( @$oarray, $eline );
         if ( $argv->{source} ) {

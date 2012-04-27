@@ -20,7 +20,7 @@ This document describes version 0.34 of Regexp::Assemble, released
 =head1 SYNOPSIS
 
   use Regexp::Assemble;
-  
+
   my $ra = Regexp::Assemble->new;
   $ra->add( 'ab+c' );
   $ra->add( 'ab+-' );
@@ -97,7 +97,7 @@ are using. B<modifiers> exists as an alias, for users familiar
 with L<Regexp::List>.
 
 B<chomp>, controls whether the pattern should be chomped before being
-lexed. Handy if you are reading patterns from a file. By default, 
+lexed. Handy if you are reading patterns from a file. By default,
 C<chomp>ing is performed (this behaviour changed as of version 0.24,
 prior versions did not chomp automatically).
 See also the C<file> attribute and the C<add_file> method.
@@ -582,7 +582,7 @@ sub _lex {
         # /\\?./, which means there can never be a remainder, so we
         # don't have to bother about quotemeta. In other words:
         # $qm will never be true in this block.
-        my $remain = substr($record,$len); 
+        my $remain = substr($record,$len);
         $case and $remain = $case eq 'U' ? uc($remain) : lc($remain);
         $debug and print "#   add remaining <$remain> case=<$case> qm=<$qm>\n";
         push @path, $remain;
@@ -733,7 +733,7 @@ sub _insertr {
     }
     elsif( $self->{dup_warn} ) {
         if( ref $self->{dup_warn} eq 'CODE' ) {
-            $self->{dup_warn}->($self, $_[0]); 
+            $self->{dup_warn}->($self, $_[0]);
         }
         else {
             my $pattern = join( '', @{$_[0]} );
@@ -911,13 +911,13 @@ sub as_string {
             $self->{str} = $Always_Fail;
         }
         else {
-            my $begin = 
+            my $begin =
                   $self->{anchor_word_begin}   ? '\\b'
                 : $self->{anchor_line_begin}   ? '^'
                 : $self->{anchor_string_begin} ? '\A'
                 : ''
             ;
-            my $end = 
+            my $end =
                   $self->{anchor_word_end}            ? '\\b'
                 : $self->{anchor_line_end}            ? '$'
                 : $self->{anchor_string_end}          ? '\Z'
@@ -1345,7 +1345,7 @@ boundaries (C<^> and C<$>) and string boundaries (C<\A>
 and C<\Z> (or C<\z> if you absolutely need it)).
 
 The shortcut C<anchor_I<mumble>> implies both
-C<anchor_I<mumble>_begin> C<anchor_I<mumble>_end> 
+C<anchor_I<mumble>_begin> C<anchor_I<mumble>_end>
 is also available. If different anchors are specified
 the most specific anchor wins. For instance, if both
 C<anchor_word_begin> and C<anchor_line_begin> are
@@ -1650,7 +1650,7 @@ sub dump {
 
 =item chomp(0|1)
 
-Turns chomping on or off. 
+Turns chomping on or off.
 
 IMPORTANT: As of version 0.24, chomping is now on by default as it
 makes C<add_file> Just Work. The only time you may run into trouble
@@ -1658,7 +1658,7 @@ is with C<add("\\$/")>. So don't do that, or else explicitly turn
 off chomping.
 
 To avoid incorporating (spurious)
-record separators (such as "\n" on Unix) when reading from a file, 
+record separators (such as "\n" on Unix) when reading from a file,
 C<add()> C<chomp>s its input. If you don't want this to happen,
 call C<chomp> with a false value.
 
@@ -2476,7 +2476,7 @@ sub _scan_node {
                         }
                     }
                     push @{$reduce{$common->[0]}}, [
-                        @$common, 
+                        @$common,
                         (ref($tail) eq 'HASH' ? $tail : @$tail ),
                         @$path
                     ];
@@ -2663,7 +2663,7 @@ sub _combine {
     my $self = shift;
     my $type = shift;
     # print "c in = @{[_dump(\@_)]}\n";
-    # my $combine = 
+    # my $combine =
     return '('
     . $type
     . do {
@@ -2784,7 +2784,7 @@ sub _lookahead {
             @head{ keys %$inner } = (values %$inner);
         }
         elsif( ref($in->{$path}[0]) eq 'ARRAY' ) {
-            my $subpath = $in->{$path}[0]; 
+            my $subpath = $in->{$path}[0];
             for( my $sp = 0; $sp < @$subpath; ++$sp ) {
                 if( ref($subpath->[$sp]) eq 'HASH' ) {
                     my $follow = _lookahead( $subpath->[$sp] );
@@ -3150,7 +3150,7 @@ pattern C<(?:f(?:ew|ig|un)|b(?:ad|it))>. See F<eg/tld> for a
 real-world example of how alternations are sorted. Once you have
 looked at that, everything should be crystal clear.
 
-When tracking is in use, no reduction is performed. nor are 
+When tracking is in use, no reduction is performed. nor are
 character classes formed. The reason is that it is
 too difficult to determine the original pattern afterwards. Consider the
 two patterns C<pale> and C<palm>. These should be reduced to

@@ -3,11 +3,11 @@
 # Version 1.0.1
 # スペースをデリミタとしたキーバリュー型の設定ファイルをロードし、ハッシュに格納します。
 #
-# usage 
+# usage
 # %hash = &kscconf::load
 #
 # Written by Keiya CHINEN <keiya_21@yahoo.co.jp>
-# 
+#
 # KSCCONF
 
 package KSpade::Conf;
@@ -26,7 +26,7 @@ sub load {
 			$HASH{$key} = $value;
 		}
 		close(CONF);
-	}	
+	}
 	return %HASH;
 }
 

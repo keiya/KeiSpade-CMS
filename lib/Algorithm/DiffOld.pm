@@ -29,7 +29,7 @@ This particular module is B<ONLY> for people who B<HAVE> to have the old
 interface, which uses a comparison function rather than a key generating
 function.
 
-Because each of the lines in one array have to be compared with each 
+Because each of the lines in one array have to be compared with each
 of the lines in the other array, this does M*N comparisions. This can
 be very slow. I clocked it at taking 18 times as long as the stock
 version of Algorithm::Diff for a 4000-line file. It will get worse
@@ -44,7 +44,7 @@ quadratically as array sizes increase.
   $lcsref = LCS( \@seq1, \@seq2, $comparison_function );
 
   @diffs = diff( \@seq1, \@seq2, $comparison_function );
-  
+
   traverse_sequences( \@seq1, \@seq2,
                      { MATCH => $callback,
                        DISCARD_A => $callback,
@@ -201,7 +201,7 @@ sub _longestCommonSubsequence
 			# oddly, it's faster to always test this (CPU cache?).
 			if ( defined( $k ) )
 			{
-				$links->[ $k ] = 
+				$links->[ $k ] =
 					[ ( $k ? $links->[ $k - 1 ] : undef ), $i, $j ];
 			}
 		}

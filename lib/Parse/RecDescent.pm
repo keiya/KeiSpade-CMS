@@ -37,7 +37,7 @@ sub import  # IMPLEMENT PRECOMPILER BEHAVIOUR UNDER:
         exit;
     }
 }
-        
+
 sub Save
 {
     my ($self, $class) = @_;
@@ -132,7 +132,7 @@ sub resync   # ($linecounter)
     my $self = tied($_[0]);
     die "Tried to alter something other than a LineCounter\n"
         unless $self =~ /Parse::RecDescent::LineCounter/;
-    
+
     my $parser = $self->{parser};
     my $apparently = $parser->{offsetlinenum}
              - Parse::RecDescent::_linecount(${$self->{text}})
@@ -153,7 +153,7 @@ sub TIESCALAR   # ($classname, \$text, $thisparser, $prevflag)
           }, $_[0];
 }
 
-sub FETCH    
+sub FETCH
 {
     my $parser = $_[0]->{parser};
     my $missing = $parser->{fulltextlen}-length(${$_[0]->{text}})-$_[0]->{prev}+1;
@@ -178,7 +178,7 @@ sub TIESCALAR   # ($classname, \$text, $thisparser, $prev)
           }, $_[0];
 }
 
-sub FETCH    
+sub FETCH
 {
     my $parser = $_[0]->{parser};
     return $parser->{fulltextlen}-length(${$_[0]->{text}})+$_[0]->{prev};
@@ -319,7 +319,7 @@ sub addvar
     {
         $parser->{localvars} .= " $1";
         $self->{"vars"} .= "$var;\n" }
-    else 
+    else
         { $self->{"vars"} .= "my $var;\n" }
     $self->{"changed"} = 1;
     return 1;
@@ -366,7 +366,7 @@ sub ' . $namespace . '::' . $self->{"name"} .  '
 	local $tracelevel = ($tracelevel||0)+1;
 	$ERRORS = 0;
     my $thisrule = $thisparser->{"rules"}{"' . $self->{"name"} . '"};
-    
+
     Parse::RecDescent::_trace(q{Trying rule: [' . $self->{"name"} . ']},
                   Parse::RecDescent::_tracefirst($_[1]),
                   q{' . $self->{"name"} . '},
@@ -466,7 +466,7 @@ sub ' . $namespace . '::' . $self->{"name"} .  '
                       q{' . $self->{"name"} .'},
                       $tracelevel);
         Parse::RecDescent::_trace(q{(consumed: [} .
-                      Parse::RecDescent::_tracemax(substr($_[1],0,-length($text))) . q{])}, 
+                      Parse::RecDescent::_tracemax(substr($_[1],0,-length($text))) . q{])},
                       Parse::RecDescent::_tracefirst($text),
                       , q{' . $self->{"name"} .'},
                       $tracelevel)
@@ -560,7 +560,7 @@ sub checkleftmost($)
         Parse::RecDescent::_warn(2,"Lone <error?> in production treated
                         as <error?> <reject>");
         Parse::RecDescent::_hint("A production consisting of a single
-                      conditional <error?> directive would 
+                      conditional <error?> directive would
                       normally succeed (with the value zero) if the
                       rule is not 'commited' when it is
                       tried. Since you almost certainly wanted
@@ -774,7 +774,7 @@ sub code($$$$)
         my $repcount = 0;
 
 ';
-    $code .= 
+    $code .=
 '       my @itempos = ({});
 '           if $parser->{_check}{itempos};
 
@@ -826,7 +826,7 @@ sub code($$$$)
                       automatically appended.");
     }
 
-    $code .= 
+    $code .=
 '
 
         Parse::RecDescent::_trace(q{>>Matched production: ['
@@ -854,7 +854,7 @@ sub sethashname { $_[0]->{hashname} = '__ACTION' . ++$_[1]->{actcount} .'__'; }
 sub new
 {
     my $class = ref($_[0]) || $_[0];
-    bless 
+    bless
     {
         "code"      => $_[1],
         "lookahead" => $_[2],
@@ -868,7 +868,7 @@ sub isterminal { 0 }
 sub code($$$$)
 {
     my ($self, $namespace, $rule) = @_;
-    
+
 '
         Parse::RecDescent::_trace(q{Trying action},
                       Parse::RecDescent::_tracefirst($text),
@@ -903,12 +903,12 @@ sub sethashname { $_[0]->{hashname} = '__DIRECTIVE' . ++$_[1]->{dircount} .  '__
 
 sub issubrule { undef }
 sub isterminal { 0 }
-sub describe { $_[1] ? '' : $_[0]->{name} } 
+sub describe { $_[1] ? '' : $_[0]->{name} }
 
 sub new ($$$$$)
 {
     my $class = ref($_[0]) || $_[0];
-    bless 
+    bless
     {
         "code"      => $_[1],
         "lookahead" => $_[2],
@@ -920,7 +920,7 @@ sub new ($$$$$)
 sub code($$$$)
 {
     my ($self, $namespace, $rule) = @_;
-    
+
 '
         ' . ($self->{"lookahead"} ? '$_savetext = $text;' : '' ) .'
 
@@ -964,7 +964,7 @@ sub sethashname { $_[0]->{hashname} = '__DIRECTIVE' . ++$_[1]->{dircount} .  '__
 sub new ($$$;$)
 {
     my $class = ref($_[0]) || $_[0];
-    bless 
+    bless
     {
         "lookahead" => $_[1],
         "line"      => $_[2],
@@ -978,7 +978,7 @@ sub new ($$$;$)
 sub code($$$$)
 {
     my ($self, $namespace, $rule) = @_;
-    
+
 '
         Parse::RecDescent::_trace(q{>>Rejecting production<< (found '
                      . $self->describe . ')},
@@ -1008,7 +1008,7 @@ sub sethashname { $_[0]->{hashname} = '__DIRECTIVE' . ++$_[1]->{dircount} .  '__
 sub new ($$$$$)
 {
     my $class = ref($_[0]) || $_[0];
-    bless 
+    bless
     {
         "msg"        => $_[1],
         "lookahead"  => $_[2],
@@ -1020,13 +1020,13 @@ sub new ($$$$$)
 sub code($$$$)
 {
     my ($self, $namespace, $rule) = @_;
-    
+
     my $action = '';
-    
+
     if ($self->{"msg"})  # ERROR MESSAGE SUPPLIED
     {
-        #WAS: $action .= "Parse::RecDescent::_error(qq{$self->{msg}}" .  ',$thisline);'; 
-        $action .= 'push @{$thisparser->{errors}}, [qq{'.$self->{msg}.'},$thisline];'; 
+        #WAS: $action .= "Parse::RecDescent::_error(qq{$self->{msg}}" .  ',$thisline);';
+        $action .= 'push @{$thisparser->{errors}}, [qq{'.$self->{msg}.'},$thisline];';
 
     }
     else      # GENERATE ERROR MESSAGE DURING PARSE
@@ -1036,14 +1036,14 @@ sub code($$$$)
            $rule =~ s/_/ /g;
         #WAS: Parse::RecDescent::_error("Invalid $rule: " . $expectation->message() ,$thisline);
         push @{$thisparser->{errors}}, ["Invalid $rule: " . $expectation->message() ,$thisline];
-        '; 
+        ';
     }
 
     my $dir =
           new Parse::RecDescent::Directive('if (' .
-        ($self->{"commitonly"} ? '$commit' : '1') . 
+        ($self->{"commitonly"} ? '$commit' : '1') .
         ") { do {$action} unless ".' $_noactions; undef } else {0}',
-                    $self->{"lookahead"},0,$self->describe); 
+                    $self->{"lookahead"},0,$self->describe);
     $dir->{hashname} = $self->{hashname};
     return $dir->code($namespace, $rule, 0);
 }
@@ -1095,7 +1095,7 @@ sub new ($$$$$$)
     $mod =~ s/[gc]//g;
     $pattern =~ s/(\A|[^\\])\\G/$1/g;
 
-    bless 
+    bless
     {
         "pattern"   => $pattern,
         "ldelim"      => $ldel,
@@ -1117,7 +1117,7 @@ sub code($$$$)
     my $mod  = $self->{"mod"};
 
     $sdel =~ s/[[{(<]/{}/;
-    
+
 my $code = '
         Parse::RecDescent::_trace(q{Trying terminal: [' . $self->describe
                       . ']}, Parse::RecDescent::_tracefirst($text),
@@ -1176,7 +1176,7 @@ sub new ($$$$)
     $desc=~s/}/\\}/g;
     $desc=~s/{/\\{/g;
 
-    bless 
+    bless
     {
         "pattern"     => $pattern,
         "lookahead"   => $_[2],
@@ -1189,7 +1189,7 @@ sub new ($$$$)
 sub code($$$$)
 {
     my ($self, $namespace, $rule, $check) = @_;
-    
+
 my $code = '
         Parse::RecDescent::_trace(q{Trying terminal: [' . $self->describe
                       . ']},
@@ -1249,7 +1249,7 @@ sub new ($$$$)
     $desc=~s/}/\\}/g;
     $desc=~s/{/\\{/g;
 
-    bless 
+    bless
     {
         "pattern"   => $pattern,
         "lookahead" => $_[2],
@@ -1261,7 +1261,7 @@ sub new ($$$$)
 sub code($$$$)
 {
     my ($self, $namespace, $rule, $check) = @_;
-    
+
 my $code = '
         Parse::RecDescent::_trace(q{Trying terminal: [' . $self->describe
                       . ']},
@@ -1330,7 +1330,7 @@ sub callsyntax($$)
 sub new ($$$$;$$$)
 {
     my $class = ref($_[0]) || $_[0];
-    bless 
+    bless
     {
         "subrule"   => $_[1],
         "lookahead" => $_[2],
@@ -1345,7 +1345,7 @@ sub new ($$$$;$$$)
 sub code($$$$)
 {
     my ($self, $namespace, $rule) = @_;
-    
+
 '
         Parse::RecDescent::_trace(q{Trying subrule: [' . $self->{"subrule"} . ']},
                   Parse::RecDescent::_tracefirst($text),
@@ -1379,7 +1379,7 @@ sub code($$$$)
         Parse::RecDescent::_trace(q{>>Matched subrule: ['
                     . $self->{subrule} . ']<< (return value: [}
                     . $_tok . q{]},
-                      
+
                       Parse::RecDescent::_tracefirst($text),
                       q{' . $rule->{"name"} .'},
                       $tracelevel)
@@ -1437,12 +1437,12 @@ sub new ($$$$$$$$$$)
                        repetitions (such as
                        \"!$subrule($repspec)\" can never
                        succeed, since optional items always
-                       match (zero times at worst). 
-                       Did you mean a single \"!$subrule\", 
+                       match (zero times at worst).
+                       Did you mean a single \"!$subrule\",
                        instead?");
         }
     }
-    bless 
+    bless
     {
         "subrule"   => $subrule,
         "repspec"   => $repspec,
@@ -1459,7 +1459,7 @@ sub new ($$$$$$$$$$)
 sub code($$$$)
 {
     my ($self, $namespace, $rule) = @_;
-    
+
     my ($subrule, $repspec, $min, $max, $lookahead) =
         @{$self}{ qw{subrule repspec min max lookahead} };
 
@@ -1480,7 +1480,7 @@ sub code($$$$)
         . ',$expectation,'
         . ($self->{argcode} ? "sub { return $self->{argcode} }"
                         : 'sub { \\@arg }')
-        . '))) 
+        . ')))
         {
             Parse::RecDescent::_trace(q{<<Didn\'t match repeated subrule: ['
             . $self->describe . ']>>},
@@ -1493,7 +1493,7 @@ sub code($$$$)
         Parse::RecDescent::_trace(q{>>Matched repeated subrule: ['
                     . $self->{subrule} . ']<< (}
                     . @$_tok . q{ times)},
-                      
+
                       Parse::RecDescent::_tracefirst($text),
                       q{' . $rule->{"name"} .'},
                       $tracelevel)
@@ -1521,7 +1521,7 @@ sub new
 sub code($$$$)
 {
     my ($self, $namespace, $rule) = @_;
-    
+
     '
         $return = $item[-1];
     ';
@@ -1542,7 +1542,7 @@ sub new
 {
     my ($class, $type, $minrep, $maxrep, $leftarg, $op, $rightarg) = @_;
 
-    bless 
+    bless
     {
         "type"      => "${type}op",
         "leftarg"   => $leftarg,
@@ -1557,7 +1557,7 @@ sub new
 sub code($$$$)
 {
     my ($self, $namespace, $rule) = @_;
-    
+
     my ($leftarg, $op, $rightarg) =
         @{$self}{ qw{leftarg op rightarg} };
 
@@ -1638,7 +1638,7 @@ sub code($$$$)
     $code .= '
           $_tok = [ @item ];
           last;
-        } 
+        }
 
         unless ($repcount>='.$self->{min}.')
         {
@@ -1741,7 +1741,7 @@ sub new ($$$)
     my $class = ref($_[0]) || $_[0];
     local $Parse::RecDescent::compiling = $_[2];
     my $name_space_name = defined $_[3]
-        ? "Parse::RecDescent::".$_[3] 
+        ? "Parse::RecDescent::".$_[3]
         : _nextnamespace();
     my $self =
     {
@@ -1763,7 +1763,7 @@ sub new ($$$)
         $self->{_AUTOACTION}
             = new Parse::RecDescent::Action($sourcecode,0,-1)
     }
-    
+
     bless $self, $class;
     shift;
     return $self->Replace(@_)
@@ -1896,7 +1896,7 @@ sub _generate($$$;$$)
     local $::RD_WARN  = $::RD_WARN;
     local $::RD_TRACE = $::RD_TRACE;
     local $::RD_CHECK = $::RD_CHECK;
-               
+
     while (pos $grammar < length $grammar)
     {
         $line = $lines[-1] - _linecount($grammar) + 1;
@@ -1977,7 +1977,7 @@ sub _generate($$$;$$)
                            negative components in their ranges.");
                 }
             }
-            
+
             $prod && $prod->enddirective($line,$minrep,$maxrep);
         }
         elsif ($grammar =~ m/\G\s*<[^m]/gc)
@@ -2037,7 +2037,7 @@ sub _generate($$$;$$)
                     _error("<nocheck> directive not at start of grammar", $line);
                     _hint("The <nocheck> directive can only
                            be specified at the start of a
-                           grammar (before the first rule 
+                           grammar (before the first rule
                            is defined.");
                 }
                 else
@@ -2066,7 +2066,7 @@ sub _generate($$$;$$)
                     _error("<autotree> directive not at start of grammar", $line);
                     _hint("The <autotree> directive can only
                            be specified at the start of a
-                           grammar (before the first rule 
+                           grammar (before the first rule
                            is defined.");
                 }
                 else
@@ -2213,7 +2213,7 @@ sub _generate($$$;$$)
                 _parse("a token constructor", $aftererror,$line,$code);
                 $code =~ s/\A\s*<token:(.*)>\Z/$1/s;
 
-                my $types = eval 'no strict; local $SIG{__WARN__} = sub {0}; my @arr=('.$code.'); @arr' || (); 
+                my $types = eval 'no strict; local $SIG{__WARN__} = sub {0}; my @arr=('.$code.'); @arr' || ();
                 if (!$types)
                 {
                     _error("Incorrect token specification: \"$@\"", $line);
@@ -2314,7 +2314,7 @@ sub _generate($$$;$$)
                     $lookahead,$line, substr($grammar, $-[0], $+[0] - $-[0]) ) or next;
             my $rulename = $1;
             if ($rulename =~ /Replace|Extend|Precompile|Save/ )
-            {   
+            {
                 _warn(2,"Rule \"$rulename\" hidden by method
                        Parse::RecDescent::$rulename",$line)
                 and
@@ -2485,7 +2485,7 @@ sub _generate($$$;$$)
                                            $self,
                                            $matchrule,
                                            $argcode);
-                                           
+
                         $prod and $prod->additem($item)
                               or  _no_rule("repetition",$line,"$code$argcode($1)");
 
@@ -2614,7 +2614,7 @@ sub _generate($$$;$$)
                                        $desc,
                                        $matchrule,
                                        $argcode);
-     
+
                 $prod and $prod->additem($item)
                       or  _no_rule("(sub)rule",$line,$name);
 
@@ -2767,7 +2767,7 @@ sub _check_grammar ($)
                     _hint("Will you be providing this rule
                            later, or did you perhaps
                            misspell \"$call\"? Otherwise
-                           it will be treated as an 
+                           it will be treated as an
                            immediate <reject>.");
                     eval "sub $self->{namespace}::$call {undef}";
                 }
@@ -2802,7 +2802,7 @@ sub _check_grammar ($)
         }
     }
 }
-    
+
 # GENERATE ACTUAL PARSER CODE
 
 sub _code($)
@@ -2862,14 +2862,14 @@ sub AUTOLOAD    # ($parser, $text; $linenum, @args)
     $_[0]->{errors} = [];
     my @args = @_[3..$#_];
     my $args = sub { [ @args ] };
-                 
+
     $AUTOLOAD =~ s/$class/$_[0]->{namespace}/;
     no strict "refs";
 
     local $::RD_WARN  = $::RD_WARN  || $_[0]->{__WARN__};
     local $::RD_HINT  = $::RD_HINT  || $_[0]->{__HINT__};
     local $::RD_TRACE = $::RD_TRACE || $_[0]->{__TRACE__};
-               
+
     croak "Unknown starting rule ($AUTOLOAD) called\n"
         unless defined &$AUTOLOAD;
     my $retval = &{$AUTOLOAD}($_[0],$text,undef,undef,$args);
@@ -2893,7 +2893,7 @@ sub _parserepeat($$$$$$$$$$)    # RETURNS A REF TO AN ARRAY OF MATCHES
 {
     my ($parser, $text, $prod, $min, $max, $_noactions, $expectation, $argcode) = @_;
     my @tokens = ();
-    
+
     my $reps;
     for ($reps=0; $reps<$max;)
     {
@@ -3325,7 +3325,7 @@ is exactly equivalent to:
     rule1: a | b | c | g | h
     rule2: d | e | f
 
-Each production in a rule consists of zero or more items, each of which 
+Each production in a rule consists of zero or more items, each of which
 may be either: the name of another rule to be matched (a "subrule"),
 a pattern or string literal to be matched directly (a "token"), a
 block of Perl code to be executed (an "action"), a special instruction
@@ -3506,7 +3506,7 @@ single production.
 
 For the purpose of matching, each terminal in a production is considered
 to be preceded by a "prefix" - a pattern which must be
-matched before a token match is attempted. By default, the 
+matched before a token match is attempted. By default, the
 prefix is optional whitespace (which always matches, at
 least trivially), but this default may be reset in any production.
 
@@ -3601,8 +3601,8 @@ type: __STRINGI<n>__, __PATTERNI<n>__, __DIRECTIVEI<n>__, __ACTIONI<n>__:
         }
 
 
-If you want proper I<named> access to patterns or literals, you need to turn 
-them into separate rules: 
+If you want proper I<named> access to patterns or literals, you need to turn
+them into separate rules:
 
     stuff: various bits 'and' pieces "then" data 'end'
         { print $item{various}  # PRINTS various
@@ -3618,7 +3618,7 @@ The advantage of using C<%item>, instead of C<@items> is that it
 removes the need to track items positions that may change as a grammar
 evolves. For example, adding an interim C<E<lt>skipE<gt>> directive
 of action can silently ruin a trailing action, by moving an C<@item>
-element "down" the array one place. In contrast, the named entry 
+element "down" the array one place. In contrast, the named entry
 of C<%item> is unaffected by such an insertion.
 
 A limitation of the C<%item> hash is that it only records the I<last>
@@ -3688,7 +3688,7 @@ text being parsed - for example, to provide a C<#include>-like facility:
 =item C<$thisline> and C<$prevline>
 
 C<$thisline> stores the current line number within the current parse
-(starting from 1). C<$prevline> stores the line number for the last 
+(starting from 1). C<$prevline> stores the line number for the last
 character which was already successfully parsed (this will be different from
 C<$thisline> at the end of each line).
 
@@ -3726,7 +3726,7 @@ rule with a second argument. For example:
 
 C<$thiscolumn> stores the current column number within the current line
 being parsed (starting from 1). C<$prevcolumn> stores the column number
-of the last character which was actually successfully parsed. Usually 
+of the last character which was actually successfully parsed. Usually
 C<$prevcolumn == $thiscolumn-1>, but not at the end of lines.
 
 For efficiency, C<$thiscolumn> and C<$prevcolumn> are
@@ -3737,7 +3737,7 @@ Assignment to C<$thiscolumn> or C<$prevcolumn> is a fatal error.
 
 Modifying the value of the variable C<$text> (as in the previous
 C<hash_include> example, for instance) may confuse the column
-counting mechanism. 
+counting mechanism.
 
 Note that C<$thiscolumn> reports the column number I<before> any
 whitespace that might be skipped before reading a token. Hence
@@ -3766,7 +3766,7 @@ when the variable's value is used.
 Assignment to C<$thisoffset> or <$prevoffset> is a fatal error.
 
 Modifying the value of the variable C<$text> will I<not> affect the
-offset counting mechanism. 
+offset counting mechanism.
 
 Also see the entry for C<@itempos>.
 
@@ -3812,7 +3812,7 @@ it is possible to write:
               to $itempos[3]{column}{to}" }
 
 Note however that (in the current implementation) the use of C<@itempos>
-anywhere in a grammar implies that item positioning information is 
+anywhere in a grammar implies that item positioning information is
 collected I<everywhere> during the parse. Depending on the grammar
 and the size of the text to be parsed, this may be prohibitively
 expensive and the explicit use of C<$thisline>, C<$thiscolumn>, etc. may
@@ -3822,7 +3822,7 @@ be a better choice.
 =item C<$thisparser>
 
 A reference to the S<C<Parse::RecDescent>> object through which
-parsing was initiated. 
+parsing was initiated.
 
 The value of C<$thisparser> propagates down the subrules of a parse
 but not back up. Hence, you can invoke subrules from another parser
@@ -3841,7 +3841,7 @@ with the same names as the required subrules!
 
 =item C<$thisrule>
 
-A reference to the S<C<Parse::RecDescent::Rule>> object corresponding to the 
+A reference to the S<C<Parse::RecDescent::Rule>> object corresponding to the
 rule currently being matched.
 
 =item C<$thisprod>
@@ -3889,9 +3889,9 @@ but start-up actions can be used to execute I<any> valid Perl code
 within a parser's special namespace.
 
 Start-up actions can appear within a grammar extension or replacement
-(that is, a partial grammar installed via C<Parse::RecDescent::Extend()> or 
+(that is, a partial grammar installed via C<Parse::RecDescent::Extend()> or
 C<Parse::RecDescent::Replace()> - see L<Incremental Parsing>), and will be
-executed before the new grammar is installed. Note, however, that a 
+executed before the new grammar is installed. Note, however, that a
 particular start-up action is only ever executed once.
 
 
@@ -3939,17 +3939,17 @@ Either of these is equivalent to:
       | and_expr
         { [@item] }
 
-    and_expr:   not_expr '&&' and_expr  
+    and_expr:   not_expr '&&' and_expr
         { [@item] }
     |   not_expr
         { [@item] }
 
-    not_expr:   '!' brack_expr      
+    not_expr:   '!' brack_expr
         { [@item] }
     |   brack_expr
         { [@item] }
 
-    brack_expr: '(' expression ')'  
+    brack_expr: '(' expression ')'
         { [@item] }
       | identifier
         { [@item] }
@@ -3993,15 +3993,15 @@ which are equivalent to:
             { "expression_node"->new(@item[1..3]) }
         | and_expr
 
-        and_expr:   not_expr '&&' and_expr  
+        and_expr:   not_expr '&&' and_expr
             { "and_expr_node"->new(@item[1..3]) }
         |   not_expr
 
-        not_expr:   '!' brack_expr      
+        not_expr:   '!' brack_expr
             { "not_expr_node"->new(@item[1..2]) }
         |   brack_expr
 
-        brack_expr: '(' expression ')'  
+        brack_expr: '(' expression ')'
             { "brack_expr_node"->new(@item[1..3]) }
         | identifier
 
@@ -4110,7 +4110,7 @@ result of misspellings, and is a sufficiently common occurance that a
 warning is generated for such situations.
 
 However, when prototyping a grammar it is sometimes useful to be
-able to use subrules before a proper specification of them is 
+able to use subrules before a proper specification of them is
 really possible.  For example, a grammar might include a section like:
 
     function_call: identifier '(' arg(s?) ')'
@@ -4134,7 +4134,7 @@ so that the function call syntax can be tested with dummy input such as:
 
 et cetera.
 
-Early in prototyping, many such "stubs" may be required, so 
+Early in prototyping, many such "stubs" may be required, so
 C<Parse::RecDescent> provides a means of automating their definition.
 If the variable C<$::RD_AUTOSTUB> is defined when a parser is built,
 a subrule reference to any non-existent rule (say, C<sr>),
@@ -4272,7 +4272,7 @@ attempt a match.
 Note in the preceding example, that the C<E<lt>commitE<gt>> was only placed
 in production two. If production one had been:
 
-    request: 'explain' <commit> expression 
+    request: 'explain' <commit> expression
 
 then production two would be (inappropriately) skipped if a leading
 "explain..." was encountered.
@@ -4291,7 +4291,7 @@ by some other production later in the rule. For example, to insert
 tracing code into the parse:
 
     complex_rule: { print "In complex rule...\n"; } <reject>
-        
+
     complex_rule: simple_rule '+' 'i' '*' simple_rule
         | 'i' '*' simple_rule
         | simple_rule
@@ -4547,7 +4547,7 @@ are only displayed once parsing ultimately fails. Moreover,
 C<E<lt>error...E<gt>> directives that cause one production of a rule
 to fail are automatically removed from the message queue
 if another production subsequently causes the entire rule to succeed.
-This means that you can put 
+This means that you can put
 C<E<lt>error...E<gt>> directives wherever useful diagnosis can be done,
 and only those associated with actual parser failure will ever be
 displayed. Also see L<"Gotchas">.
@@ -4598,7 +4598,7 @@ to work like this:
     | <error?: Error message if committed>
     | <error:  Error message if uncommitted>
 
-Parse::RecDescent automatically appends a 
+Parse::RecDescent automatically appends a
 C<E<lt>rejectE<gt>> directive if the C<E<lt>error?E<gt>> directive
 is the only item in a production. A level 2 warning (see below)
 is issued when this happens.
@@ -4641,7 +4641,7 @@ can be moderated in only one respect: if C<$::RD_TRACE> has an
 integer value (I<N>) greater than 1, only the I<N> characters of
 the "current parsing context" (that is, where in the input string we
 are at any point in the parse) is reported at any time.
-   > 
+   >
 C<$::RD_TRACE> is mainly useful for debugging a grammar that isn't
 behaving as you expected it to. To this end, if C<$::RD_TRACE> is
 defined when a parser is built, any actual parser code which is
@@ -4815,9 +4815,9 @@ to something interesting. For example:
 Now the C<command> rule selects how to proceed on the basis of the keyword
 that is found. It is as if C<command> were declared:
 
-    command:    'while'    while_body    "end while" 
-       |    'if'       if_body   "end if" 
-       |    'function' function_body "end function" 
+    command:    'while'    while_body    "end while"
+       |    'if'       if_body   "end if"
+       |    'function' function_body "end function"
 
 
 When a C<E<lt>matchrule:...E<gt>> directive is used as a repeated
@@ -4876,7 +4876,7 @@ but not:
 
 =item Deferred actions
 
-The C<E<lt>defer:...E<gt>> directive is used to specify an action to be 
+The C<E<lt>defer:...E<gt>> directive is used to specify an action to be
 performed when (and only if!) the current production ultimately succeeds.
 
 Whenever a C<E<lt>defer:...E<gt>> directive appears, the code it specifies
@@ -4890,7 +4890,7 @@ If the parse ultimately succeeds
 I<and> the production in which the C<E<lt>defer:...E<gt>> directive was
 evaluated formed part of the successful parse, then the deferred code is
 executed immediately before the parse returns. If however the production
-which queued a deferred action fails, or one of the higher-level 
+which queued a deferred action fails, or one of the higher-level
 rules which called that production fails, then the deferred action is
 removed from the queue, and hence is never executed.
 
@@ -4957,21 +4957,21 @@ the subrules C<noun> and C<trans> to match, that production ultimately
 failed and so the deferred actions queued by those subrules were subsequently
 disgarded. The second production then succeeded, causing the entire
 parse to succeed, and so the deferred actions queued by the (second) match of
-the C<noun> subrule and the subsequent match of C<intrans> I<are> preserved and 
+the C<noun> subrule and the subsequent match of C<intrans> I<are> preserved and
 eventually executed.
 
 Deferred actions provide a means of improving the performance of a parser,
 by only executing those actions which are part of the final parse-tree
-for the input data. 
+for the input data.
 
-Alternatively, deferred actions can be viewed as a mechanism for building 
+Alternatively, deferred actions can be viewed as a mechanism for building
 (and executing) a
 customized subroutine corresponding to the given input data, much in the
 same way that autoactions (see L<"Autoactions">) can be used to build a
 customized data structure for specific input.
 
 Whether or not the action it specifies is ever executed,
-a C<E<lt>defer:...E<gt>> directive always succeeds, returning the 
+a C<E<lt>defer:...E<gt>> directive always succeeds, returning the
 number of deferred actions currently queued at that point.
 
 
@@ -5068,7 +5068,7 @@ input to a Parse::RecDescent parser (when it eventually supports
 tokenized input).
 
 The text of the token is the value of the
-immediately preceding item in the production. A 
+immediately preceding item in the production. A
 C<E<lt>token:...E<gt>> directive always succeeds with a return
 value which is the hash reference that is the new token. It also
 sets the return value for the production to that hash ref.
@@ -5094,7 +5094,7 @@ grammar:
     my $parser = new Parse::RecDescent q
     {
     startrule: subrule1 subrule 2
-    
+
     # ETC...
     };
 
@@ -5133,7 +5133,7 @@ or inefficient:
        |    atom
         { $return = [ $item[1] ] }
 
-and either way is ugly and hard to get right.   
+and either way is ugly and hard to get right.
 
 The C<E<lt>leftop:...E<gt>> and C<E<lt>rightop:...E<gt>> directives provide an
 easier way of specifying such operations. Using C<E<lt>leftop:...E<gt>> the
@@ -5208,7 +5208,7 @@ Note that for both the C<E<lt>leftop:...E<gt>> and C<E<lt>rightop:...E<gt>> dire
 return the operator itself, just a list of the operands involved. This is
 particularly handy for specifying lists:
 
-    list: '(' <leftop: list_item ',' list_item> ')' 
+    list: '(' <leftop: list_item ',' list_item> ')'
         { $return = $item[2] }
 
 There is, however, a problem: sometimes the operator is itself significant.
@@ -5235,13 +5235,13 @@ In other words, given the input:
 
 the specifications:
 
-    list:      '('  <leftop: list_item separator list_item>  ')' 
+    list:      '('  <leftop: list_item separator list_item>  ')'
 
     separator: ',' | '=>'
 
 or:
 
-    list:      '('  <leftop: list_item /(,|=>)/ list_item>  ')' 
+    list:      '('  <leftop: list_item /(,|=>)/ list_item>  ')'
 
 cause the list separators to be interleaved with the operands in the
 anonymous array in C<$item[2]>:
@@ -5251,24 +5251,24 @@ anonymous array in C<$item[2]>:
 
 But the following version:
 
-    list:      '('  <leftop: list_item /,|=>/ list_item>  ')' 
+    list:      '('  <leftop: list_item /,|=>/ list_item>  ')'
 
 returns only the operators:
 
     [ 'a', '1', 'b', '2' ]
-    
+
 Of course, none of the above specifications handle the case of an empty
 list, since the C<E<lt>leftop:...E<gt>> and C<E<lt>rightop:...E<gt>> directives
 require at least a single right or left operand to match. To specify
-that the operator can match "trivially", 
+that the operator can match "trivially",
 it's necessary to add a C<(s?)> qualifier to the directive:
 
-    list:      '('  <leftop: list_item /(,|=>)/ list_item>(s?)  ')' 
+    list:      '('  <leftop: list_item /(,|=>)/ list_item>(s?)  ')'
 
 Note that in almost all the above examples, the first and third arguments
 of the C<<leftop:...E<gt>> directive were the same subrule. That is because
 C<<leftop:...E<gt>>'s are frequently used to specify "separated" lists of the
-same type of item. To make such lists easier to specify, the following 
+same type of item. To make such lists easier to specify, the following
 syntax:
 
     list:   element(s /,/)
@@ -5279,12 +5279,12 @@ is exactly equivalent to:
 
 Note that the separator must be specified as a raw pattern (i.e.
 not a string or subrule).
-    
+
 
 =item Scored productions
 
 By default, Parse::RecDescent grammar rules always accept the first
-production that matches the input. But if two or more productions may 
+production that matches the input. But if two or more productions may
 potentially match the same input, choosing the first that does so may
 not be optimal.
 
@@ -5318,10 +5318,10 @@ criteria other than specification order. For example:
     | adjective noun verb article noun   { [@item] } <score: sensible(@item)>
     | noun verb preposition article noun { [@item] } <score: sensible(@item)>
 
-Now, when each production reaches its respective C<E<lt>score:...E<gt>> 
+Now, when each production reaches its respective C<E<lt>score:...E<gt>>
 directive, the subroutine C<sensible> will be called to evaluate the
 matched items (somehow). Once all productions have been tried, the
-one which C<sensible> scored most highly will be the one that is 
+one which C<sensible> scored most highly will be the one that is
 accepted as a match for the rule.
 
 The variable $score always holds the current best score of any production,
@@ -5345,7 +5345,7 @@ to ensure that the seplist with the most items gets the lowest score.
 As the above examples indicate, it is often the case that all productions
 in a rule use exactly the same C<E<lt>score:...E<gt>> directive. It is
 tedious to have to repeat this identical directive in every production, so
-Parse::RecDescent also provides the C<E<lt>autoscore:...E<gt>> directive. 
+Parse::RecDescent also provides the C<E<lt>autoscore:...E<gt>> directive.
 
 If an C<E<lt>autoscore:...E<gt>> directive appears in any
 production of a rule, the code it specifies is used as the scoring
@@ -5354,10 +5354,10 @@ end with an explicit C<E<lt>score:...E<gt>> directive. Thus the rules above coul
 be rewritten:
 
     line: <autoscore: -@{$item[1]}>
-    line: seplist[sep=>','] 
+    line: seplist[sep=>',']
     | seplist[sep=>':']
     | seplist[sep=>" "]
-    
+
 
     sentence: <autoscore: sensible(@item)>
     | verb noun preposition article noun { [@item] }
@@ -5549,13 +5549,13 @@ convenient short-hand for:
     _alternation_1_of_production_1_of_rule_character:
        good | bad | ugly
 
-Since alternations are parsed by recursively calling the parser generator, 
+Since alternations are parsed by recursively calling the parser generator,
 any type(s) of item can appear in an alternation. For example:
 
     character: 'the' ( 'high' "plains"  # Silent, with poncho
          | /no[- ]name/ # Silent, no poncho
          | vengeance_seeking    # Poncho-optional
-         | <error>      
+         | <error>
          ) drifter
 
 In this case, if an error occurred, the automatically generated
@@ -5678,7 +5678,7 @@ appending ".pm" to the last element of the class name. Thus
 
 would produce a module file named Parser.pm.
 
-It is somewhat tedious to have to write a small Perl program just to 
+It is somewhat tedious to have to write a small Perl program just to
 generate a precompiled grammar class, so Parse::RecDescent has some special
 magic that allows you to do the job directly from the command-line.
 
@@ -5759,13 +5759,13 @@ complete input text>. If any input text remains after the lines are matched,
 there must have been an error in the last C<line>. In that case the C<eofile>
 rule will fail, causing the entire C<file> rule to fail too.
 
-Note too that C<eofile> must match C</^\Z/> (end-of-text), I<not> 
+Note too that C<eofile> must match C</^\Z/> (end-of-text), I<not>
 C</^\cZ/> or C</^\cD/> (end-of-file).
 
-And don't forget the action at the end of the production. If you just 
+And don't forget the action at the end of the production. If you just
 write:
 
-    file: line(s) eofile    
+    file: line(s) eofile
 
 then the value returned by the C<file> rule will be the value of its
 last item: C<eofile>. Since C<eofile> always returns an empty string
@@ -5775,7 +5775,7 @@ will trip up code such as:
 
     $parser->file($filetext) || die;
 
-(since "" is false). 
+(since "" is false).
 
 Remember that Parse::RecDescent returns undef on failure,
 so the only safe test for failure is:
@@ -5914,7 +5914,7 @@ closed or if they contain particularly nasty Perl syntax errors
 
 The generator only detects the most obvious form of left recursion
 (potential recursion on the first subrule in a rule). More subtle
-forms of left recursion (for example, through the second item in a 
+forms of left recursion (for example, through the second item in a
 rule after a "zero" match of a preceding "zero-or-more" repetition,
 or after a match of a subrule with an empty production) are not found.
 

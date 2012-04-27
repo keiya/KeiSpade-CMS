@@ -30,7 +30,7 @@ sub fetch {
 		if (defined $_[2]) {
 			push(@row, (@$arr_ref)[$_[2]]);
 		} else {
-			@row = @$arr_ref; 
+			@row = @$arr_ref;
 		}
 	} continue {
 			$i++;

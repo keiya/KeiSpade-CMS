@@ -22,7 +22,7 @@ my $scriptname = $vars{'ScriptName'};
 #sha2()
 
 if (!-d $vars{'Addons::upl::FileDir'}) {
-	mkdir $vars{'Addons::upl::FileDir'} or 
+	mkdir $vars{'Addons::upl::FileDir'} or
 	warn "[KeiSpade-CMS] Directory '". $vars{'Addons::upl::FileDir'} ." not found. Please mkdir.";
 }
 
