@@ -51,7 +51,7 @@ sub create_table {
 	my $dbh = $self->{dbh};
 	#my $notable = 1;
        	my $create_table = "create table pages (" .
-       	                       "title," .
+       	                       "title primary key," .
        	                       "lastmodified_date," .
        	                       "created_date," .
        	                       "tags," .

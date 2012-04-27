@@ -10,5 +10,7 @@ chmod 644 ./dat/.htaccess
 printf "\nchanging ./files permission to 777\n"
 chmod -R 777 ./files
 chmod 644 ./files/.htaccess
+printf "\nchanging ./cache permission to 777\n"
+chmod -R 777 ./cache
 
 printf "\nPlease install sqlite3 if not installed\n"

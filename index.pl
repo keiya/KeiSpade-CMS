@@ -45,7 +45,7 @@ our %vars = (
     'NumberOfAtomEntries'   => 5
 );
 %vars = (%vars, KSpade::Conf::load('./dat/kspade.conf'));
-$vars{'Version'}  = '0.4.2';
+$vars{'Version'}  = '0.4.3';
 
 # http header + html meta header
 $vars{'HttpStatus'} = 'Status: 200 OK';
@@ -110,8 +110,17 @@ sub page {
 		$main::vars{'HtmlHead'} .= '<title>'.$hash_ofpage->{'title'}.'@'.$main::vars{'SiteName'}.'</title>';
 
 		$main::vars{'HtmlBody'} .= "<h2>$hash_ofpage->{'title'}</h2>";
-		$main::vars{'HtmlBody'} .=
-		    Text::HatenaEx->parse(KSpade::Security::noscript($hash_ofpage->{'body'}));
+		
+		my $cachefile = 'cache/'.KSpade::Misc::sha($main::vars{'PageName'});
+		if ($main::vars{'RenderCache'} == 1 && -e $cachefile) {
+		    open (my $cf,'< '.$cachefile);
+		    read ($cf, $main::vars{'HtmlBody'}, (-s $cachefile));
+		    close ($cf);
+		}
+		else {
+		    $main::vars{'HtmlBody'} .=
+		        Text::HatenaEx->parse(KSpade::Security::noscript($hash_ofpage->{'body'}));
+		}
 
 		my $confer;
 		if (defined $hash_ofpage->{'confer'}) {
@@ -182,8 +191,7 @@ sub edit {
 	my @res = ($sql->fetch("select body from pages where title='$main::vars{'PageName'}';"));
 	#$res[0] =~ s/<br \/>/\n/g;
 	$main::vars{'DBody'} = $res[0];
-	require 'sha.pl';
-	$main::vars{'BodyHash'} = &sha::pureperl($res[0]);
+	$main::vars{'BodyHash'} = KSpade::Misc::sha($res[0]);
 	#$main::vars{'Token'} = rand)
 	$main::vars{'HtmlHead'} .= '<meta http-equiv="Expires" content="0">';
 	$main::vars{'HtmlHead'} .= '<title>'.$main::vars{'PageName'}.' &gt; Edit@'.$main::vars{'SiteName'}.'</title>';
@@ -195,14 +203,19 @@ sub edit {
 # submit edited text
 sub post {
 	my $pagename = $main::vars{'PageName'};
-
-	if ($ENV{'REQUEST_METHOD'} eq 'POST') {
+	if ($main::vars{'ReadOnly'} == 1) {
+	    $main::vars{'HttpStatus'} = 'Status: 400 Bad Request';
+	    $main::vars{'HtmlHead'} .= '<title>'.$main::vars{'PageName'}.' &gt; Error@'.$main::vars{'SiteName'}.'</title>';
+	    $main::vars{'HtmlBody'} = KSpade::Show::template('html/readonly.html',\%vars);
+	    KSpade::Show::html('html/frmwrk.html',\%main::vars);
+	}
+	elsif ($ENV{'REQUEST_METHOD'} eq 'POST') {
 		my %page;
 		KSpade::Show::formelements(\%page);
 		chomp %page;
 		require 'sha.pl';
 		my @res = ($sql->fetch("select * from pages where title='".$main::vars{'PageName'}."';"));
-		my $hashparent = &sha::pureperl($res[7]);
+		my $hashparent = KSpade::Misc::sha($res[7]);
 		if (($page{'bodyhash'} eq $hashparent) or ($page{'bodyhash'} =~ /Conflict/)) {
 			$page{'title'} = 'undefined'.rand(16384) if $page{'title'} eq '';
 			$sql->do("update pages set title='$page{'title'}', lastmodified_date='$page{'modified_date'}', tags='$page{'tags'}',".
@@ -210,6 +223,14 @@ sub post {
 			$main::vars{'HttpStatus'} = 'Status: 303 See Other';
 			$main::vars{'HttpStatus'} .= "\nLocation: $main::vars{'ScriptAbsolutePath'}$main::vars{'ScriptName'}?page=$page{'title'}";
 			print $main::vars{'HttpStatus'} . "\n\n";
+			if ($main::vars{'RenderCache'} == 1) {
+			    my $cachefile = 'cache/'.KSpade::Misc::sha($page{'title'});
+			    my $parsed =
+			        Text::HatenaEx->parse(KSpade::Security::noscript($page{'body'}));
+			    open (my $cf,'> '.$cachefile);
+			    print $cf $parsed;
+			    close ($cf);
+			}
 		} else {
 			require Text::Diff;
 			my $diff = Text::Diff::diff(\$res[7],\$page{'body'});
@@ -253,7 +274,12 @@ sub new {
 
 # submit new page
 sub newpost {
-	if ($ENV{'REQUEST_METHOD'} eq 'POST') {
+	if ($main::vars{'ReadOnly'} == 1) {
+		    $main::vars{'HttpStatus'} = 'Status: 400 Bad Request';
+		    $main::vars{'HtmlHead'} .= '<title>Error@'.$main::vars{'SiteName'}.'</title>';
+		    $main::vars{'HtmlBody'} = KSpade::Show::template('html/readonly.html',\%vars);
+	}
+	elsif ($ENV{'REQUEST_METHOD'} eq 'POST') {
 		my %page;
 		KSpade::Show::formelements(\%page);
 		chomp(%page);
@@ -266,6 +292,14 @@ sub newpost {
 		KSpade::Misc::setpagename($main::vars{'PageName'});
 		$main::vars{'HttpStatus'} = 'Status: 303 See Other';
 		$main::vars{'HttpStatus'} .= "\nLocation: ${abspath}$main::vars{'ScriptName'}?page=$main::vars{'PageName'}";
+		if ($main::vars{'RenderCache'} == 1) {
+		    my $cachefile = 'cache/'.KSpade::Misc::sha($page{'title'});
+		    my $parsed =
+		        Text::HatenaEx->parse(KSpade::Security::noscript($page{'body'}));
+		    open (my $cf,'> '.$cachefile);
+		    print $cf $parsed;
+		    close ($cf);
+		}
 	}
 	KSpade::Show::html('html/frmwrk.html',\%main::vars);
 }
