@@ -24,11 +24,13 @@ sub getline {
 
 sub getcookies {
 	my $cookies_str = shift;
-	my @cookies_nd = split(/;/, $ENV{'HTTP_COOKIE'});
 	my %cookies;
-	foreach (@cookies_nd) {
-		my ($key, $val) = split(/=/);
-		$cookies{$key} = $val;
+	if ($ENV{'HTTP_COOKIE'}) {
+		my @cookies_nd = split(/;/, $ENV{'HTTP_COOKIE'});
+		foreach (@cookies_nd) {
+			my ($key, $val) = split(/=/);
+			$cookies{$key} = $val;
+		}
 	}
 	return %cookies;
 }
