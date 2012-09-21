@@ -31,7 +31,7 @@ if ($ENV{'SERVER_NAME'} ne '') {
 $absuri .= $ENV{'REQUEST_URI'};
 
 my $abspath = $absuri;
-$abspath =~ s/$myname.+$//;
+$abspath =~ s/$myname(?:.+)?$//;
 
 # constants, default values
 our %vars = (
